@@ -28,6 +28,6 @@ n0a=Ia'*n0;
 % n0a_d=zeros(size(n0a));
 Y0a=[n0a;n0a_d];
 % Perform simulation
-data_out = ode4_truss(@tenseg_control_ckclose_CTS,tspan,Y0a,data_in);
+data_out = ode4_tsg(@tenseg_control_ckclose_CTS,tspan,Y0a,data_in);
 
 
