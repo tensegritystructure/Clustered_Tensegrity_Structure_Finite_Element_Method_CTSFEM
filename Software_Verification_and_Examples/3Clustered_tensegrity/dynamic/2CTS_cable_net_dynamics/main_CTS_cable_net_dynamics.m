@@ -38,7 +38,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 dt=0.001;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
 tf=3;                   % final time of dynamic simulation
-out_dt=0.2;            % output data interval(approximately, not exatly)
+out_dt=0.02;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
 period=0.5;             %period of seismic
@@ -87,9 +87,11 @@ S=Gp';                      % clustering matrix as group matrix
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
+[A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
 A_1ac=A_1a*S';          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
+A_2c=A_1*S'/diag(l_c);
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -128,8 +130,11 @@ plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 %% mass matrix and damping matrix
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
-d=0.000;     %damping coefficient
-D=d*2*max(sqrt(mass.*E.*A./l0))*eye(3*nn);    %critical damping
+d=0.01;     %damping coefficient
+d_cri=damping_critical(rho,E_c,A_c);
+d_c=d*d_cri;          %damping coefficient of all members
+D=A_2c*diag(d_c)*A_2c';     %damping matrix
+
 
 %% mode analysis
 [V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode
