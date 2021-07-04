@@ -62,7 +62,7 @@ tenseg_plot(N,C_b,C_s);
 title('Clustered D-bar in edges and nodes');
 
 %% Boundary constraints
-pinned_X=[1]; pinned_Y=[1]; pinned_Z=(1:nn)';
+pinned_X=[]; pinned_Y=[]; pinned_Z=(1:nn)';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
 %% Group/Clustered information 
@@ -149,13 +149,13 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[8];n_ct1=[0.2];n_ct2=[0.5];
+ind_n_ct=[2;8];n_ct1=[0.5;0.5];n_ct2=[0.5;0.5];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
 
-a_c=2*sqrt(5);    % coefficient in error dynamics(damping term)
-b_c=5;            % coeffieient in error dynamics(stiffness term)
+a_c=2*sqrt(50);    % coefficient in error dynamics(damping term)
+b_c=50;            % coeffieient in error dynamics(stiffness term)
 
 %% choose active, passive members
 % ind_act=[3:6]; ind_pas=[1,2];

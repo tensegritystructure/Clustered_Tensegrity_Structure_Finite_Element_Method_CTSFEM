@@ -23,7 +23,7 @@ material{2}=0; % index for considering slack of string (1) for yes,(0) for no (f
 thick=6e-3;        % thickness of hollow bar
 hollow_solid=0;          % use hollow bar or solid bar in minimal mass design (1)hollow (0)solid
 c_b=0.1;           % coefficient of safty of bars 0.5
-c_s=0.1;           % coefficient of safty of strings 0.3
+c_s=0.01;           % coefficient of safty of strings 0.3
 
 % static analysis set
 % substep=10;                                     %ºÉÔØ×Ó²½
@@ -35,9 +35,9 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 
 %dynamic analysis set
-dt=1e-4;               % time step in dynamic simulation
+dt=1e-5;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=1;                   % final time of dynamic simulation
+tf=0.2;                   % final time of dynamic simulation
 out_dt=0.002;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
@@ -45,11 +45,11 @@ period=0.5;             %period of seismic
 
 %% N C of the structure
 % Manually specify node positions of double layer prism.
-N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
+N=[0 0 0;1 1 0;2 0 0;1 -1 0;0 sqrt(2) 0;0 -sqrt(2) 0]';    
 
 % Manually specify connectivity indices.
-C_s_in = [1 2;2 3;3 4;4 1];  % This is indicating that string connection
-C_b_in = [1 3;2 4];  % Similarly, this is saying bar 1 connects node 1 to node 2,
+C_s_in = [1 3;2 4;2 5;4 6];  % This is indicating that string connection
+C_b_in = [1 2;2 3;3 4;4 1];  % Similarly, this is saying bar 1 connects node 1 to node 2,
 
 % Convert the above matrices into full connectivity matrices.
 C_b = tenseg_ind2C(C_b_in,N);%%
@@ -59,17 +59,17 @@ C=[C_b;C_s];
 
 % Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
-title('Clustered D-bar in edges and nodes');
+
 
 %% Boundary constraints
-pinned_X=[]; pinned_Y=[]; pinned_Z=(1:nn)';
+pinned_X=[1;5;6]; pinned_Y=[1;5;6]; pinned_Z=(1:nn)';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
 %% Group/Clustered information 
 %generate group index
-gr={[3,4]};     % number of elements in one group
+% gr={[3,4]};     % number of elements in one group
 % gr={[3,4];[5,6]};     % number of elements in one group
-% gr=[];                     %if no group is used
+gr=[];                     %if no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
 S=Gp';                      % clustering matrix
 %% self-stress design
@@ -149,7 +149,7 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[2;8];n_ct1=[0.5;0.5];n_ct2=[0.5;0.5];
+ind_n_ct=[4;10];n_ct1=[0.8;0.8];n_ct2=[0.8;0.8];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
@@ -159,7 +159,7 @@ b_c=50;            % coeffieient in error dynamics(stiffness term)
 
 %% choose active, passive members
 % ind_act=[3:6]; ind_pas=[1,2];
-ind_act=[3:5]; ind_pas=[1,2];
+ind_act=[5:8]; ind_pas=[1:4];
 % ind_act=[1:6]; ind_pas=[];
 I_act=transfer_matrix(ind_act,1:size(S,1));
 I_pas=transfer_matrix(ind_pas,1:size(S,1));
@@ -194,7 +194,7 @@ l0_t=data_out.l0_t; %time history of members' rest length
 nd_t=data_out.nd_t;   %time history of nodal coordinate
 
 %% plot member force 
-tenseg_plot_result(out_tspan,t_t([1:6],:),{'1','2','3','4','5','6'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+tenseg_plot_result(out_tspan,t_t([1:8],:),{'1','2','3','4','5','6','7','8'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
 tenseg_plot_result(out_tspan,n_t([3*3-2,3*3-1],:),{'3X','3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
@@ -206,16 +206,12 @@ tenseg_plot_result(out_tspan,l_t([1,2],:),{'1','2'},{'Time (s)','Coordinate (m)'
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
 tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
 axis off 
-tenseg_plot( reshape(n_t(:,30),3,[]),C_b,C_s,[],[],[0,90])
-axis off 
-tenseg_plot( reshape(n_t(:,1),3,[]),C_b,C_s,[],[],[0,90])
-axis off
 %% save output data
 if savedata==1
     save (['Dbar_CTS_',material{1},'.mat']);
 end
 %% make video of the dynamic
-name=['CTS_Tbar'];
+name=['CTS_Dbar'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
