@@ -20,6 +20,8 @@ consti_data=data_in.consti_data;
 % plastic=data_in.plastic;
 % multielastic=data_in.multielastic;
 material=data_in.material;
+lb=data_in.lb;      %lower bound
+ub=data_in.ub;      %upper bound
 
 A=data_in.A;
 E=data_in.E;
@@ -125,7 +127,7 @@ t_pas=I_pas'*(E.*A./l0.*(l_c-l0));
 % q_pas=(I_pas'*E).*(I_pas'*A)./(I_pas'*l0).*(I_pas'*l-I_pas'*l0);
 
  options = optimoptions('lsqlin','Display','off');
-[t_act,~,residual,exitflag] = lsqlin(TAU_act,meu-TAU_pas*t_pas,[],[],[],[],[],[],[],options);%0*ones(size(I_act,2),1)
+[t_act,~,residual,exitflag] = lsqlin(TAU_act,meu-TAU_pas*t_pas,[],[],[],[],lb,ub,[],options);%0*ones(size(I_act,2),1)
 % max(residual)       % maximum residual
 % t_act=pinv(TAU_act)*(meu-TAU_pas*t_pas);      % directly solve the t_act    
 f_c=I_pas*t_pas+I_act*t_act;       %the force vector
