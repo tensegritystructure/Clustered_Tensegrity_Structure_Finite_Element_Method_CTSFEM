@@ -17,7 +17,7 @@ clc; clear all; close all;
 global M 
 [consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
-material{2}=1; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
+material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
 % cross section design cofficient
 thick=6e-3;        % thickness of hollow bar
@@ -35,10 +35,10 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 
 %dynamic analysis set
-dt=0.001;               % time step in dynamic simulation
-auto_dt=1;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=2;                   % final time of dynamic simulation
-out_dt=0.02;            % output data interval(approximately, not exatly)
+dt=1e-4;               % time step in dynamic simulation
+auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
+tf=1;                   % final time of dynamic simulation
+out_dt=0.002;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
 period=0.5;             %period of seismic
@@ -75,9 +75,11 @@ S=Gp';                      % clustering matrix
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
+[A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
 A_1ac=A_1a*S';          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
+A_2c=A_1*S'/diag(l_c);
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -115,7 +117,9 @@ plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
 d=0.01;     %damping coefficient
-D=d*2*max(sqrt(mass.*E.*A./l0))*eye(3*nn);    %critical damping
+d_cri=damping_critical(rho,E_c,A_c);
+d_c=d*d_cri;          %damping coefficient of all members
+D=A_2c*diag(d_c)*A_2c';     %damping matrix
 
 %% mode analysis
 [V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode
@@ -145,7 +149,7 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[8];n_ct1=[0.2];n_ct2=[0.5];
+ind_n_ct=[8];n_ct1=[0.5];n_ct2=[0.5];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
@@ -204,7 +208,7 @@ if savedata==1
     save (['Dbar_CTS_',material{1},'.mat']);
 end
 %% make video of the dynamic
-name=['CTS_Tbar',material{1},'_slack_',num2str(material{2})];
+name=['CTS_Tbar'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
