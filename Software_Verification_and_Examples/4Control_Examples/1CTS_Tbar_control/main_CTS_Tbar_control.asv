@@ -109,7 +109,7 @@ mass=S'*rho.*A.*l0;
 %% tangent stiffness matrix
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
-num_plt=1:4;
+num_plt=3:6;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg);
 
