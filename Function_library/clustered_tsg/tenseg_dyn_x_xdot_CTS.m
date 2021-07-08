@@ -5,7 +5,7 @@ function Yd=tenseg_dyn_x_xdot_CTS(t,Y,data_in)
 % Output:
 %   Yd=[Xd,Xdd]
 
-global l q E f n n_d l0 A stress strain
+global l q E f n n_d l0 A stress strain l0_c
 C=data_in.C;
 Ia=data_in.Ia;
 Ib=data_in.Ib;
@@ -108,6 +108,7 @@ K=kron(C'*q_bar*C,eye(3));                      %stiffness matrix
 E_tts=S'*E;     %Young's modulus TTS
 A_tts=S'*A;     % Cross sectional area TTS
 l0_tts=(f+E_tts.*A_tts).\E_tts.*A_tts.*l;   %rest length, TTS
+l0_c=S*l0_tts;
 mass=rho.*A_tts.*l0_tts;
 M=tenseg_mass_matrix(mass,C,0); % generate mass matrix
 

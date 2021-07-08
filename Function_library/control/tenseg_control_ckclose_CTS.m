@@ -5,7 +5,7 @@ function Yd=tenseg_control_ckclose_CTS(t,Y,data_in)
 % Output:
 %   Yd=[Xd,Xdd]
 
-global l q E f n n_d l0 A stress strain M
+global l q E f f_c n n_d l0 A stress strain M l0_c exitflag
 C=data_in.C;
 Ia=data_in.Ia;
 Ib=data_in.Ib;
@@ -130,6 +130,11 @@ t_pas=I_pas'*(E.*A./l0.*(l_c-l0));
 [t_act,~,residual,exitflag] = lsqlin(TAU_act,meu-TAU_pas*t_pas,[],[],[],[],lb,ub,[],options);%0*ones(size(I_act,2),1)
 % max(residual)       % maximum residual
 % t_act=pinv(TAU_act)*(meu-TAU_pas*t_pas);      % directly solve the t_act    
+
+% if exitflag~=1
+%     t_act=I_act'*f_c;   %use the value in last step
+% end
+
 f_c=I_pas*t_pas+I_act*t_act;       %the force vector
 f=S'*f_c;
 q_c=f_c./l_c;

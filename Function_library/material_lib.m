@@ -78,7 +78,7 @@ end
 switch string_material
     case 'Steel_string'
         rho_s = 7870;
-        strain_s1=[0.016099,3];  % strain of string
+        strain_s1=[0.016099,10];  % strain of string
         stress_s1=1e6*[1223.5,1223.5];              % stress of string
         [data_s1,data_s2,Es,sigma_s]=point2consti_data(strain_s1,stress_s1);
     case 'Steel'
@@ -109,8 +109,10 @@ switch string_material
         %---------------- Rubber band for Strings -------------------
         Es = 2e06;
         rho_s = 1700;
-        sigma_s = 1e07;
+        sigma_s = 1e10;
         [data_s1,data_s2]=blin_consti_data(Es,sigma_s);
+
+        
     otherwise
         disp('Edit the material database')
 end
