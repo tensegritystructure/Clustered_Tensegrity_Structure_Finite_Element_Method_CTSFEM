@@ -15,7 +15,7 @@
 clc; clear all; close all;
 % Global variable
 global M 
-[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Rubber_band');
+[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
@@ -37,7 +37,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %dynamic analysis set
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=2;                   % final time of dynamic simulation
+tf=1;                   % final time of dynamic simulation
 out_dt=0.002;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
@@ -45,37 +45,59 @@ period=0.5;             %period of seismic
 
 %% N C of the structure
 % Manually specify node positions of double layer prism.
-h=1;b=1;
-N_1=b*[-1 1 0;1 1 0;1 -1 0;-1 -1 0]';
-N_2=b*[-1 0 h;0 1 h;1 0 h;0 -1 h]'; 
-N_3=b*[-1 -1 2*h;-1 1 2*h;1 1 2*h;1 -1 2*h]';
-N=[N_1,N_2,N_3];
+R=50;          %radius
+p=12;          %complexity for cable dome
+m=2;   %number of circle of the vertical bars
+h=0.15*2*R;   %hight of the dome
+beta=30*pi/180*ones(m,1);    %all angle of diagonal string
+% [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
+rate=0.3;
+[N,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
+[ne,nn]=size(C);% ne:No.of element;nn:No.of node
 
-% Manually specify connectivity indices.
-C_b_in = [1 8;4 7;3 6;2 5;7 10;6 9;5 12;8 11];  % Similarly, this is saying bar 1 connects node 1 to node 2,
-C_s_in = [4 8;3 7;2 6;1 5;8 12;7 11;6 10;5 9;1 4;4 3;3 2;2 1;5 8;8 7;7 6;6 5;9 12;12 11;11 10;10 9];  % This is indicating that string connection
-
-% Convert the above matrices into full connectivity matrices.
-C_b = tenseg_ind2C(C_b_in,N);%%
-C_s = tenseg_ind2C(C_s_in,N);
-C=[C_b;C_s];
-[ne,nn]=size(C);        % ne:No.of element;nn:No.of node
-
-% Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
-
-
+title('Cable dome');
+tenseg_plot(N,[],C);
 %% Boundary constraints
-pinned_X=[1:4]'; pinned_Y=[1:4]'; pinned_Z=(1:4)';
+pinned_X=([5:5:60])'; pinned_Y=([5:5:60])'; pinned_Z=([5:5:60])';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
 %% Group/Clustered information 
 %generate group index
-gr={[9:16]};     % number of elements in one group
-% gr={[3,4];[5,6]};     % number of elements in one group
-% gr=[];                     %if no group is used
-Gp=tenseg_str_gp(gr,C);    %generate group matrix
-S=Gp';                      % clustering matrix
+gr_whg=[1:13:13*(p-1)+1];    % whs
+gr_nhg=[2:13:13*(p-1)+2];    % whs
+gr_whs=[7:13:13*(p-1)+7];    % whs
+gr_nhs=[12:13:13*(p-1)+12];     % nhs
+gr_nhds=[13:13:13*(p-1)+13];     % nhds
+gr_wxs=[kron(ones(1,p),[5,6])+13*kron(0:p-1,[1,1])];     % wxs
+gr_nxs=[kron(ones(1,p),[10,11])+13*kron(0:p-1,[1,1])];     % nxs
+gr_wjs=[kron(ones(1,p),[3,4])+13*kron(0:p-1,[1,1])];    % wjs
+gr_njs=[kron(ones(1,p),[8,9])+13*kron(0:p-1,[1,1])];    %njs
+gr={gr_whg;gr_nhg;gr_whs;gr_nhs;gr_nhds;gr_wxs;gr_nxs;gr_wjs;gr_njs};
+
+% several clustered string in one group of ridge and diagonal strings
+num_clu=3;
+gr_whs2=reshape(gr_whs,numel(gr_whs)/num_clu,[])';
+gr_nhs2=reshape(gr_nhs,numel(gr_nhs)/num_clu,[])';
+gr_nhds2=reshape(gr_nhds,numel(gr_nhds)/num_clu,[])';
+gr_wxs2=reshape(gr_wxs,numel(gr_wxs)/num_clu,[])';
+gr_nxs2=reshape(gr_nxs,numel(gr_nxs)/num_clu,[])';
+gr_wjs2=reshape(gr_wjs,numel(gr_wjs)/num_clu,[])';
+gr_njs2=reshape(gr_njs,numel(gr_njs)/num_clu,[])';
+
+gr2=[mat2cell(gr_whg',ones(1,p));       %group matrix considering CTS
+    mat2cell(gr_nhg',ones(1,p));
+    mat2cell(gr_whs2,ones(1,num_clu));
+    mat2cell(gr_nhs2,ones(1,num_clu));
+    mat2cell(gr_nhds2,ones(1,num_clu));
+    mat2cell(gr_wxs2,ones(1,num_clu));
+    mat2cell(gr_nxs2,ones(1,num_clu));
+    mat2cell(gr_wjs2,ones(1,num_clu));
+    mat2cell(gr_njs2,ones(1,num_clu))];
+
+Gp=tenseg_str_gp3(gr,C);    %generate group matrix1
+Gp2=tenseg_str_gp3(gr2,C);    %generate group matrix2
+S=Gp2';                      % clustering matrix
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -91,16 +113,19 @@ A_2c=A_1*S'/diag(l_c);
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-index_gp=[9,10:13]';                 % number of groups with designed force
-fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
+index_gp=[6];                   % number of groups with designed force
+fd=20^2/3*1000;                        % force in bar is given as -1000
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=pinv(S')*t;
-q_c=pinv(S')*q;
+t_c=diag(sum(S,2))\S*t;
+q_c=diag(sum(S,2))\S*q;
+% 
+% t_c=pinv(S')*t;
+% q_c=pinv(S')*q;
 %% cross sectional design
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
-A_c(9)=max(A);      %increase area of active member
+     %increase area of active member
 E=S'*E_c;     %Young's modulus TTS
 A=S'*A_c;     % Cross sectional area TTS
 l0=(t+E.*A).\(E.*A.*l);
@@ -154,7 +179,14 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[[9]'*3];n_ct1=[1.5*h*ones(1,1)];n_ct2=[1.5*h*ones(1,1)];
+rate=0.7;
+[N_1,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
+rate=0.7;
+[N_2,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
+
+ind_n_ct=a;
+n_ct1=N_1(:);n_ct1=n_ct1(ind_n_ct);     % control target start configuration
+n_ct2=N_2(:);n_ct2=n_ct2(ind_n_ct);     % control target start configuration
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
@@ -164,8 +196,11 @@ b_c=100;            % coeffieient in error dynamics(stiffness term)
 
 %% choose active, passive members
 % ind_act=[3:6]; ind_pas=[1,2];
-ind_act=[9]; ind_pas=setdiff(1:size(S,1),ind_act);
+ind_pas=(1:2*p)';ind_act=setdiff([1:size(Gp2,2)]',ind_pas); 
 % ind_act=[1:6]; ind_pas=[];
+G_c=kron(eye(7),ones(3,1));         % group of control variable
+% G_c=reduced_control_variable(gr2(2*p+1:end,1),gr(3:end,1));
+
 I_act=transfer_matrix(ind_act,1:size(S,1));
 I_pas=transfer_matrix(ind_pas,1:size(S,1));
 % lower bound and upper bound of actuator
@@ -189,6 +224,7 @@ data.Ic=Ic; data.n_ct_t=n_ct_t;data.n_ct_dt=n_ct_dt;data.n_ct_ddt=n_ct_ddt;
 data.a_c=a_c;data.b_c=b_c;
 data.I_act=I_act;data.I_pas=I_pas;
 data.lb=lb;data.ub=ub;
+data.G_c=G_c;
 %% shape control analysis
 % solve dynamic equation with closed loop control
 data_out=shape_control_CTS(data);
@@ -201,10 +237,10 @@ nd_t=data_out.nd_t;   %time history of nodal coordinate
 exitflag_t=data_out.exitflag_t;   % exitflag of lsqlin
 
 %% plot member force 
-tenseg_plot_result(out_tspan,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+tenseg_plot_result(out_tspan,t_t([1,2,7,12,13,5,10,3,8],:),{'1','2','3','4','5','6','7','8','9'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([[9:12]'*3],:),{'9Z','10Z','11Z','12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,n_t([1*3-2,2*3-2],:),{'1X','2X'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% Plot rest length l0_t
 tenseg_plot_result(out_tspan,l0c_t([1,9,10,14,18],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
@@ -218,10 +254,10 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
 axis off 
 %% save output data
 if savedata==1
-    save (['Dbar_CTS_',material{1},'.mat']);
+    save (['cable_dome_control','.mat']);
 end
 %% make video of the dynamic
-name=['CTS_prism'];
+name=['CTS_cable_dome'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})

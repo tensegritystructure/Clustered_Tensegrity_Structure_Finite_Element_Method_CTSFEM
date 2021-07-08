@@ -94,8 +94,11 @@ w0=zeros(numel(N),1); w0a=Ia'*w0;
 index_gp=[9,10:13]';                 % number of groups with designed force
 fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=pinv(S')*t;
-q_c=pinv(S')*q;
+t_c=diag(sum(S,2))\S*t;
+q_c=diag(sum(S,2))\S*q;
+
+% t_c=pinv(S')*t;
+% q_c=pinv(S')*q;
 %% cross sectional design
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
@@ -154,7 +157,7 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[[9]'*3];n_ct1=[1.5*h*ones(1,1)];n_ct2=[1.5*h*ones(1,1)];
+ind_n_ct=[[9]'*3];n_ct1=[1.5*h*ones(1,1)];n_ct2=[1.0*h*ones(1,1)];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
@@ -218,7 +221,7 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
 axis off 
 %% save output data
 if savedata==1
-    save (['Dbar_CTS_',material{1},'.mat']);
+    save (['prism_CTS_',material{1},'.mat']);
 end
 %% make video of the dynamic
 name=['CTS_prism'];

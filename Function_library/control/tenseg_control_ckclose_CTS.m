@@ -13,6 +13,7 @@ S=data_in.S;
 index_b=data_in.index_b;
 index_s=data_in.index_s;
 rho=data_in.rho;
+
 % w0=data.w;
 % dXb=data.dXb;
 consti_data=data_in.consti_data;
@@ -39,7 +40,13 @@ dt=data_in.dt;
 Ic=data_in.Ic; n_ct_t=data_in.n_ct_t;n_ct_dt=data_in.n_ct_dt;n_ct_ddt=data_in.n_ct_ddt;
 a_c=data_in.a_c;b_c=data_in.b_c;
 I_act=data_in.I_act;I_pas=data_in.I_pas;
-
+if any(ismember(fields(data_in),'G_c'))     %judge existence of G_c
+    G_c=data_in.G_c;
+else
+    G_c=eye(size(I_act,2));
+end
+lb_c=pinv(G_c)*lb;
+ub_c=pinv(G_c)*ub;
 nf=numel(Y)/2;
 na=Y(1:nf,:);               %free node cooridnate
 na_d=Y(nf+1:end,:);         %free node velocity
@@ -126,8 +133,9 @@ meu=Ic'*(M_aa\Ia')*(w-M*Ib*nb_dd-D*n_d)-n_ct_dd+a_c*(Ic'*na_d-n_ct_d)+b_c*(Ic'*n
 t_pas=I_pas'*(E.*A./l0.*(l_c-l0));
 % q_pas=(I_pas'*E).*(I_pas'*A)./(I_pas'*l0).*(I_pas'*l-I_pas'*l0);
 
+
  options = optimoptions('lsqlin','Display','off');
-[t_act,~,residual,exitflag] = lsqlin(TAU_act,meu-TAU_pas*t_pas,[],[],[],[],lb,ub,[],options);%0*ones(size(I_act,2),1)
+[t_act,~,residual,exitflag] = lsqlin(TAU_act*G_c,meu-TAU_pas*t_pas,[],[],[],[],lb_c,ub_c,[],options);%0*ones(size(I_act,2),1)
 % max(residual)       % maximum residual
 % t_act=pinv(TAU_act)*(meu-TAU_pas*t_pas);      % directly solve the t_act    
 
@@ -135,7 +143,7 @@ t_pas=I_pas'*(E.*A./l0.*(l_c-l0));
 %     t_act=I_act'*f_c;   %use the value in last step
 % end
 
-f_c=I_pas*t_pas+I_act*t_act;       %the force vector
+f_c=I_pas*t_pas+I_act*G_c*t_act;       %the force vector
 f=S'*f_c;
 q_c=f_c./l_c;
 q=f./l;
