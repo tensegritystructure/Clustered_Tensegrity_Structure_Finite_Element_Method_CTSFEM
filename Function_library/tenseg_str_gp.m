@@ -15,7 +15,7 @@ function Gp=tenseg_str_gp(gr,C)
 Gp=eye(size(C,1));
 E=eye(size(C,1));
 Gp1=[];
-%% method 1
+%% method 1  keep the origional order of members
 
 if ~isempty(gr)
    for i=1:numel(gr)       % this is to combine members in one group

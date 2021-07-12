@@ -70,7 +70,7 @@ pinned_X=[1:4]'; pinned_Y=[1:4]'; pinned_Z=(1:4)';
 
 %% Group/Clustered information 
 %generate group index
-gr={[9:16]};     % number of elements in one group
+gr={[9,13],[10,14],[11,15],[12,16]};     % number of elements in one group
 % gr={[3,4];[5,6]};     % number of elements in one group
 % gr=[];                     %if no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
@@ -90,7 +90,7 @@ A_2c=A_1*S'/diag(l_c);
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-index_gp=[9,10:13]';                 % number of groups with designed force
+index_gp=[9,13:16]';                 % number of groups with designed force
 fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
 t_c=pinv(S')*t;
@@ -99,7 +99,7 @@ q_c=pinv(S')*q;
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
-
+% A_c(17:20)=1e-8*ones(4,1);          % reduce the stiffness of middle string
 E=S'*E_c;     %Young's modulus TTS
 A=S'*A_c;     % Cross sectional area TTS
 l0=(t+E.*A).\(E.*A.*l);
@@ -139,7 +139,7 @@ plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
 % calculate external force and 
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[9]; dl0_c=[-5];
+ind_dl0_c=[9:12']; dl0_c=-1*ones(4,1);
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 
 
@@ -166,7 +166,7 @@ N_out=data_out1.N_out;
 tenseg_plot_result(1:substep,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([[9:12]'*3],:),{'9Z','10Z','11Z','12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([[6,10]'*3],:),{'6Z','10Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% make video of the static
 name=['Tbar_static'];
