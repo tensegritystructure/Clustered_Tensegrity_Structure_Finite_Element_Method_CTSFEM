@@ -101,10 +101,11 @@ gr2=[mat2cell(gr_whs2,ones(1,num_clu));
     mat2cell(gr_wjs2,ones(1,num_clu));
     mat2cell(gr_njs2,ones(1,num_clu))];
 
-Gp=tenseg_str_gp2(gr,C);    %generate group matrix1
-Gp2=tenseg_str_gp2(gr2,C);    %generate group matrix2
+Gp=tenseg_str_gp(gr,C);    %generate group matrix1
+Gp2=tenseg_str_gp(gr2,C);    %generate group matrix2
 S=Gp2';                      % clustering matrix
 
+tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
