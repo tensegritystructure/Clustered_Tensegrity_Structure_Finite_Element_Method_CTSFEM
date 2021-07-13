@@ -105,7 +105,7 @@ Gp=tenseg_str_gp(gr,C);    %generate group matrix1
 Gp2=tenseg_str_gp(gr2,C);    %generate group matrix2
 S=Gp2';                      % clustering matrix
 
-tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
+
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -140,6 +140,8 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 
+
+tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,[],[],[],[],[],t,[])
 %% tangent stiffness matrix
 num_plt=[];%1:4;
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);

@@ -34,12 +34,14 @@ NodeSize = 4; % Size of node marker
 
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
-LabelNodes = 1;
+LabelNodes = 0;
 LabelEle=1;
+Color_CTS=0;   % 1 color by clustered info, 0 color by lb_ele
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
 FontNodes = 18; % Font of node labels
+
 
 FractionDistance = 0.005; % Distance between object and label (relative to overall axis size)
 
@@ -114,24 +116,10 @@ else
 end
 
 
-%% Plot member vectors
+%% cluster information & color
 index_s=setdiff(1:size(C,1),index_b);
 C_b=C(index_b,:);
 C_s=C(index_s,:);
-Hb = N*C_b';
-bar_start_nodes = zeros(3,size(Hb,2));
-bar_end_nodes = zeros(3,size(Hb,2));
-for j = 1:size(Hb,2)
-    bar_start_nodes(:,j) = N(:,C_b(j,:)==-1);
-    bar_end_nodes(:,j) = N(:,C_b(j,:)==1);
-end
-Hs = N*C_s';
-string_start_nodes = zeros(3,size(Hs,2));
-string_end_nodes = zeros(3,size(Hs,2));
-for j = 1:size(Hs,2)
-    string_start_nodes(:,j) = N(:,C_s(j,:)==-1);
-    string_end_nodes(:,j) = N(:,C_s(j,:)==1);
-end
 
 [n_clu,n_e]=size(S);    %n_clu number of clustered members, n_e No. of elements
 for i=1:n_clu
@@ -141,6 +129,7 @@ vec_bar=zeros(n_e,1);
 vec_bar(index_b)=1;
 n_clu_b=find(S*vec_bar>0);      % groups corresponding to bars
 n_clu_s=find(S*vec_bar==0);
+if Color_CTS==1
 color_b=[zeros(1,numel(n_clu_b));zeros(1,numel(n_clu_b));linspace(0,1,numel(n_clu_b))]';
 sort_b=reshape(reshape(1:2*ceil(numel(n_clu_b)/2),[],2)',[],1);%this is to reorder the color
 sort_b=sort_b(1:numel(n_clu_b));
@@ -149,11 +138,57 @@ color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));zeros(1,numel
 sort_s=reshape(reshape(1:2*ceil(numel(n_clu_s)/2),[],2)',[],1);%this is to reorder the color
 sort_s=sort_s(1:numel(n_clu_s));
 color_s=color_s(sort_s,:);
+else
+    lb_ele_clu=diag(sum(S,2))\S*lb_ele;
+    SIGMA=sort(lb_ele_clu);
+SIGMA=unique(SIGMA);
+% cc=jet(length(SIGMA));
+cc=jet(100);%   100 color
+AA=zeros(length(SIGMA),1);
+Pplot=[];
+
+for k=1:length(SIGMA)
+    l = find(lb_ele_clu==SIGMA(k));
+    cc2=1+ceil((SIGMA(k)-min(SIGMA))/(max(SIGMA)-min(SIGMA))*99);
+    color_clu(l,:)=ones(length(l),1)*cc(cc2,:);
+
+end
+    color_b=color_clu(n_clu_b,:);
+    color_s=color_clu(n_clu_s,:);    
+end
 % index_b=ismember(C_b,C,'row')
+
+% %% plot bars and strings
+% for k=1:length(SIGMA)
+%     l = find(lb_ele_clu==SIGMA(k));
+%        
+%     color_clu(l,:)=ones(length(l),1)*cc(k,:);
+%     for i=l(1):l(end)
+%         for j=1:numel(index_clu{n_clu_b(i)})
+%                 nod1=find(C(index_clu{n_clu_b(i)}(j),:)==-1);
+%                 nod2=find(C(index_clu{n_clu_b(i)}(j),:)==1);
+%                 PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','-');
+%                 hold on
+%             end
+%              Pplot=[Pplot,PP]; 
+%                AA{1,i}=[num2str(lb_ele_clu(n_clu_b(i)),4)];
+%     end
+% 
+% end
+
+
+
+
 
 %% plot bars
 if ~isempty(C_b)
-    
+    Hb = N*C_b';
+bar_start_nodes = zeros(3,size(Hb,2));
+bar_end_nodes = zeros(3,size(Hb,2));
+for j = 1:size(Hb,2)
+    bar_start_nodes(:,j) = N(:,C_b(j,:)==-1);
+    bar_end_nodes(:,j) = N(:,C_b(j,:)==1);
+end
     if ~isempty(R3Ddata) && isfield(R3Ddata,'Bradius') % 3D plot
         for j = 1:size(C_b,1)
             [LatFace, UpFace, DwFace] = PlotCylinderObject(bar_start_nodes(:,j),bar_end_nodes(:,j),...
@@ -174,9 +209,11 @@ if ~isempty(C_b)
             for j=1:numel(index_clu{n_clu_b(i)})
                 nod1=find(C(index_clu{n_clu_b(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_b(i)}(j),:)==1);
-                line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','-');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','-');
                 hold on
             end
+             Pplot=[Pplot,PP]; 
+               AA(i)=lb_ele_clu(n_clu_b(i));
         end
     end
 end
@@ -185,6 +222,13 @@ end
 
 %% plot strings
 if ~isempty(C_s)
+    Hs = N*C_s';
+string_start_nodes = zeros(3,size(Hs,2));
+string_end_nodes = zeros(3,size(Hs,2));
+for j = 1:size(Hs,2)
+    string_start_nodes(:,j) = N(:,C_s(j,:)==-1);
+    string_end_nodes(:,j) = N(:,C_s(j,:)==1);
+end
     if ~isempty(R3Ddata) && isfield(R3Ddata,'Sradius') % 3D plot
         for j = 1:size(C_s,1)
             [LatFace, UpFace, DwFace] = PlotCylinderObject(string_start_nodes(:,j),string_end_nodes(:,j),...
@@ -205,14 +249,29 @@ if ~isempty(C_s)
             for j=1:numel(index_clu{n_clu_s(i)})
                 nod1=find(C(index_clu{n_clu_s(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_s(i)}(j),:)==1);
-                line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_s(i,:),'linestyle','-');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',StringWidth,'color',color_s(i,:),'linestyle','-');
                 hold on
             end
+                         Pplot=[Pplot,PP]; 
+%                AA{1,numel(n_clu_b)+i}=[num2str(lb_ele_clu(n_clu_s(i)),4)];
+               AA(numel(n_clu_b)+i)=lb_ele_clu(n_clu_s(i));
         end
     end
 end
 
+%% legend
+[AA_s,IB]=sort(AA);
+Pplot_s=Pplot(IB);
+[AA_u,IA,~]=uniquetol(AA_s,1e-1)
+Pplot_u=Pplot_s(IA);
 
+label=cell(1,length(AA_u));
+for i=1:length(AA_u)
+    label{1,i}=num2str(AA_u(i),2);
+end
+legend(Pplot_u,label);
+% colorbar
+% colormap jet
 
 %% lable element number and value
 
@@ -222,7 +281,7 @@ if LabelEle == 1
             text(mean(N(1,find(C(i,:))))+ dist_x, ...
                 mean(N(2,find(C(i,:))))+ dist_y, ...
                 mean(N(3,find(C(i,:))))+ dist_z, ...
-                [num2str(i),num2str(lb_ele(i))], 'FontSize',FontBars, 'Color', 'k')
+                [num2str(lb_ele(i),2)], 'FontSize',FontBars, 'Color', 'k')
         else
             text(mean(N(1,find(C(i,:))))+ dist_x, ...
                 mean(N(2,find(C(i,:))))+ dist_y, ...
