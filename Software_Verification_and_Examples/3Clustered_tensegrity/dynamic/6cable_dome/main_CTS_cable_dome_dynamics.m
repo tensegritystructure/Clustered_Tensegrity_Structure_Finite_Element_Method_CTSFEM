@@ -142,6 +142,8 @@ mass=S'*rho.*A.*l0;
 
 
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,[],[],[],[],[],t,[])
+tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
+
 %% tangent stiffness matrix
 num_plt=[];%1:4;
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);

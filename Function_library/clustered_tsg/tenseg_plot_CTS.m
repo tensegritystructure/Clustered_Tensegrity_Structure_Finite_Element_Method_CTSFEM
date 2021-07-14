@@ -35,8 +35,8 @@ NodeSize = 4; % Size of node marker
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
 LabelNodes = 0;
-LabelEle=1;
-Color_CTS=0;   % 1 color by clustered info, 0 color by lb_ele
+LabelEle=0;
+Color_CTS=1;   % 1 color by clustered info, 0 color by lb_ele
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
@@ -129,35 +129,33 @@ vec_bar=zeros(n_e,1);
 vec_bar(index_b)=1;
 n_clu_b=find(S*vec_bar>0);      % groups corresponding to bars
 n_clu_s=find(S*vec_bar==0);
+Pplot=[];
 if Color_CTS==1
 color_b=[zeros(1,numel(n_clu_b));zeros(1,numel(n_clu_b));linspace(0,1,numel(n_clu_b))]';
+% color_b=winter(numel(n_clu_b));
 sort_b=reshape(reshape(1:2*ceil(numel(n_clu_b)/2),[],2)',[],1);%this is to reorder the color
 sort_b=sort_b(1:numel(n_clu_b));
 color_b=color_b(sort_b,:);
-color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));zeros(1,numel(n_clu_s))]';
+color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s))]';
+% color_s=autumn(numel(n_clu_s));
 sort_s=reshape(reshape(1:2*ceil(numel(n_clu_s)/2),[],2)',[],1);%this is to reorder the color
 sort_s=sort_s(1:numel(n_clu_s));
 color_s=color_s(sort_s,:);
 else
-    [AA_s,IB]=sort(AA);
-Pplot_s=Pplot(IB);
-[AA_u,IA,~]=uniquetol(AA_s,1e-1)
-Pplot_u=Pplot_s(IA);
-
-    
-    
-    lb_ele_clu=diag(sum(S,2))\S*lb_ele;
+     lb_ele_clu=diag(sum(S,2))\S*lb_ele;
     [SIGMA_1,Ib]=sort(lb_ele_clu);
-[SIGMA_2,Ia,~]=uniquetol(SIGMA_1,1e-1);
+[SIGMA_2,Ia,Ia2]=uniquetol(SIGMA_1,1e-1);
 % cc=jet(length(SIGMA));
-cc=jet(100);%   100 color
-AA=zeros(length(SIGMA_1),1);
-Pplot=[];
+cc=jet(length(Ia));%    color vector
+color_clu=zeros(size(S,1),3);
 
 for k=1:length(SIGMA_2)
-    l = find(lb_ele_clu==SIGMA(k));
-    cc2=1+ceil((SIGMA(k)-min(SIGMA))/(max(SIGMA)-min(SIGMA))*99);
-    color_clu(l,:)=ones(length(l),1)*cc(cc2,:);
+    l = find(lb_ele_clu==SIGMA_2(k));
+%     cc2=1+ceil((SIGMA_2(k)-min(SIGMA))/(max(SIGMA)-min(SIGMA))*99);
+    
+l=Ib(find(Ia2==k));
+    
+    color_clu(l,:)=ones(length(l),1)*cc(k,:);
 
 end
     color_b=color_clu(n_clu_b,:);
@@ -220,7 +218,7 @@ end
                 hold on
             end
              Pplot=[Pplot,PP]; 
-               AA(i)=lb_ele_clu(n_clu_b(i));
+
         end
     end
 end
@@ -260,25 +258,24 @@ end
                 hold on
             end
                          Pplot=[Pplot,PP]; 
-%                AA{1,numel(n_clu_b)+i}=[num2str(lb_ele_clu(n_clu_s(i)),4)];
-               AA(numel(n_clu_b)+i)=lb_ele_clu(n_clu_s(i));
+
         end
     end
 end
 
 %% legend
-[AA_s,IB]=sort(AA);
-Pplot_s=Pplot(IB);
-[AA_u,IA,~]=uniquetol(AA_s,1e-1)
-Pplot_u=Pplot_s(IA);
+if Color_CTS==0    % plot element information
+[~,Ic]=sort([n_clu_b;n_clu_s]);
+Pplot_c=Pplot(Ic);
+Pplot_b=Pplot_c(Ib);
+Pplot_a=Pplot_b(Ia);
 
-label=cell(1,length(AA_u));
-for i=1:length(AA_u)
-    label{1,i}=num2str(AA_u(i),2);
+label=cell(1,length(SIGMA_2));
+for i=1:length(SIGMA_2)
+    label{1,i}=num2str(SIGMA_2(i),2);
 end
-legend(Pplot_u,label);
-% colorbar
-% colormap jet
+legend(Pplot_a,label,'AutoUpdate','off');
+end
 
 %% lable element number and value
 
