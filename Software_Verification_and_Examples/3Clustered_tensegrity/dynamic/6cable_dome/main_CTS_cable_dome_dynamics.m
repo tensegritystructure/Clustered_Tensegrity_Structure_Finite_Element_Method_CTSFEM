@@ -105,7 +105,9 @@ Gp=tenseg_str_gp(gr,C);    %generate group matrix1
 Gp2=tenseg_str_gp(gr2,C);    %generate group matrix2
 S=Gp2';                      % clustering matrix
 
-
+tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
+% view([0 90])
+% view([0 30])
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -142,7 +144,7 @@ mass=S'*rho.*A.*l0;
 
 
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,[],[],[],[],[],t,[])
-tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
+
 
 %% tangent stiffness matrix
 num_plt=[];%1:4;
