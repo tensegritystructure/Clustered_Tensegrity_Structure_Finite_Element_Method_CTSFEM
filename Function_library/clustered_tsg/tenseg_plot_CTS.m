@@ -139,15 +139,22 @@ sort_s=reshape(reshape(1:2*ceil(numel(n_clu_s)/2),[],2)',[],1);%this is to reord
 sort_s=sort_s(1:numel(n_clu_s));
 color_s=color_s(sort_s,:);
 else
+    [AA_s,IB]=sort(AA);
+Pplot_s=Pplot(IB);
+[AA_u,IA,~]=uniquetol(AA_s,1e-1)
+Pplot_u=Pplot_s(IA);
+
+    
+    
     lb_ele_clu=diag(sum(S,2))\S*lb_ele;
-    SIGMA=sort(lb_ele_clu);
-SIGMA=unique(SIGMA);
+    [SIGMA_1,Ib]=sort(lb_ele_clu);
+[SIGMA_2,Ia,~]=uniquetol(SIGMA_1,1e-1);
 % cc=jet(length(SIGMA));
 cc=jet(100);%   100 color
-AA=zeros(length(SIGMA),1);
+AA=zeros(length(SIGMA_1),1);
 Pplot=[];
 
-for k=1:length(SIGMA)
+for k=1:length(SIGMA_2)
     l = find(lb_ele_clu==SIGMA(k));
     cc2=1+ceil((SIGMA(k)-min(SIGMA))/(max(SIGMA)-min(SIGMA))*99);
     color_clu(l,:)=ones(length(l),1)*cc(cc2,:);
