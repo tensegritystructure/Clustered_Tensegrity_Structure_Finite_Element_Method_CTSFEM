@@ -145,6 +145,7 @@ mass=S'*rho.*A.*l0;
 
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,[],[],[],[],[],t,[])
 
+
 %% tangent stiffness matrix
 num_plt=[];%1:4;
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
@@ -252,10 +253,10 @@ if savedata==1
     save (['CTS_cable_dome_','time_',num2str(tf),'s','.mat']);
 end
 %% make video of the dynamic
-name=['CTS_cable_dome_CTS','time_',num2str(tf)];
+name=['CTS_cable_dome_','time_',num2str(tf)];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,[])
-tenseg_video_CTS(n_t,C,[gr_whg,gr_nhg],S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
+tenseg_video_CTS(n_t,C,[gr_whg,gr_nhg],S,[],[],[],[],[],[],t_t,min(numel(out_tspan),50),tf,name,savevideo)
 %output data to tecplot
 tenseg_tecplot(C,n_t,t_t,interp1([min(radius),max(radius)],[0.2,0.8],radius));

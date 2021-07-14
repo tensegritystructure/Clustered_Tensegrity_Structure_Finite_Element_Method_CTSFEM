@@ -37,7 +37,6 @@ NodeSize = 4; % Size of node marker
 LabelNodes = 0;
 LabelEle=0;
 Color_CTS=0;   % 1 color by clustered info, 0 color by lb_ele
-Label_colorbar=1  % 1 colorbar, 2 legend, 0 nothing,
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
@@ -270,31 +269,24 @@ end
 end
 
 %% legend
-switch Label_colorbar
-    case 2
-if Color_CTS==0    % plot element information
-[~,Ic]=sort([n_clu_b;n_clu_s]);
-Pplot_c=Pplot(Ic);
-Pplot_b=Pplot_c(Ib);
-Pplot_a=Pplot_b(Ia);
 
-label=cell(1,length(SIGMA_2));
-for i=1:length(SIGMA_2)
-    label{1,i}=num2str(SIGMA_2(i),2);
-end
-legend(Pplot_a,label,'AutoUpdate','off');
-end
+% if Color_CTS==0    % plot element information
+% [~,Ic]=sort([n_clu_b;n_clu_s]);
+% Pplot_c=Pplot(Ic);
+% Pplot_b=Pplot_c(Ib);
+% Pplot_a=Pplot_b(Ia);
+% 
+% label=cell(1,length(SIGMA_2));
+% for i=1:length(SIGMA_2)
+%     label{1,i}=num2str(SIGMA_2(i),2);
+% end
+% legend(Pplot_a,label,'AutoUpdate','off');
+% end
 %% colorbar
-    case 1
-uu=linspace(min(bound),max(bound),8);
-ticklabel=cell(1,8);
-for i=1:8
-    ticklabel{i}=num2str(uu(i),2);
-end
+for1=
 colorbar('Ticks',linspace(0,1,8),...
-    'TickLabels',ticklabel,'fontsize',12);
+    'TickLabels',linspace(min(bound),max(bound),8));
 colormap jet;
-end
 %% lable element number and value
 
 if LabelEle == 1
