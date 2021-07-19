@@ -36,8 +36,8 @@ NodeSize = 4; % Size of node marker
 % Write labels? (1: show, 0: suppress)
 LabelNodes = 0;
 LabelEle=0;
-Color_CTS=0;   % 1 color by clustered info, 0 color by lb_ele
-Label_colorbar=1  % 1 colorbar, 2 legend, 0 nothing,
+Color_CTS=1;   % 1 color by clustered info, 0 color by lb_ele
+Label_colorbar=0  % 1 colorbar, 2 legned, 0 nothing,
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
