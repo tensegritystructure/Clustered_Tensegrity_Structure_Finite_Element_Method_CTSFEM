@@ -237,13 +237,18 @@ nd_t=data_out.nd_t;   %time history of nodal coordinate
 exitflag_t=data_out.exitflag_t;   % exitflag of lsqlin
 
 %% plot member force 
-tenseg_plot_result(out_tspan,t_t([1,2,7,12,13,5,10,3,8],:),{'1','2','3','4','5','6','7','8','9'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+tenseg_plot_result(out_tspan,t_t([1,2,7,12,13,5,10,3,8],:),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+grid on;
+columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
 
 %% Plot nodal coordinate curve X Y
 tenseg_plot_result(out_tspan,n_t([1*3-2,2*3-2],:),{'1X','2X'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% Plot rest length l0_t
-tenseg_plot_result(out_tspan,l0c_t([1,9,10,14,18],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,l0c_t([1,13,25,28,31,34,37,40,43],:),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
+grid on;
+columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
+
 %% plot exitflag
 tenseg_plot_result(out_tspan,exitflag_t,{'Exitflag'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
 
@@ -257,10 +262,11 @@ if savedata==1
     save (['cable_dome_control','.mat']);
 end
 %% make video of the dynamic
-name=['CTS_cable_dome'];
+name=['CTS_cable_dome_color'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,[gr_whg,gr_nhg],S,[],[],[1,2],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
 %output data to tecplot
 tenseg_tecplot(C,n_t,t_t,interp1([min(radius),max(radius)],[0.2,0.8],radius));
