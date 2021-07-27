@@ -72,6 +72,8 @@ gr={[3,4]};     % number of elements in one group
 % gr=[];                     %if no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
 S=Gp';                      % clustering matrix
+
+tenseg_plot_CTS(N,C,[1,2],S)
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -109,7 +111,7 @@ mass=S'*rho.*A.*l0;
 %% tangent stiffness matrix
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
-num_plt=3:6;
+num_plt=3:8;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg);
 
@@ -219,6 +221,7 @@ name=['CTS_Tbar'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
 %output data to tecplot
 tenseg_tecplot(C,n_t,t_t,interp1([min(radius),max(radius)],[0.2,0.8],radius));

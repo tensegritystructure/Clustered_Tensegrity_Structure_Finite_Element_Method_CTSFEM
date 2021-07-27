@@ -28,9 +28,9 @@ function [fig_out] = tenseg_plot_CTS( N,C,index_b,S,fig_handle,highlight_nodes,v
 % Handle optional arguments
 
 %% Object size options (for line plots)
-BarWidth = 4; % Width of bar lines
-StringWidth = 2; % Width of string lines
-NodeSize = 4; % Size of node marker
+BarWidth = 1; % Width of bar lines
+StringWidth = 1; % Width of string lines
+NodeSize = 1; % Size of node marker
 
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
@@ -225,7 +225,7 @@ end
             for j=1:numel(index_clu{n_clu_b(i)})
                 nod1=find(C(index_clu{n_clu_b(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_b(i)}(j),:)==1);
-                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','-');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','--');
                 hold on
             end
              Pplot=[Pplot,PP]; 
@@ -265,7 +265,7 @@ end
             for j=1:numel(index_clu{n_clu_s(i)})
                 nod1=find(C(index_clu{n_clu_s(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_s(i)}(j),:)==1);
-                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',StringWidth,'color',color_s(i,:),'linestyle','-');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',StringWidth,'color',color_s(i,:),'linestyle','--');
                 hold on
             end
                          Pplot=[Pplot,PP]; 
