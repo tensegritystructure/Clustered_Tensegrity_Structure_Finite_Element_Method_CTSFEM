@@ -29,7 +29,7 @@ c_s=0.1;           % coefficient of safty of strings 0.3
 substep=20;                                     %ºÉÔØ×Ó²½
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
-savedata=1;             % save data or not (1) yes (0)no
+savedata=0;             % save data or not (1) yes (0)no
 savevideo=1;            % make video(1) or not(0)
 gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
@@ -38,7 +38,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
 tf=1;                   % final time of dynamic simulation
-out_dt=0.002;            % output data interval(approximately, not exatly)
+out_dt=1e-4;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
 period=0.5;             %period of seismic
@@ -70,11 +70,12 @@ pinned_X=[1:4]'; pinned_Y=[1:4]'; pinned_Z=(1:4)';
 
 %% Group/Clustered information 
 %generate group index
-gr={[9,13],[10,14],[11,15],[12,16]};     % number of elements in one group
+gr={[9,13],[10,14],[11,15],[12,16]};     % number of elements in one group: 
 % gr={[3,4];[5,6]};     % number of elements in one group
 % gr=[];                     %if no group is used
-Gp=tenseg_str_gp(gr,C);    %generate group matrix
+Gp=tenseg_str_gp(gr,C);    %generate group matrix: bar,vertical string,bottom string, middle string, top string
 S=Gp';                      % clustering matrix
+
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -90,6 +91,7 @@ A_2c=A_1*S'/diag(l_c);
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
+% index_gp=[21,17:20]';                 % number of groups with designed force
 index_gp=[9,13:16]';                 % number of groups with designed force
 fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
@@ -99,7 +101,7 @@ q_c=pinv(S')*q;
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
-% A_c(17:20)=1e-8*ones(4,1);          % reduce the stiffness of middle string
+A_c(17:20)=1e-8*ones(4,1);          % reduce the stiffness of middle string
 E=S'*E_c;     %Young's modulus TTS
 A=S'*A_c;     % Cross sectional area TTS
 l0=(t+E.*A).\(E.*A.*l);
@@ -109,7 +111,8 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Sradius=interp1([min(radius),max(radius)],[0.03,.1],r_s);
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
-
+tenseg_plot_CTS(N,C,index_b,S);
+tenseg_plot_CTS(N,C,index_b,S,[],[],[],[],[],t,[],[min(t),max(t)]);
 %% tangent stiffness matrix
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
@@ -132,16 +135,20 @@ D=A_2c*diag(d_c)*A_2c';     %damping matrix
 [V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode
 w_2=diag(D1);                                    % eigen value of 
 omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
-plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
-    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
+% plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
+%     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
+plot_mode_CTS(V_mode,omega,N,Ia,C,index_b,S,l,'natrual vibration',...
+    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg,3);
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[9:12']; dl0_c=-1*ones(4,1);
-[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
-
+ind_dl0_c=[9:12']; dl0_c=-0.7*ones(4,1);
+[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep/2,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
+dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
+l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
 
 %% Step1: statics: equilibrium calculation
 % input data
@@ -163,16 +170,27 @@ t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
 N_out=data_out1.N_out;
 %% plot member force 
-tenseg_plot_result(1:substep,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
-
+tenseg_plot_result(1:substep,t_t([1,9,17,21,25],:),{'Bar','Vertical string','Bottom string','Middle string','Top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+grid on
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([[6,10]'*3],:),{'6Z','10Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([[8,12]'*3],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on
 
+%% Plot configuration
+for i=round(linspace(1,substep,3))
+tenseg_plot_CTS(reshape(n_t(:,i),3,[]),C,index_b,S,[],[],[45,10]);
+% grid on;
+axis off;
+end
+%% save data
+if savedata==1
+    save (['prism_static','.mat']);
+end
 %% make video of the static
+
 name=['Tbar_static'];
-% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(substep,50),tf,name,savevideo)
 
 %% Step 2: dynamics:change rest length of strings
 % time step
@@ -180,19 +198,24 @@ if auto_dt
 dt=pi/(8*max(omega)); 	% time step dt is 1/8 of the smallest period, guarantee convergence in solving ODE
 end
 tspan=0:dt:tf;
+tspan1=0:dt:tf/2;
 out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
 
 % calculate external force and 
 ind_w=[];w=[];
-ind_dl0_c=[9]; dl0_c=[-5];
-% ind_dl0_c=[2]; dl0_c=[-120];
-[w_t,l0_ct]=tenseg_load_prestress_CTS(tspan,ind_w,w,'ramp',ind_dl0_c,dl0_c,l0_c,gravity,[0;0;0],C,mass);
-
+ind_dl0_c=[9:12']; dl0_c=-0.7*ones(4,1);
+[w_t,l0_ct]=tenseg_load_prestress_CTS(tspan1,ind_w,w,'ramp',ind_dl0_c,dl0_c,l0_c,gravity,[0;0;0],C,mass);
+w_t=[w_t,w_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];   % second half no change of boundary info
+l0_ct=[l0_ct,l0_ct(:,end)*ones(1,numel(tspan)-numel(tspan1))];
 % boundary node motion info
-[~,dnb_t,dnb_d_t,dnb_dd_t,dz_a_t]=tenseg_ex_force(tspan,a,b,'vib_force',gravity,[0;0;9.8],C,mass,[1,2],amplitude,period);
+[~,dnb_t,dnb_d_t,dnb_dd_t,dz_a_t]=tenseg_ex_force(tspan1,a,b,'vib_force',gravity,[0;0;9.8],C,mass,[1,2],amplitude,period);
+dnb_t=[dnb_t,dnb_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];
+dnb_d_t=[dnb_d_t,dnb_d_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];
+dnb_dd_t=[dnb_dd_t,dnb_dd_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];
 
 % give initial speed of free coordinates
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
+
     %% dynamics calculation
 
 % input data
@@ -221,7 +244,7 @@ nd_t=data_out.nd_t;   %time history of nodal coordinate
 tenseg_plot_result(out_tspan,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([[9:12]'*3],:),{'9Z','10Z','11Z','12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,n_t([[12]'*3-1],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
@@ -229,13 +252,12 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90]);
 
 %% save output data
 if savedata==1
-    save (['cable_net_CTS_',material{1},'.mat']);
+    save (['prism_dynamic_',num2str(tf),'.mat']);
 end
 %% make video of the dynamic
-name=['Tbar_dynamic_'];
-% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
+name=['Tbar_dynamic_',num2str(tf)];
+% tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,index_b,S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
 %output data to tecplot
 tenseg_tecplot(C,n_t,t_t,interp1([min(radius),max(radius)],[0.2,0.8],radius));

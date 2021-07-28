@@ -37,8 +37,8 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %dynamic analysis set
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=1;                   % final time of dynamic simulation
-out_dt=1e-3;            % output data interval(approximately, not exatly)
+tf=0.05;                   % final time of dynamic simulation
+out_dt=1e-4;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
 period=0.5;             %period of seismic
@@ -136,10 +136,10 @@ plot_mode_CTS(V_mode,omega,N,Ia,C,[1,2],S,l,'natrual vibration',...
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[3,4,5]; dl0_c=[-0.8,0.2,0.2];
-[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep/2,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
-w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
-dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
-l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
+[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+% w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
+% dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
+% l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
 %% Step1: statics: equilibrium calculation
 % input data
 data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
@@ -163,7 +163,7 @@ N_out=data_out1.N_out;
 tenseg_plot_result(1:substep,t_t([1,2,3,5,6],:),{'1','2','3-4','5','6'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
 grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([3*2-1],:),{'2Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([3*3-1],:),{'3Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
 grid on;
 %% Plot configuration
 for i=round(linspace(1,substep,3))

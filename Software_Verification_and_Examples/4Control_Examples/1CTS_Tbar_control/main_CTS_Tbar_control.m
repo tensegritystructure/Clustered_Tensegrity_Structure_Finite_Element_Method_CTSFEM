@@ -151,8 +151,8 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[2;8];n_ct1=[0.5;0.5];n_ct2=[0.5;0.5];
-% ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
+ind_n_ct=[2;8];n_ct1=[0.4;0.4];n_ct2=[0.4;0.4];
+% ind_n_ct=[5];n_ct1=[0.6];n_ct2=[0.6];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
 
@@ -193,14 +193,14 @@ t_t=data_out.t_t;   %time history of members' force
 n_t=data_out.n_t;   %time history of nodal coordinate 
 l_t=data_out.l_t;   %time history of members' length 
 l0_t=data_out.l0_t; %time history of members' rest length 
-nd_t=data_out.nd_t;   %time history of nodal coordinate
+nd_t=data_out.nd_t;   %time history of nodaacl coordinate
 
 %% plot member force 
-tenseg_plot_result(out_tspan,t_t([1:6],:),{'1','2','3','4','5','6'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
-
+tenseg_plot_result(out_tspan,t_t([1,2,3,5,6],:),{'1','2','3-4','5','6'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([3*3-2,3*3-1],:),{'3X','3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
-
+tenseg_plot_result(out_tspan,n_t([3*3-1],:),{'3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on;
 %% Plot rest length l_t
 tenseg_plot_result(out_tspan,l_t([1,2],:),{'1','2'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
@@ -218,8 +218,6 @@ if savedata==1
 end
 %% make video of the dynamic
 name=['CTS_Tbar'];
-% % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
 tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
