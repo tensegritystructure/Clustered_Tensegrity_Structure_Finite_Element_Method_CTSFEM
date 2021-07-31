@@ -22,7 +22,7 @@ material{2}=0; % index for considering slack of string (1) for yes,(0) for no (f
 % cross section design cofficient
 thick=6e-3;        % thickness of hollow bar
 hollow_solid=0;          % use hollow bar or solid bar in minimal mass design (1)hollow (0)solid
-c_b=0.1;           % coefficient of safty of bars 0.5
+c_b=1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
@@ -38,7 +38,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
 tf=1;                   % final time of dynamic simulation
-out_dt=1e-4;            % output data interval(approximately, not exatly)
+out_dt=1e-3;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
 period=0.5;             %period of seismic
@@ -145,10 +145,10 @@ plot_mode_CTS(V_mode,omega,N,Ia,C,index_b,S,l,'natrual vibration',...
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[9:12']; dl0_c=-0.7*ones(4,1);
-[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep/2,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
-w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
-dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
-l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
+[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+% w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
+% dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
+% l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
 
 %% Step1: statics: equilibrium calculation
 % input data
@@ -170,10 +170,10 @@ t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
 N_out=data_out1.N_out;
 %% plot member force 
-tenseg_plot_result(1:substep,t_t([1,9,17,21,25],:),{'Bar','Vertical string','Bottom string','Middle string','Top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
+tenseg_plot_result(1:substep,t_t([1,9,17,21,25],:),{'Bar','Vertical string','Bottom string','Middle string','Top string'},{'Substep','Force (N)'},'plot_member_force.png',saveimg);
 grid on
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([[8,12]'*3],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([[12]'*3],:),{'12Z'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
 grid on
 
 %% Plot configuration
@@ -244,7 +244,7 @@ nd_t=data_out.nd_t;   %time history of nodal coordinate
 tenseg_plot_result(out_tspan,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([[12]'*3-1],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,n_t([[12]'*3],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
@@ -252,7 +252,7 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90]);
 
 %% save output data
 if savedata==1
-    save (['prism_dynamic_',num2str(tf),'.mat']);
+    save (['prism_dynamic_',num2str(tf),'.mat'],'n_t');
 end
 %% make video of the dynamic
 name=['Tbar_dynamic_',num2str(tf)];

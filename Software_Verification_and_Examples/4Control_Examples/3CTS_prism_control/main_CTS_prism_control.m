@@ -37,7 +37,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %dynamic analysis set
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=2;                   % final time of dynamic simulation
+tf=1;                   % final time of dynamic simulation
 out_dt=0.002;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
@@ -113,7 +113,8 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Sradius=interp1([min(radius),max(radius)],[0.03,.1],r_s);
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
-
+tenseg_plot_CTS(N,C,index_b,S,[],[],[],[],[],t,[],[min(t),max(t)]);
+tenseg_plot_CTS(N,C,index_b,S)
 %% tangent stiffness matrix
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
@@ -124,7 +125,7 @@ plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 %% mass matrix and damping matrix
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
-d=0.00;     %damping coefficient
+d=0.01;     %damping coefficient
 d_cri=damping_critical(rho,E_c,A_c);
 d_c=d*d_cri;          %damping coefficient of all members
 D=A_2c*diag(d_c)*A_2c';     %damping matrix
@@ -157,10 +158,16 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[[9]'*3];n_ct1=[1.5*h*ones(1,1)];n_ct2=[1.0*h*ones(1,1)];
+ind_n_ct=[[9:12]'*3];n_ct1=[1.2*h*ones(4,1)];n_ct2=[1.2*h*ones(4,1)];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
+% num=numel(tspan);
+% M_diff=triu(ones(num))-2*triu(ones(num),1)+triu(ones(num),2);   % matrix to calculate diff of vectors in time history
+% M_diff(:,1)=0;                                      %(1st term 0)
+% n_ct_t=n_ct1*ones(1,num)+(n_ct2-n_ct1)*[linspace(0,1,round(num/2)),linspace(1,1,num-round(num/2))];  % nodal coordinate of control target in time history
+% n_ct_dt=n_ct_t*M_diff;
+% n_ct_ddt=n_ct_dt*M_diff;
 
 a_c=2*sqrt(100);    % coefficient in error dynamics(damping term)
 b_c=100;            % coeffieient in error dynamics(stiffness term)
@@ -205,10 +212,10 @@ exitflag_t=data_out.exitflag_t;   % exitflag of lsqlin
 
 %% plot member force 
 tenseg_plot_result(out_tspan,t_t([1,9,17,21,25],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
-
+grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([[9:12]'*3],:),{'9Z','10Z','11Z','12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
-
+tenseg_plot_result(out_tspan,n_t([[12]'*3],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on;
 %% Plot rest length l0_t
 tenseg_plot_result(out_tspan,l0c_t([1,9,10,14,18],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
 %% plot exitflag
@@ -221,13 +228,12 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
 axis off 
 %% save output data
 if savedata==1
-    save (['prism_CTS_',material{1},'.mat']);
+    save (['prism_CTS_',num2str(tf),'.mat']);
 end
 %% make video of the dynamic
-name=['CTS_prism'];
-% % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
+name=['CTS_prism_6'];
+% tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,index_b,S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
 %output data to tecplot
 tenseg_tecplot(C,n_t,t_t,interp1([min(radius),max(radius)],[0.2,0.8],radius));
