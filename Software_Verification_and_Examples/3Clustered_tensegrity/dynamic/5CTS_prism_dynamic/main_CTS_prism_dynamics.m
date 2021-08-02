@@ -105,6 +105,7 @@ A_c(17:20)=1e-8*ones(4,1);          % reduce the stiffness of middle string
 E=S'*E_c;     %Young's modulus TTS
 A=S'*A_c;     % Cross sectional area TTS
 l0=(t+E.*A).\(E.*A.*l);
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);

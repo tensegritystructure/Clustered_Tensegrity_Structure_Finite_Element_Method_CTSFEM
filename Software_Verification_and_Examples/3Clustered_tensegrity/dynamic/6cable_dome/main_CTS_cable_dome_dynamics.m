@@ -106,6 +106,7 @@ Gp2=tenseg_str_gp(gr2,C);    %generate group matrix2
 S=Gp2';                      % clustering matrix
 
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S)
+axis off
 % view([0 90])
 % view([0 30])
 %% self-stress design

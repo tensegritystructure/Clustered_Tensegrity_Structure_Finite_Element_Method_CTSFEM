@@ -41,7 +41,7 @@ Label_colorbar=1;  % 1 colorbar, 2 legned, 0 nothing,
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
-FontNodes = 18; % Font of node labels
+FontNodes = 12; % Font of node labels
 
 
 FractionDistance = 0.005; % Distance between object and label (relative to overall axis size)

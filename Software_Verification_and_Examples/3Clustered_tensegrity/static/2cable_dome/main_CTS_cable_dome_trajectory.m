@@ -97,8 +97,9 @@ S=Gp2';                      % clustering matrix
 
 %% trajectory design
 n_t=[];
-rate_0=linspace(0.2,0.8,100);
-for i=1:100
+substep=20;
+rate_0=linspace(0.2,0.8,substep);
+for i=1:substep
 rate=rate_0(i);
 [N,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
 
@@ -161,12 +162,19 @@ xlabel('deploying rate','fontsize',18,'Interpreter','latex');
 ylabel('minimal stiffness eigenvalue','fontsize',18,'Interpreter','latex');
 
 %% plot member force 
-tenseg_plot_result(1:100,t_t(:,:),{'whs','nhs','nhds','wxs','nxs','wjs','njs'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
-
+tenseg_plot_result(1:substep,t_t(:,:),{'whs','nhs','nhds','wxs','nxs','wjs','njs'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
+% tenseg_plot_result(1:substep,t_t(:,:),{'IHS','nhs','nhds','wxs','nxs','wjs','njs'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
+grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:100,n_t([3*4-2,3*4],:),{'4X','4Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
-
-%% make video of the trajectory
+tenseg_plot_result(rate_0,n_t([3*4-2],:),{'4X'},{'Deployment ratio','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on;
+%% plot configuration
+for i=round(linspace(1,substep,3))
+tenseg_plot_CTS(reshape(n_t(:,i),3,[]),C,[gr_whg,gr_nhg],S,[],[],[45,30]);
+% grid on;
+axis off;
+end
+    %% make video of the trajectory
 name=['CTS_cable_dome_trajectory'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})

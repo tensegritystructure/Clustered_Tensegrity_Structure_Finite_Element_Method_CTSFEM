@@ -15,15 +15,15 @@
 clc; clear all; close all;
 % Global variable
 global M 
-[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Rubber_band');
+[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
 % cross section design cofficient
 thick=6e-3;        % thickness of hollow bar
 hollow_solid=0;          % use hollow bar or solid bar in minimal mass design (1)hollow (0)solid
-c_b=0.1;           % coefficient of safty of bars 0.5
-c_s=0.01;           % coefficient of safty of strings 0.3
+c_b=1;           % coefficient of safty of bars 0.5
+c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
 % substep=10;                                     %ºÉÔØ×Ó²½
@@ -71,7 +71,8 @@ pinned_X=[1:4]'; pinned_Y=[1:4]'; pinned_Z=(1:4)';
 
 %% Group/Clustered information 
 %generate group index
-gr={[9:16]};     % number of elements in one group
+% gr={[9:16]};     % number of elements in one group
+gr={[9,13],[10,14],[11,15],[12,16]};   
 % gr={[3,4];[5,6]};     % number of elements in one group
 % gr=[];                     %if no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
@@ -91,22 +92,26 @@ A_2c=A_1*S'/diag(l_c);
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-index_gp=[9,10:13]';                 % number of groups with designed force
+% index_gp=[9,10:13]';                 % number of groups with designed force
+% fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
+index_gp=[9,13:16]';                 % number of groups with designed force
 fd=[1e2;1e2*ones(4,1)];              % force in bar is given as -1000
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=diag(sum(S,2))\S*t;
-q_c=diag(sum(S,2))\S*q;
+% t_c=diag(sum(S,2))\S*t;
+% q_c=diag(sum(S,2))\S*q;
 
-% t_c=pinv(S')*t;
-% q_c=pinv(S')*q;
+t_c=pinv(S')*t;
+q_c=pinv(S')*q;
 %% cross sectional design
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
-A_c(9)=max(A);      %increase area of active member
+% A_c(9)=max(A);      %increase area of active member
+A_c(17:20)=1e-8*ones(4,1);          % reduce the stiffness of middle string
 E=S'*E_c;     %Young's modulus TTS
 A=S'*A_c;     % Cross sectional area TTS
 l0=(t+E.*A).\(E.*A.*l);
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);
@@ -125,7 +130,7 @@ plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 %% mass matrix and damping matrix
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
-d=0.01;     %damping coefficient
+d=0.1;     %damping coefficient
 d_cri=damping_critical(rho,E_c,A_c);
 d_c=d*d_cri;          %damping coefficient of all members
 D=A_2c*diag(d_c)*A_2c';     %damping matrix
@@ -158,7 +163,7 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-ind_n_ct=[[9:12]'*3];n_ct1=[1.2*h*ones(4,1)];n_ct2=[1.2*h*ones(4,1)];
+ind_n_ct=[[9:12]'*3];n_ct1=[1*h*ones(4,1)];n_ct2=[1*h*ones(4,1)];
 % ind_n_ct=[7:8];n_ct1=[1.8;0.3];n_ct2=[1.8;0.3];
 Ic=transfer_matrix(ind_n_ct,a);         %transfer matrix for control coordinate
 [n_ct_t,n_ct_dt,n_ct_ddt]=coord_vel_acc(tspan,n_ct1,n_ct2);     %nodal coordinate of control target
@@ -173,9 +178,8 @@ a_c=2*sqrt(100);    % coefficient in error dynamics(damping term)
 b_c=100;            % coeffieient in error dynamics(stiffness term)
 
 %% choose active, passive members
-% ind_act=[3:6]; ind_pas=[1,2];
-ind_act=[9]; ind_pas=setdiff(1:size(S,1),ind_act);
-% ind_act=[1:6]; ind_pas=[];
+% ind_act=[9]; ind_pas=setdiff(1:size(S,1),ind_act);
+ind_act=[9:12']; ind_pas=setdiff(1:size(S,1),ind_act);
 I_act=transfer_matrix(ind_act,1:size(S,1));
 I_pas=transfer_matrix(ind_pas,1:size(S,1));
 % lower bound and upper bound of actuator
@@ -217,7 +221,7 @@ grid on;
 tenseg_plot_result(out_tspan,n_t([[12]'*3],:),{'12Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 grid on;
 %% Plot rest length l0_t
-tenseg_plot_result(out_tspan,l0c_t([1,9,10,14,18],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,l0c_t([1,9,13,17,21],:),{'bar','diagonal string','bottom string','middle string','top string'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
 %% plot exitflag
 tenseg_plot_result(out_tspan,exitflag_t,{'Exitflag'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
 
@@ -228,10 +232,10 @@ tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
 axis off 
 %% save output data
 if savedata==1
-    save (['prism_CTS_',num2str(tf),'.mat']);
+    save (['prism_CTS_1','.mat']);
 end
 %% make video of the dynamic
-name=['CTS_prism_6'];
+name=['CTS_prism_final'];
 % tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
 tenseg_video_CTS(n_t,C,index_b,S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 

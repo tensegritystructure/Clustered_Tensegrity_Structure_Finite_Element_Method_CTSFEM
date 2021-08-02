@@ -101,7 +101,7 @@ S=Gp2';                      % clustering matrix
 
 %% trajectory design
 n_t=[];
-dvd_num=1e4;    %number of dividing time
+dvd_num=20;    %number of dividing time
 % ratio=linspace(0.2,0.8,dvd_num);
 ratio=[linspace(0.2,0.8,dvd_num/2),0.8*ones(1,dvd_num/2)];
 % ratio=linspace(0.01,0.99,100);      %deployment ratio
@@ -235,17 +235,18 @@ ylabel('\itf_{min}','fontsize',18); %minimal natural frequency
 %% plot member force 
 
 % tenseg_plot_result(1:90,t_t(:,1:90),{'whs','nhs','nhds','wxs','nxs','wjs','njs'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
-tenseg_plot_result(ratio(plot_num),t_gp_t(:,(plot_num)),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'{\itc}','{\itf} (N)'},'plot_member_force.png',saveimg);
+tenseg_plot_result(ratio(plot_num),t_gp_t(:,(plot_num)),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Deployment ratio','Force(N)'},'plot_member_force.png',saveimg);
 grid on;
 columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
-
+ylim([-5,6]*1e4);
 %% plot rest length
 
-tenseg_plot_result(ratio(plot_num),l0_c_t([3:3:21,22,23],plot_num),{'OHS','IHS','ITS','ODS','IDS','ORS','IRS','OB','IB'},{'{\itc}','{\itl}_0 (m)'},'plot_member_length.png',saveimg);
+tenseg_plot_result(ratio(plot_num),l0_c_t([3:3:21,22,23],plot_num),{'OHS','IHS','ITS','ODS','IDS','ORS','IRS','OB','IB'},{'Deployment ratio','Rest length (m)'},'plot_member_length.png',saveimg);
 columnlegend(3, {'OHS','IHS','ITS','ODS','IDS','ORS','IRS','OB','IB'}, 'location','northeast');
 grid on;
+ylim([0,230]);
 l0_gp=pinv(Gp)*l0_t;% string length in group
-tenseg_plot_result(ratio(1:90),l0_gp(:,1:90),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'{\itc}','Length (m)'},'plot_member_length.png',saveimg);
+tenseg_plot_result(ratio(1:90),l0_gp(:,1:90),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Deployment ratio','Length (m)'},'plot_member_length.png',saveimg);
 columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
 grid on;
 %% Plot nodal coordinate curve X Y

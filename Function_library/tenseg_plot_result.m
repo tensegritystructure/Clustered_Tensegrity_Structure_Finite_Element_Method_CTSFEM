@@ -19,7 +19,7 @@ figure
 %     plot(out_tspan,data(i,:),'linewidth',2);hold on
 % end
 plot(out_tspan,data,'linewidth',2);
-%'k-o',
+%,'k-o'
 set(gca,'fontsize',18,'linewidth',1.15);
 legend(legend1,'location','best','fontsize',15);
 ylabel(label(2),'fontsize',18);
