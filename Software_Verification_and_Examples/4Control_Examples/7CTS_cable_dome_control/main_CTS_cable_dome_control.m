@@ -51,7 +51,7 @@ m=2;   %number of circle of the vertical bars
 h=0.15*2*R;   %hight of the dome
 beta=30*pi/180*ones(m,1);    %all angle of diagonal string
 % [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
-rate=0.3;
+rate=0.2;
 [N,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
 [ne,nn]=size(C);% ne:No.of element;nn:No.of node
 
@@ -179,9 +179,9 @@ ind_dl0_c=[]; dl0_c=[];
 n0a_d=zeros(numel(a),1);                    %initial speed in X direction
     
 %% Specify control objectives
-rate=0.7;
+rate=0.8;
 [N_1,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
-rate=0.7;
+rate=0.8;
 [N_2,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
 
 ind_n_ct=a;
