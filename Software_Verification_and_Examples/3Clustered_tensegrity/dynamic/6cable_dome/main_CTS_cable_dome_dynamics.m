@@ -54,7 +54,7 @@ h=0.15*2*R;   %hight of the dome
 beta=30*pi/180*ones(m,1);    %all angle of diagonal string
 % [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
 
-rate=0.2;
+rate=0.3;
 [N,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
 [ne,nn]=size(C);% ne:No.of element;nn:No.of node
 

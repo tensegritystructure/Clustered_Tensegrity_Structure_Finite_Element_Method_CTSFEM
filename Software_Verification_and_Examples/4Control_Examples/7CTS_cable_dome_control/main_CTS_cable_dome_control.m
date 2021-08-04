@@ -242,10 +242,11 @@ grid on;
 columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([1*3-2,2*3-2],:),{'1X','2X'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,n_t([4*3-2],:),{'4X'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on
 
 %% Plot rest length l0_t
-tenseg_plot_result(out_tspan,l0c_t([1,13,25,28,31,34,37,40,43],:),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Time (s)','Length (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,l0c_t([1,13,25,28,31,34,37,40,43],:),{'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'},{'Time (s)','Rest length (m)'},'plot_coordinate.png',saveimg);
 grid on;
 columnlegend(3, {'OB','IB','OHS','IHS','ITS','ODS','IDS','ORS','IRS'}, 'location','southwest');
 
