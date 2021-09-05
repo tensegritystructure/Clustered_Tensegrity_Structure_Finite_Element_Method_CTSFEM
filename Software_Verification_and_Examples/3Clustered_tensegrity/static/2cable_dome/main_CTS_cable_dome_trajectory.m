@@ -97,7 +97,7 @@ S=Gp2';                      % clustering matrix
 
 %% trajectory design
 n_t=[];
-substep=20;
+substep=30;
 rate_0=linspace(0.2,0.8,substep);
 for i=1:substep
 rate=rate_0(i);
@@ -142,11 +142,22 @@ num_plt=1:4;
 
 % plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 %     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.8,saveimg);
+%% mass matrix and damping matrix
+M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
+% damping matrix
+d=0.00;     %damping coefficient
+D=d*2*max(sqrt(mass.*E.*A./l0))*eye(3*nn);    %critical damping
 
-%record the result
+%% mode analysis
+[V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode
+w_2=diag(D1);                                    % eigen value of 
+omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
+
+%%record the result
 n_t=[n_t,N(:)];
 num_prestress_mode(i)=size(V2,2);
 minimal_stiffness(i)=min(k);
+minimal_frequency(i)=min(omega);
 t_t(:,i)=t_c;
 end
 %% plot the prestress mode number and minimal stiffness
@@ -160,6 +171,13 @@ plot(rate_0,minimal_stiffness,'-o','linewidth',2);
 set(gca,'fontsize',18); grid on;
 xlabel('deploying rate','fontsize',18,'Interpreter','latex');
 ylabel('minimal stiffness eigenvalue','fontsize',18,'Interpreter','latex');
+figure
+plot(rate_0,minimal_frequency,'-o','linewidth',2);
+set(gca,'fontsize',18); grid on;
+xlabel('deploying rate','fontsize',18,'Interpreter','latex');
+ylabel('minimal natural frequency','fontsize',18,'Interpreter','latex');
+
+
 
 %% plot member force 
 tenseg_plot_result(1:substep,t_t(:,:),{'whs','nhs','nhds','wxs','nxs','wjs','njs'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
