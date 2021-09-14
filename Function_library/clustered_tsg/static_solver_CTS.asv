@@ -112,7 +112,7 @@ for k=1:substep
        Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
 
 A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
-        K_t=K+A_2c*diag(E.*A./(l0.^-1))*A_2c';
+        K_t=K+A_2c*diag(E.*A./(l_c.^3))*A_1c';
 %         for j=1:ne
 %             Ki{j,1}=q_bar(j,j)*eye(3)+E(j)*A(j)*l(j)^(-3)*B(:,j)*B(:,j)';
 %         end

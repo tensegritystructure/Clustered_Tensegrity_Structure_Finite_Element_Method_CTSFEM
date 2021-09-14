@@ -31,7 +31,7 @@ switch bar_material
     case 'Steel_Q345'
 %         rho_b = 7870;
         rho_b = 7870;    %amplified density
-        strain_b1=[1456e-6,23301e-6,1];  % strain of bar Q345
+        strain_b1=[1456e-6,23301e-6,10];  % strain of bar Q345
         stress_b1=1e6*[300,435,435];              % stress of bar Q345
         [data_b1,data_b2,Eb,sigma_b]=point2consti_data(strain_b1,stress_b1);
     case 'Q345_blin'

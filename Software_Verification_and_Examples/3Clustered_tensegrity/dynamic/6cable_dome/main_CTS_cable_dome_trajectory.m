@@ -113,9 +113,10 @@ rate=ratio(i);
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
+
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -160,9 +161,10 @@ rate=ratio(i);
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
+
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -179,10 +181,12 @@ t_c=pinv(S')*t;
 q_c=pinv(S')*q;
 %% rest length and mass
 l0=(t+E.*A).\E.*A.*l;
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 
 %% tangent stiffness matrix
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 %% mass matrix and damping matrix

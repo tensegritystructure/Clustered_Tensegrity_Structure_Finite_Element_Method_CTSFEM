@@ -113,7 +113,7 @@ rate=ratio(i);
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_gp);          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;
 %SVD of equilibrium matrix

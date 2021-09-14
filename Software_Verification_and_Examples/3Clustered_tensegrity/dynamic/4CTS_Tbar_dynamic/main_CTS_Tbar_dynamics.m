@@ -76,10 +76,10 @@ S=Gp';                      % clustering matrix as group matrix
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 [A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
-A_2c=A_1*S'/diag(l_c);
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
+A_2c=A_2*S';;
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -99,6 +99,7 @@ index_s=setdiff(1:size(S,1),index_b);	% index of strings
 E=S'*E_c;     %Young's modulus CTS
 A=S'*A_c;     % Cross sectional area CTS
 l0=(t+E.*A).\E.*A.*l;
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);
@@ -107,7 +108,8 @@ mass=S'*rho.*A.*l0;
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 
 %% tangent stiffness matrix
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=4:8;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
@@ -135,8 +137,11 @@ plot_mode_CTS(V_mode,omega,N,Ia,C,[1,2],S,l,'natrual vibration',...
 % calculate external force and 
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[3,4,5]; dl0_c=[-0.8,0.2,0.2];
+ind_dl0_c=[3,4,5]; dl0_c=[-0.3,0.17,0.17];
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+temp=linspace(0,0.6,substep);
+l0_ct(ind_dl0_c,:)=[2*sqrt((1-temp).^2+1)-0.05;sqrt((1+temp).^2+1);sqrt((1+temp).^2+1)];  %redesign member length
+
 % w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
 % dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
 % l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];

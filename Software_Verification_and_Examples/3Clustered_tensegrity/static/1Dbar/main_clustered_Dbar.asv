@@ -66,7 +66,7 @@ S=Gp';                      % clustering matrix
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 A_1ac=A_1a*diag(l.^-1)*S'*diag(l_gp);          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
+A_2ac=A_2a*diag(l.^-1)*S'*diag(l_gp);          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
@@ -87,7 +87,6 @@ index_s=setdiff(1:size(S,1),index_b);	% index of strings
 E=S'*E_c;     %Young's modulus CTS
 A=S'*A_c;     % Cross sectional area CTS
 l0=(t+E.*A).\E.*A.*l;
-l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);
@@ -97,7 +96,7 @@ mass=S'*rho.*A.*l0;
 
 %% tangent stiffness matrix
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...

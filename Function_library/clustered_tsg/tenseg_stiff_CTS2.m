@@ -1,4 +1,4 @@
-function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c)
+function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -21,10 +21,10 @@ function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c
 %   rho_b: density of bar
 %   rho_s: density of string
 
-A_1ac=A_1a*S';
+
 
 Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia;
-Ke_aa=A_1ac*diag(E_c.*A_c./(l_c.^3))*A_1ac';
+Ke_aa=A_2ac*diag(E_c.*A_c./l0_c)*A_2ac';
 Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
 [K_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix
 k=diag(D1);   

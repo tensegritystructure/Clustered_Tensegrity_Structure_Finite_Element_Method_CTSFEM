@@ -94,7 +94,7 @@ S=Gp2';                      % clustering matrix
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 l_c=S*l;
-A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_1ac=A_1a*diag(l.^-1)*S'diag(l_c);          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 
 %SVD of equilibrium matrix
@@ -124,9 +124,7 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 %% tangent stiffness matrix
-% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
-
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
@@ -147,9 +145,49 @@ omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
 %%%%
-
+%%%%
+%% tangent stiffness matrix
+Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia;
+Ke_aa=A_1ag*diag(E_gp.*A_gp./(l_c.^3))*A_1ag';
+Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
+[V_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix
+d1=diag(D1);   
+%% plot the mode
+figure
+plot(1:size(Ia,2),d1,'k-o','linewidth',1.5);
+set(gca,'fontsize',18);
+xlabel('Order of Vibration Mode','fontsize',18,'Interpreter','latex');
+ylabel('Frequency (Hz)','fontsize',18,'Interpreter','latex');
+% grid on;
+if saveimg==1
+    saveas(gcf,'eigenvalue of tangent stiffness matrix.png');
+end
+num_plt=1:6
+ampli=0.1
+for i=1:numel(num_plt)
+    f1=figure;
+    title=({['mode ',num2str(num_plt(i))];['f=',num2str(d1(num_plt(i)),'%.4f'),'Hz']});
+    %plot buckling mode
+    tenseg_plot(N+ampli*max(l0)*reshape(Ia*V_mode(:,num_plt(i)),3,[]),C_b,C_s,f1,[],[],title);
+    tenseg_plot_dash(N,C_b,C_s,f1,[],[],title);
+    % axis off;
+    %     view(2);
+    if saveimg==1
+        saveas(gcf,['Mode',num2str(num_plt(i)),'.png']);
+    end
+end
 %% input file of ANSYS
 % ansys_input_gp(N,C,A_gp,t_gp,b,Eb,Es,rho_b,rho_s,Gp,index_s,find(t_gp>0),'tower');
+
+%% mass matrix and damping matrix
+M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
+% damping matrix
+d=0;     %damping coefficient
+D=d*2*max(sqrt(mass.*E.*A./l0))*eye(3*nn);    %critical damping
+
+%% mode analysis
+num_plt=1:4;        % number of modes to plot
+[V_mode,omega]=tenseg_mode(Ia,C,C_b,C_s,N(:),E,A,l0,M,num_plt,saveimg,0.1,S);
 
 %% input data for dynamic analysis
 % time step

@@ -135,6 +135,7 @@ index_s=setdiff(1:size(S,1),index_b);	% index of strings
 E=S'*E_c;     %Young's modulus CTS
 A=S'*A_c;     % Cross sectional area CTS
 l0=(t+E.*A).\E.*A.*l;
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);
@@ -142,7 +143,8 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 %% tangent stiffness matrix
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:3;
 if i==3
