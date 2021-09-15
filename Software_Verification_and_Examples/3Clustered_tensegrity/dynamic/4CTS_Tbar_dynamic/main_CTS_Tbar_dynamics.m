@@ -45,8 +45,8 @@ period=0.5;             %period of seismic
 
 %% N C of the structure
 % Manually specify node positions of double layer prism.
-N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
-% N=[0 0 0;1 2 0;2 0 0;1 -2 0]';    
+% N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
+N=[0 0 0;1 2 0;2 0 0;1 -2 0]';    
 
 % Manually specify connectivity indices.
 C_s_in = [1 2;2 3;3 4;4 1];  % This is indicating that string connection
@@ -140,7 +140,9 @@ plot_mode_CTS(V_mode,omega,N,Ia,C,[1,2],S,l,'natrual vibration',...
 % calculate external force and 
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[3,4,5]; dl0_c=0.1*[-2,0.5,0.5];
+ind_dl0_c=[3,4,5];
+% dl0_c=[-0.8,0.2,0.2];
+dl0_c=[-2,0.5,0.5];
 % [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep/2,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
@@ -170,7 +172,7 @@ N_out=data_out1.N_out;
 tenseg_plot_result(1:substep,t_t([1,2,3,5,6],:),{'1','2','3-4','5','6'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
 grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([3*3-1],:),{'3Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,0.5*(n_t([3*3-1],:)-n_t([3*4-1],:)-2),{'3Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
 grid on;
 %% Plot configuration
 for i=round(linspace(1,substep,3))
@@ -184,7 +186,7 @@ if savedata==1
     save (['cable_net_CTS_static','.mat']);
 end
 %% make video of the static
-name=['Tbar_static1'];
+name=['Tbar_static2'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
 tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(substep,50),tf,name,savevideo)
 
@@ -199,7 +201,7 @@ out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data t
 
 % calculate external force and 
 ind_w=[];w=[];
-ind_dl0_c=[3,4,5]; dl0_c=0.1*[-2,0.5,0.5];
+ind_dl0_c=[3,4,5];dl0_c=[-2,0.5,0.5];
 % ind_dl0_c=[2]; dl0_c=[-120];
 [w_t,l0_ct]=tenseg_load_prestress_CTS(tspan1,ind_w,w,'ramp',ind_dl0_c,dl0_c,l0_c,gravity,[0;0;0],C,mass);
 w_t=[w_t,w_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];   % second half no change of boundary info
@@ -236,27 +238,13 @@ nd_t=data_out.nd_t;   %time history of nodal coordinate
 
 
 
-l=sqrt(sum((reshape(n_t(:,end),3,[])*C').^2))'; %bar length
-l_c=S*l;
-l0=l0_ct(:,end);
-strain=(l_c-l0)./l0;        %strain of member
-[E,stress]=stress_strain(consti_data,index_b,index_s,strain,material);
-f_c=stress.*A_c;         %member force
-f=S'*f_c;
-q_c=f_c./l_c;
-q=f./l;      %reculate force density
-q_bar=diag(q);
-K=kron(C'*q_bar*C,eye(3));                  
-
-norm(K*n_t(:,end))
-
 
 %% plot member force 
 tenseg_plot_result(out_tspan,t_t([1:5],:),{'1','2','3','4','5'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
-
+grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([3*3-1],:),{'3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
-
+tenseg_plot_result(out_tspan,n_t([3*3-1],:)-n_t([3*4-1],:)-2,{'3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+grid on;
 %% Plot final configuration
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
 tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
