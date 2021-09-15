@@ -29,7 +29,7 @@ c_s=0.1;           % coefficient of safty of strings 0.3
 substep=20;                                     %ºÉÔØ×Ó²½
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
-savedata=1;             % save data or not (1) yes (0)no
+savedata=0;             % save data or not (1) yes (0)no
 savevideo=1;            % make video(1) or not(0)
 gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
@@ -37,7 +37,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %dynamic analysis set
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=0.05;                   % final time of dynamic simulation
+tf=1;                   % final time of dynamic simulation
 out_dt=1e-4;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
@@ -46,6 +46,7 @@ period=0.5;             %period of seismic
 %% N C of the structure
 % Manually specify node positions of double layer prism.
 N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
+% N=[0 0 0;1 2 0;2 0 0;1 -2 0]';    
 
 % Manually specify connectivity indices.
 C_s_in = [1 2;2 3;3 4;4 1];  % This is indicating that string connection
@@ -72,6 +73,8 @@ gr={[3,4]};     % number of elements in one group
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
 % S=eye(ne);                  % no clustering matrix
 S=Gp';                      % clustering matrix as group matrix
+
+tenseg_plot_CTS(N,C,[1,2],S);
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
@@ -79,7 +82,7 @@ S=Gp';                      % clustering matrix as group matrix
 l_c=S*l;                % length vector CTS
 A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
-A_2c=A_2*S';;
+A_2c=A_2*S';
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -120,7 +123,7 @@ plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 %% mass matrix and damping matrix
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
-d=0.01;     %damping coefficient
+d=0.1;     %damping coefficient
 d_cri=damping_critical(rho,E_c,A_c);
 d_c=d*d_cri;          %damping coefficient of all members
 D=A_2c*diag(d_c)*A_2c';     %damping matrix
@@ -131,20 +134,19 @@ D=A_2c*diag(d_c)*A_2c';     %damping matrix
 w_2=diag(D1);                                    % eigen value of 
 omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 plot_mode_CTS(V_mode,omega,N,Ia,C,[1,2],S,l,'natrual vibration',...
-    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
+    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.1,saveimg);
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
 ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[3,4,5]; dl0_c=[-0.3,0.17,0.17];
-[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
-temp=linspace(0,0.6,substep);
-l0_ct(ind_dl0_c,:)=[2*sqrt((1-temp).^2+1)-0.05;sqrt((1+temp).^2+1);sqrt((1+temp).^2+1)];  %redesign member length
+ind_dl0_c=[3,4,5]; dl0_c=0.1*[-2,0.5,0.5];
+% [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 
-% w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
-% dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
-% l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
+[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep/2,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+w_t=[w_t,w_t(:,end)*ones(1,substep/2)];   % second half no change of boundary info
+dnb_t=[dnb_t,dnb_t(:,end)*ones(1,substep/2)];
+l0_ct=[l0_ct,l0_ct(:,end)*ones(1,substep/2)];
 %% Step1: statics: equilibrium calculation
 % input data
 data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
@@ -176,6 +178,11 @@ tenseg_plot_CTS(reshape(n_t(:,i),3,[]),C,[1,2],S);
 axis off;
 end
 tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,90])
+
+%% save output data
+if savedata==1
+    save (['cable_net_CTS_static','.mat']);
+end
 %% make video of the static
 name=['Tbar_static1'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
@@ -192,7 +199,7 @@ out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data t
 
 % calculate external force and 
 ind_w=[];w=[];
-ind_dl0_c=[3,4,5]; dl0_c=[-0.8,0.2,0.2];
+ind_dl0_c=[3,4,5]; dl0_c=0.1*[-2,0.5,0.5];
 % ind_dl0_c=[2]; dl0_c=[-120];
 [w_t,l0_ct]=tenseg_load_prestress_CTS(tspan1,ind_w,w,'ramp',ind_dl0_c,dl0_c,l0_c,gravity,[0;0;0],C,mass);
 w_t=[w_t,w_t(:,end)*ones(1,numel(tspan)-numel(tspan1))];   % second half no change of boundary info
@@ -228,11 +235,27 @@ l_t=data_out.l_t;   %time history of members' length
 nd_t=data_out.nd_t;   %time history of nodal coordinate
 
 
+
+l=sqrt(sum((reshape(n_t(:,end),3,[])*C').^2))'; %bar length
+l_c=S*l;
+l0=l0_ct(:,end);
+strain=(l_c-l0)./l0;        %strain of member
+[E,stress]=stress_strain(consti_data,index_b,index_s,strain,material);
+f_c=stress.*A_c;         %member force
+f=S'*f_c;
+q_c=f_c./l_c;
+q=f./l;      %reculate force density
+q_bar=diag(q);
+K=kron(C'*q_bar*C,eye(3));                  
+
+norm(K*n_t(:,end))
+
+
 %% plot member force 
 tenseg_plot_result(out_tspan,t_t([1:5],:),{'1','2','3','4','5'},{'Time (s)','Force (N)'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(out_tspan,n_t([3*2-2,3*2-1],:),{'2X','2Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(out_tspan,n_t([3*3-1],:),{'3Y'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
@@ -243,7 +266,7 @@ if savedata==1
     save (['cable_net_CTS_dynamic',num2str(tf),'.mat']);
 end
 %% make video of the dynamic
-name=['Tbar_dynamic_CTS'];
+name=['Tbar_dynamic_CTS',num2str(tf)];
 % tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
 tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 

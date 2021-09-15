@@ -45,8 +45,8 @@ period=0.5;             %period of seismic
 
 %% N C of the structure
 % Manually specify node positions of double layer prism.
-N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
-
+% N=[0 0 0;1 1 0;2 0 0;1 -1 0]';    
+N=[0 0 0;1 2 0;2 0 0;1 -2 0]';  
 % Manually specify connectivity indices.
 C_s_in = [1 2;2 3;3 4;4 1];  % This is indicating that string connection
 C_b_in = [1 3;2 4];  % Similarly, this is saying bar 1 connects node 1 to node 2,
@@ -78,10 +78,10 @@ tenseg_plot_CTS(N,C,[1,2],S)
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 [A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
-A_2c=A_1*S'/diag(l_c);
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
+A_2c=A_2*S';
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
 
@@ -109,7 +109,8 @@ mass=S'*rho.*A.*l0;
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 
 %% tangent stiffness matrix
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 % plot the mode shape of tangent stiffness matrix
 num_plt=3:8;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...

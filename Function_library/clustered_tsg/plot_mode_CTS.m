@@ -1,4 +1,4 @@
-function plot_mode(Mode,value,N,Ia,C,index_b,S,l,title,xlb,ylb,num_plt,ampli,saveimg,view_vec)
+function plot_mode_CTS(Mode,value,N,Ia,C,index_b,S,l,title,xlb,ylb,num_plt,ampli,saveimg,view_vec)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.

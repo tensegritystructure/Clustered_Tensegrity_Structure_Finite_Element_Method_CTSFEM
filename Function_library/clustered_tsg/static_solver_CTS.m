@@ -72,7 +72,7 @@ for k=1:substep
     Xb=Xb0+dXb_t(:,k);         %forced node displacement
     l0=l0_t(:,k);         %forced enlongation of string
     disp(k);
-    u=1e-1;
+    u=1e-3;
     
     X=[Ia';Ib']\[Xa;Xb];
     l=sqrt(sum((reshape(X,3,[])*C').^2))'; %bar length
