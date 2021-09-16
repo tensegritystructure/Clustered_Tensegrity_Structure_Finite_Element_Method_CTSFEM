@@ -76,24 +76,19 @@ S=Gp';                      % clustering matrix
 tenseg_plot_CTS(N,C,[1,2],S)
 %% self-stress design
 %Calculate equilibrium matrix and member length
-[A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-[A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
-l_c=S*l;                % length vector CTS
-A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
-A_2c=A_2*S';
+[A_1,A_1c,A_1a,A_1ac,A_2,A_2c,A_2a,A_2ac,l,l_c]=tenseg_equilibrium_matrix_CTS(N,C,S,Ia);
 %SVD of equilibrium matrix
-[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
+[U1,U2,V1,V2,S1]=tenseg_svd(A_2ac);
 
 %external force in equilibrium design
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-index_gp=[1];                 % number of groups with designed force
-fd=-1e2;              % force in bar is given as -1000
-[q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=pinv(S')*t;
-q_c=pinv(S')*q;
+index_gp=[1];                   % number of groups with designed force
+fd=-1e2;                        % force in bar is given as -1000
+% [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
+[q_c,t_c,q,t]=tenseg_prestress_design_f(S,l,l_c,A_2ac,V2,w0a,index_gp,fd);
+
 %% cross sectional design
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings

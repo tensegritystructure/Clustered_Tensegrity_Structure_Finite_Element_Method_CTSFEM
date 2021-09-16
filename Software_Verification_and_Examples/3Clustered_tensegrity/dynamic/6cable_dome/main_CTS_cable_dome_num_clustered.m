@@ -108,9 +108,9 @@ n_t=[];
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 [~,A_1ag_2,~,~,~,~]=tenseg_equilibrium_matrix1(N,C,Gp2,Ia);
-A_1ac=A_1a*S';          %equilibrium matrix CTS
+l_c=S*l;                % length vector CTS
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
-l_c=S*l;
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S1]=tenseg_svd(A_1ag); %   in group matrix
 

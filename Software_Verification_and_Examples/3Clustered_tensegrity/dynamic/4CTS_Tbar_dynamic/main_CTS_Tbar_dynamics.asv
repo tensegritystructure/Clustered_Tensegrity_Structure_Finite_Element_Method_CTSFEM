@@ -77,14 +77,16 @@ S=Gp';                      % clustering matrix as group matrix
 tenseg_plot_CTS(N,C,[1,2],S);
 %% self-stress design
 %Calculate equilibrium matrix and member length
-[A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-[A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
-l_c=S*l;                % length vector CTS
-A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
-A_2ac=A_2a*S';          %equilibrium matrix CTS
-A_2c=A_2*S';
+[A_1,A_1a,A_1ac,A_2,A_2a,A_2ac,l,l_c]=tenseg_equilibrium_matrix_CTS(N,C,S,Ia);
+
+% [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
+% [A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
+% l_c=S*l;                % length vector CTS
+% A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+% A_2ac=A_2a*S';          %equilibrium matrix CTS
+% A_2c=A_2*S';
 %SVD of equilibrium matrix
-[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
+[U1,U2,V1,V2,S1]=tenseg_svd(A_2ac);
 
 %external force in equilibrium design
 w0=zeros(numel(N),1); w0a=Ia'*w0;
@@ -172,7 +174,7 @@ N_out=data_out1.N_out;
 tenseg_plot_result(1:substep,t_t([1,2,3,5,6],:),{'1','2','3-4','5','6'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
 grid on;
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([3*3-1],:)-n_t([3*4-1],:)-2,{'3Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,0.5*(n_t([3*3-1],:)-n_t([3*4-1],:)-2),{'3Y'},{'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg);
 grid on;
 %% Plot configuration
 for i=round(linspace(1,substep,3))
