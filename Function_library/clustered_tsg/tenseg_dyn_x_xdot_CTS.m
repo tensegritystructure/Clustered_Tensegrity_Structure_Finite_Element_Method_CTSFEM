@@ -109,6 +109,7 @@ E_tts=S'*E;     %Young's modulus TTS
 A_tts=S'*A;     % Cross sectional area TTS
 l0_tts=(f+E_tts.*A_tts).\E_tts.*A_tts.*l;   %rest length, TTS
 l0_c=S*l0_tts;
+l0_c=l0;    %this is specially used for plastic material
 mass=rho.*A_tts.*l0_tts;
 M=tenseg_mass_matrix(mass,C,0); % generate mass matrix
 
