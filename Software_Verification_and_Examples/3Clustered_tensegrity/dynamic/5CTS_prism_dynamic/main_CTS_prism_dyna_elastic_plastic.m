@@ -16,7 +16,7 @@
 clc; clear all; close all;
 % Global variable
 [consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
-material{1}='plastic'; % index for material properties: linear_elastic,multielastic, plastic.
+material{1}='multielastic'; % index for material properties: linear_elastic,multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
 % cross section design cofficient
@@ -37,7 +37,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %dynamic analysis set
 dt=1e-4;               % time step in dynamic simulation
 auto_dt=0;              % use(1 or 0) auto time step, converengency is guaranteed if used
-tf=1;                   % final time of dynamic simulation
+tf=4;                   % final time of dynamic simulation
 out_dt=1e-3;            % output data interval(approximately, not exatly)
 
 amplitude=0;            % amplitude of external force of ground motion 
@@ -195,7 +195,7 @@ if auto_dt
 dt=pi/(8*max(omega)); 	% time step dt is 1/8 of the smallest period, guarantee convergence in solving ODE
 end
 tspan=0:dt:tf;
-tspan1=0:dt:tf/2;
+tspan1=0:dt:tf/8;                        % second half no change of boundary info
 out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
 
 % calculate external force and 

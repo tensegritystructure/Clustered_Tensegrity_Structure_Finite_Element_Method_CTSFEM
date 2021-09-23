@@ -41,17 +41,16 @@ switch material{1}
         E(index_b)= interp1(data_b2(1,:), data_b2(2,:), strain(index_b),'previous',data_b2(2,end));
         E(index_s)= interp1(data_s2(1,:), data_s2(2,:), strain(index_s),'previous',data_s2(2,end));
     case 'plastic'
-        %interplot stress of string(multielastic)
+        %interplot stress of string(multielastic) linear string
         stress(index_s)= interp1(data_s1(1,:), data_s1(2,:), strain(index_s),'linear','extrap');
-        %     E(index_s)= interp1(data_s2(1,:), data_s2(2,:), strain(index_s),'previous',data_s2(2,end));
-        %interplot stress of bar(plastic)
-%         Et=interp1(data_b2(1,:), data_b2(2,:), data_b2(1,end),'previous',data_b2(2,end));
+       
+        
+        % plastic bar
         Et=data_b2(2,size(data_b2,2)/2+2);      %Et is the young's modulus in plastic( bilinear kinetic plastic(BKIN))
-        Ee=interp1(data_b2(1,:), data_b2(2,:), 0,'previous',data_b2(2,end));
+        Ee_b=interp1(data_b2(1,:), data_b2(2,:), 0,'previous',data_b2(2,end));
         strain_int=(l_int-l0)./l0;
         stress_int=f_int./A;
-        stress_b=stress_int(index_b)+Ee*(strain(index_b)-strain_int(index_b));
-        
+        stress_b=stress_int(index_b)+Ee_b*(strain(index_b)-strain_int(index_b));
         stress_b=min([stress_b,interp1(data_b1(1,(size(data_b1,2)+3)/2:(size(data_b1,2)+5)/2), data_b1(2,(size(data_b1,2)+3)/2:(size(data_b1,2)+5)/2), strain(index_b),'linear','extrap')],[],2);
         stress_b=max([stress_b,interp1(data_b1(1,(size(data_b1,2)-3)/2:(size(data_b1,2)-1)/2), data_b1(2,(size(data_b1,2)-3)/2:(size(data_b1,2)-1)/2), strain(index_b),'linear','extrap')],[],2);
         %         stress_b( find(stress_b>interp1(data_b1(1,end-1:end), data_b1(2,end-1:end), strain(index_b),'linear','extrap')))=...
@@ -59,6 +58,16 @@ switch material{1}
         %         stress_b( find(stress_b<interp1(data_b1(1,1:2), data_b1(2,1:2), strain(index_b),'linear','extrap')))=...
         %             interp1(data_b1(1,1:2), data_b1(2,1:2), strain(index_b),'linear','extrap');
         stress(index_b)= stress_b;
+        % plastic string
+        Ee_s=interp1(data_s2(1,:), data_s2(2,:), 0,'previous',data_s2(2,end));
+
+        stress_s=stress_int(index_s)+Ee_s*(strain(index_s)-strain_int(index_s));
+        stress_s=min([stress_s,interp1(data_s1(1,(size(data_s1,2)+3)/2:(size(data_s1,2)+5)/2), data_s1(2,(size(data_s1,2)+3)/2:(size(data_s1,2)+5)/2), strain(index_s),'linear','extrap')],[],2);
+        stress_s=max([stress_s,interp1(data_s1(1,(size(data_s1,2)-3)/2:(size(data_s1,2)-1)/2), data_s1(2,(size(data_s1,2)-3)/2:(size(data_s1,2)-1)/2), strain(index_s),'linear','extrap')],[],2);
+        stress(index_s)= stress_s;
+        
+        
+        
 end
 
 %considering slack of string, set E, stress of slack string =0
