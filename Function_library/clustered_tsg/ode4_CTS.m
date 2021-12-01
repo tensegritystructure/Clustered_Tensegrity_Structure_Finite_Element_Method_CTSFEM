@@ -19,7 +19,7 @@ function data_out = ode4_CTS(odefun,tspan,y0,data_in)
 %         plot(tspan,y(:,1));
 %     solves the system y' = vdp1(t,y) with a constant step size of 0.1,
 %     and plots the first component of the solution.
-global l f n f_int l_int n_d stress strain  l0_c
+global l l_c f f_c n f_int l_int n_d stress strain  l0_c
 data_out=data_in;  %initialize output data
 out_tspan=data_in.out_tspan;
 ne=data_in.ne;
@@ -80,7 +80,7 @@ for i = 2:N
     
         
     end
-        f_int=f; l_int=l;               %store the force and length(for plastic calculation)
+        f_int=f_c; l_int=l_c;               %store the force and length(for plastic calculation)
     F(:,2) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,1),data_in);
     F(:,3) = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,2),data_in);
     F(:,4) = feval(odefun,tspan(i),yi+hi*F(:,3),data_in);
