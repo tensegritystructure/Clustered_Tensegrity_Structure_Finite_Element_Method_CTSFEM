@@ -176,6 +176,7 @@ plot_mode(K_mode,k,N2,Ia,C_b,C_s,l,'tangent stiffness matrix',...
 
 %% Step 2: change rest length of strings
 substep=10;
+ind_w=[];w=[];
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[2]; dl0_c=[-100];
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
