@@ -149,12 +149,12 @@ options = optimoptions(@lsqnonlin,'FunctionTolerance',1e-7);
 stress_solver(A_gp_te_new)
 
 %% unloading state
-data_out=static_solver(data);        %solve equilibrium using mNewton method
+data_out1=static_solver(data);        %solve equilibrium using mNewton method
 
-t_t=data_out.t_out;          % member force in every step
+t_t=data_out1.t_out;          % member force in every step
 t_gp=pinv(Gp)*t_t;         % member force in group
 sigma_gp=t_gp./A_gp; 
-
+N_out=data_out1.N_out{:};
 %% loading state
 ind_w=[(1:5:56)'*3;(2:5:57)'*3];w=[-2e4*ones(12,1);-2e4*ones(12,1)]; % exert force on top node of cable dome, exertnal node
 ind_dnb=[]; dnb0=[];
@@ -167,13 +167,25 @@ data_out=static_solver(data);        %solve equilibrium using mNewton method
 t_t2=data_out.t_out;          % member force in every step
 t_gp2=pinv(Gp)*t_t2;         % member force in group
 sigma_gp2=t_gp2./A_gp; 
+N_out2=data_out.N_out{:};
+%% calculate loading deformation 
+% if we change c_s, max_displs changes too.
+max_displs=max(max(abs(N_out2-N_out)))
+c_s_1=1./(0.1*[1:5]');
+max_displs_1=[0.1766;0.3505;0.5217;0.6913;0.8564]
+plot(c_s_1,max_displs_1,'o-','linewidth',2);
+set(gca,'fontsize',18,'linewidth',1.15);
+ylabel('Maximum displacement (m)','fontsize',18);
+xlabel('Safty coefficient','fontsize',18);
+% tenseg_plot_result(c_s_1,max_displs_1,[],{'Safty coefficient','Maximum displacement (m)'},'displacement.png',saveimg);
+grid on
 
 %% plot loading and unloading stress
 figure
 plot(1:9,sigma_gp,1:9,sigma_gp2)
 figure
-X = categorical({'OB','IB','ORS','ODS','IRS','IDS','OHS','IHS','THS'});
-X = reordercats(X,{'OB','IB','ORS','ODS','IRS','IDS','OHS','IHS','THS'});
+X = categorical({'OB','IB','ORS','ODS','OHS','IRS','IDS','IHS','THS'});
+X = reordercats(X,{'OB','IB','ORS','ODS','OHS','IRS','IDS','IHS','THS'});
 bar(X ,[sigma_gp,sigma_gp2])
  set(gca,'fontsize',18);
 legend('unloading state','loading state')
@@ -182,7 +194,25 @@ ylabel('Stress(Pa)','fontsize',18);
 ylim(1e7*[-0.5,17])
 grid on
 % group of 1 vertical bar(out) ...2 vertical bar(in) 3 outer top string 4 outer diagonal string 5 outer circlur string 6 inner top string 7 inner diagonal string 8 inner circlur string bottom 9 inner circluar string top
+%% plot cross sectional area
+figure
+X1 = categorical({'ORS','ODS','OHS','IRS','IDS','IHS','THS'});
+X1 = reordercats(X1,{'ORS','ODS','OHS','IRS','IDS','IHS','THS'});
+b=bar(X1 ,[A_gp(3:end)])
+ set(gca,'fontsize',18);
+xlabel('Groups of members','fontsize',18);
+ylabel('Cross sectional area (m^2)','fontsize',18);
+xtips2 = b(1).XEndPoints;
+ytips2 = b(1).YEndPoints;
+labels2 = string(b(1).YData);
+for i=1:7
+labels2(1,i)=sprintf('%0.2e',b(1).YData(i))
+end
+text(xtips2,ytips2,labels2,'HorizontalAlignment','center',...
+    'VerticalAlignment','bottom')
+grid on
 save('data.mat')
+%% calculate loading deformation
 return
 %% plot member force 
 tenseg_plot_result(1:substep,t_t(1:3,:),{'element 1','element 2','element 3'},{'Load step','Force (N)'},'member_force.png',saveimg);
