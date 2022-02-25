@@ -20,7 +20,7 @@ material{2}=0; % index for considering slack of string (1) for yes,(0) for no (f
 thick=6e-3;        % thickness of hollow bar
 hollow_solid=0;          % use hollow bar or solid bar in minimal mass design (1)hollow (0)solid
 c_b=0.1;           % coefficient of safty of bars 0.5
-c_s=0.1;           % coefficient of safty of strings 0.3
+c_s=1/2;           % coefficient of safty of strings 0.3
 
 substep=1;                                     %ºÉÔØ×Ó²½
 lumped=0;               % use lumped matrix 1-yes,0-no
@@ -171,15 +171,26 @@ N_out2=data_out.N_out{:};
 %% calculate loading deformation 
 % if we change c_s, max_displs changes too.
 max_displs=max(max(abs(N_out2-N_out)))
-c_s_1=1./(0.1*[1:5]');
-max_displs_1=[0.1766;0.3505;0.5217;0.6913;0.8564]
+figure
+
+c_s_1=1.*(0.1.*[1:10]');
+max_displs_1=[0.1766;0.3505;0.5217;0.6913;0.8564;1.0202;1.1816;1.3407;1.4977;1.6525]
 plot(c_s_1,max_displs_1,'o-','linewidth',2);
 set(gca,'fontsize',18,'linewidth',1.15);
 ylabel('Maximum displacement (m)','fontsize',18);
-xlabel('Safty coefficient','fontsize',18);
+xlabel('One by Safety factor','fontsize',18);
 % tenseg_plot_result(c_s_1,max_displs_1,[],{'Safty coefficient','Maximum displacement (m)'},'displacement.png',saveimg);
-grid on
+grid on;
 
+% another plot
+figure
+c_s_2=1:10;
+max_displs_2=[1.6525,0.8564,0.5781,0.4364,0.3505,0.2928,0.2514,0.2203,0.1961,0.1766];
+plot(c_s_2,max_displs_2,'o-','linewidth',2);
+set(gca,'fontsize',18,'linewidth',1.15);
+ylabel('Maximum displacement (m)','fontsize',18);
+xlabel('Safety factor','fontsize',18);
+grid on;
 %% plot loading and unloading stress
 figure
 plot(1:9,sigma_gp,1:9,sigma_gp2)
@@ -187,10 +198,10 @@ figure
 X = categorical({'OB','IB','ORS','ODS','OHS','IRS','IDS','IHS','THS'});
 X = reordercats(X,{'OB','IB','ORS','ODS','OHS','IRS','IDS','IHS','THS'});
 bar(X ,[sigma_gp,sigma_gp2])
- set(gca,'fontsize',18);
+ set(gca,'fontsize',15);
 legend('unloading state','loading state')
-xlabel('Groups of members','fontsize',18);
-ylabel('Stress(Pa)','fontsize',18);
+xlabel('Groups of members','fontsize',15);
+ylabel('Stress(Pa)','fontsize',15);
 ylim(1e7*[-0.5,17])
 grid on
 % group of 1 vertical bar(out) ...2 vertical bar(in) 3 outer top string 4 outer diagonal string 5 outer circlur string 6 inner top string 7 inner diagonal string 8 inner circlur string bottom 9 inner circluar string top
@@ -199,9 +210,9 @@ figure
 X1 = categorical({'ORS','ODS','OHS','IRS','IDS','IHS','THS'});
 X1 = reordercats(X1,{'ORS','ODS','OHS','IRS','IDS','IHS','THS'});
 b=bar(X1 ,[A_gp(3:end)])
- set(gca,'fontsize',18);
-xlabel('Groups of members','fontsize',18);
-ylabel('Cross sectional area (m^2)','fontsize',18);
+ set(gca,'fontsize',15);
+xlabel('Groups of strings','fontsize',15);
+ylabel('Cross sectional area (m^2)','fontsize',15);
 xtips2 = b(1).XEndPoints;
 ytips2 = b(1).YEndPoints;
 labels2 = string(b(1).YData);
