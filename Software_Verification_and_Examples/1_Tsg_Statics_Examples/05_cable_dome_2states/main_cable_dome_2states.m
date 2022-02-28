@@ -202,7 +202,7 @@ bar(X ,[sigma_gp,sigma_gp2])
 legend('unloading state','loading state')
 xlabel('Groups of members','fontsize',15);
 ylabel('Stress(Pa)','fontsize',15);
-ylim(1e7*[-0.5,17])
+ylim(1e8*[-0.5,8])
 grid on
 % group of 1 vertical bar(out) ...2 vertical bar(in) 3 outer top string 4 outer diagonal string 5 outer circlur string 6 inner top string 7 inner diagonal string 8 inner circlur string bottom 9 inner circluar string top
 %% plot cross sectional area
