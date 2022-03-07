@@ -27,12 +27,12 @@ function [fig_out] = tenseg_plot( N,C_b,C_s,fig_handle,highlight_nodes,view_vec,
 %% Object size options (for line plots)
 BarWidth = 4; % Width of bar lines
 StringWidth = 2; % Width of string lines
-NodeSize = 4; % Size of node marker
+NodeSize = 15; % Size of node marker
 
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
 LabelNodes = 0;
-LabelStrings = 1;
+LabelStrings = 0;
 LabelBars = 0;
 
 FontBars = 15; % Font of bar labels

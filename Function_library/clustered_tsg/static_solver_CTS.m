@@ -134,7 +134,7 @@ A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_CTS,0,1,opt);
+            [x,V]=fminbnd(@energy_CTS,0,1e5,opt);
         end
         Xa=Xa+x*dXa;
     end
