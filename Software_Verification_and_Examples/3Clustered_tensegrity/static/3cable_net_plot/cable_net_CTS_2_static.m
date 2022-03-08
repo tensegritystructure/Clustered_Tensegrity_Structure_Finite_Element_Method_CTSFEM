@@ -5,12 +5,7 @@
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 %
-% [1] structure design(define N, C, boundary constraints, clustering,
-% calculate equilibrium matrix,
-% group matrix,prestress mode, minimal mass design)
-% [2] calculate tangent stiffness matrix, material
-% stiffness, geometry stiffness,
-% [3] dynamic simulation
+% only plot the concept
 
 %EXAMPLE
 clc; clear all; close all;
@@ -38,11 +33,11 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 R=50;          %radius
 p=20;          %complexity for cable dome
 % rate1=19.319/50;
-rate=linspace(0.2,0.7,4)
+rate=linspace(0.2,0.8,3)
 % rate2=0.25;
-for i=1:numel(rate)
+for j=1:numel(rate)
 
-rate2=rate(i);
+rate2=rate(j);
 % rate1=2*rate2/(1+rate2);
 rate1=(1+rate2)/2;
 % generate node in one unit
@@ -87,6 +82,9 @@ C_b1 = tenseg_ind2C(C_b_in1,N1);%%
 C_s1 = tenseg_ind2C(C_s_in,N1);
 tenseg_plot(N1,C_b1,C_s1,fig_handle);
 axis off
+if saveimg==1
+saveas(fig_handle,[num2str(j),'.png']);
+end
 end
 return
 %% %% Boundary constraints
