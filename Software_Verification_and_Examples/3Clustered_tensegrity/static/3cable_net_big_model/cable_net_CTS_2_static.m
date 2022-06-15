@@ -158,6 +158,7 @@ fd=[1000];
 [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
 t_c=pinv(S')*t;
 q_c=pinv(S')*q;
+
 %% cross sectional design
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
