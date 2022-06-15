@@ -34,7 +34,7 @@ NodeSize = 4; % Size of node marker
 
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
-LabelNodes = 1;
+LabelNodes = 0;
 LabelEle=0;
 Color_CTS=0;   % 1 color by clustered info, 0 color by lb_ele
 Label_colorbar=1;  % 1 colorbar, 2 legned, 0 nothing,
@@ -145,8 +145,10 @@ color_b=[zeros(1,numel(n_clu_b));zeros(1,numel(n_clu_b));linspace(0,0,numel(n_cl
 sort_b=reshape(reshape(1:2*ceil(numel(n_clu_b)/2),[],2)',[],1);%this is to reorder the color
 sort_b=sort_b(1:numel(n_clu_b));
 color_b=color_b(sort_b,:);
-color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s))]';
+% color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s))]';
+color_s=[linspace(1,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s))]';
 % color_s=autumn(numel(n_clu_s));
+
 sort_s=reshape(reshape(1:2*ceil(numel(n_clu_s)/2),[],2)',[],1);%this is to reorder the color
 sort_s=sort_s(1:numel(n_clu_s));
 color_s=color_s(sort_s,:);
