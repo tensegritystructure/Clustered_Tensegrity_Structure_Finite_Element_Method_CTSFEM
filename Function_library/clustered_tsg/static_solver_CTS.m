@@ -79,12 +79,12 @@ for k=1:substep
     l_c=S*l;
     strain=(l_c-l0)./l0;        %strain of member
     [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
-    f_c=sigma.*A;         %member force
-    f=S'*f_c;
-    q_c=f_c./l_c;
-    q=f./l;      %reculate force density
+    t_c=sigma.*A;         %member force
+    t=S'*t_c;
+    q_c=t_c./l_c;
+    q=t./l;      %reculate force density
     
-    l_int=l;   f_int=f;
+    l_int=l;   f_int=t;
     
     for i=1:1e4
         X=[Ia';Ib']\[Xa;Xb];
@@ -93,10 +93,10 @@ for k=1:substep
         %         q=E.*A.*(1./l0-1./l);      %force density
         strain=(l_c-l0)./l0;        %strain of member
         [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
-        f_c=sigma.*A;         %member force
-        f=S'*f_c;
-        q_c=f_c./l_c;
-        q=f./l;      %reculate force density
+        t_c=sigma.*A;         %member force
+        t=S'*t_c;
+        q_c=t_c./l_c;
+        q=t./l;      %reculate force density
         
         q_bar=diag(q);
         
@@ -111,13 +111,21 @@ for k=1:substep
         H=N*C';
        Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
 
-A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
-        K_t=K+A_2c*diag(E.*A./(l0.^-1))*A_2c';
+A_2a=Ia'*kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
+ A_2ac=A_2a*S';    
+% tangent stiffness matrix
+Kg_aa=Ia'*kron(C'/diag(l)*diag(S'*t_c)*C,eye(3))*Ia-A_2a*diag(S'*t_c)/diag(l)*A_2a';
+Ke_aa=A_2ac*diag(E.*A./(l0.^-1))*A_2ac';
+K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
+
+% K_t=K+A_2c*diag(E.*A./(l0.^-1))*A_2c';
+%         K_taa=Ia'*K_t*Ia;
+
 %         for j=1:ne
 %             Ki{j,1}=q_bar(j,j)*eye(3)+E(j)*A(j)*l(j)^(-3)*B(:,j)*B(:,j)';
 %         end
 %         K_t=kron(C',eye(3))*blkdiag(Ki{:})*kron(C,eye(3));
-        K_taa=Ia'*K_t*Ia;
+
         
         %modify the stiffness matrix
         [V_mode,D]=eig(K_taa);                       %¸Õ¶È¾ØÕóÌØÕ÷¸ù
@@ -198,7 +206,7 @@ A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
     %     data_out.l_out(:,k)=l;
     %     data_out.q_out(:,k)=q;
     %     data_out.E_out(:,k)=E;
-    data_out.t_out(:,k)=f;      %member force
+    data_out.t_out(:,k)=t;      %member force
     % data_out.V{k}=energy_cal(data_out);
     data_out.Fpn_out(k)=norm(Ia'*Fp);
 end

@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%A Clustered Cable Net(deployable)%%%%%%%%
+%%%%%%A Clustered Cable Net full scale (deployable)%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -64,7 +64,7 @@ C_s_in=[[1:3:3*p-2]',[2:3:3*p-1]';[2:3:3*p-1]',[3:3:3*p]';[2:3:3*p-1]',[4:3:3*p-
 
 C_b = tenseg_ind2C(C_b_in,N);%%
 C_s = tenseg_ind2C(C_s_in,N);
-index_b=[1:size(C_b,1)]';
+% index_b=[1:size(C_b,1)]';
 C=C_s;                      % real C
 
 [ne,nn]=size(C);        % ne:No.of element;nn:No.of node
@@ -135,6 +135,7 @@ Gp=tenseg_str_gp3(gr,C);    %generate group matrix
 % S=eye(ne);                  % no clustering matrix
 S=Gp';                      % clustering matrix is group matrix
 
+[nec,ne]=size(S);
 tenseg_plot_CTS(N,C,[],S,fig_handle)
 
 
@@ -152,14 +153,22 @@ w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
 %index_gp=[3;4]; % number of groups with designed force
-index_gp=[3];
+% index_gp=[3];
 %fd=[1000; 1000];                       % force in bar is given as -1000
-fd=[1000];
-[q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=pinv(S')*t;
-q_c=pinv(S')*q;
+% fd=[1000];
+% [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
+t_c=1e5*ones(nec,1);
+t=S'*t_c;
+
 
 %% cross sectional design
+A_c=(6e-3)^2*ones(nec,1);
+E_c=Es*ones(nec,1);
+E=S'*E_c;     %Young's modulus CTS
+A=S'*A_c;     % Cross sectional area CTS
+
+%% rest length design
+
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
@@ -174,11 +183,12 @@ mass=S'*rho.*A.*l0;
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 
 %% tangent stiffness matrix
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.8,saveimg,3);
+    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.9,saveimg,3);
 %% input file of ANSYS
 % ansys_input_gp(N,C,A_gp,t_gp,b,Eb,Es,rho_b,rho_s,Gp,index_s,find(t_gp>0),'tower');
 
@@ -191,14 +201,18 @@ D=d*2*max(sqrt(mass.*E.*A./l0))*eye(3*nn);    %critical damping
 %% mode analysis
 [V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode
 w_2=diag(D1);                                    % eigen value of 
-omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
-plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
+% sort the mode
+[w_2_sort,I]=sort(w_2);
+V_mode_sort=V_mode(:,I);
+
+omega=real(sqrt(w_2_sort))/2/pi;                   % frequency in Hz
+plot_mode(V_mode_sort,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg,3);
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
 ind_w=[];w=[];
-ind_dnb=[3*[1:3:3*p-2]']; dnb0=15*sin(linspace(0,1,p)'*4*pi);
+ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 
@@ -233,13 +247,19 @@ A_2ac=A_2a*S';          % equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
 
 t=t_t(:,end);           % members' force
+t_c=pinv(S')*t;
 q=t./l;                 % members' force density
+l0=(t+E.*A).\E.*A.*l;
+
 %% tangent stiffness matrix analysis
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 plot_mode(K_mode,k,N2,Ia,C_b,C_s,l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.8,saveimg,[25,30]);
+
+
 
 %% mode analysis
 [V_mode,D1] = eig(Kt_aa,Ia'*M*Ia);         % calculate vibration mode

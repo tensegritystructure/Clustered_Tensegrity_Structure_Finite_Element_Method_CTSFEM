@@ -1,9 +1,7 @@
-function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c)
+function [Kt_aa,Kg_aa,Ke_aa,K_mode_sort,k_sort]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
-%
-% This is the old version. Result is wrong!!! use 'tenseg_stiff_CTS3'
 %
 % This function calculates the tangent stiffness matrix information of
 % CTS(clustered tensegrity structures)
@@ -23,16 +21,18 @@ function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c
 %   rho_b: density of bar
 %   rho_s: density of string
 
-A_1ac=A_1a*S';
-A_2ac=A_1ac/diag(l_c);
 
+l0_c=S*l0;
+l_c=S*l;
+A_2ac=A_2a*S';
 
-Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia;
-Ke_aa=A_1ac*diag(E_c.*A_c./(l_c.^3))*A_1ac';
-
+Kg_aa=Ia'*kron(C'/diag(l)*diag(S'*t_c)*C,eye(3))*Ia-A_2a*diag(S'*t_c)/diag(l)*A_2a';
+Ke_aa=A_2ac*diag(E_c.*A_c./l0_c)*A_2ac';
 Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
 [K_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix
 k=diag(D1);   
+[k_sort,I]=sort(k);
+K_mode_sort=K_mode(:,I);
 
 end
 
