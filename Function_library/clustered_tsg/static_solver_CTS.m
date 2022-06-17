@@ -105,7 +105,7 @@ for k=1:substep
         Fp=w-K*X;                                       %unbalanced force
         Fp_a=Ia'*Fp;                                 %see the norm of unbalanced force
         norm(Fp_a)
-        if norm(Fp_a)<1e-4
+        if norm(Fp_a)<1e-2
             break
         end
         N=reshape(X,3,[]);
@@ -144,7 +144,7 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_CTS,0,1e1,opt);
+            [x,V]=fminbnd(@energy_CTS,0,1e2,opt);
         end
         Xa=Xa+x*dXa;
     end

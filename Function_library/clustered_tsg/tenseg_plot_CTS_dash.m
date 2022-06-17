@@ -28,8 +28,8 @@ function [fig_out] = tenseg_plot_CTS( N,C,index_b,S,fig_handle,highlight_nodes,v
 % Handle optional arguments
 
 %% Object size options (for line plots)
-BarWidth = 1; % Width of bar lines
-StringWidth = 1; % Width of string lines
+BarWidth = 4; % Width of bar lines
+StringWidth = 1.5; % Width of string lines
 NodeSize = 1; % Size of node marker
 
 %% Labeling options
