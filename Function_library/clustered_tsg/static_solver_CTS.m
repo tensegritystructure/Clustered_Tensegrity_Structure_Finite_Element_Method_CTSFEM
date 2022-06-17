@@ -67,7 +67,7 @@ E=E0;
 num_slack=ne*zeros(substep+1,1);    %num of string slack
 Xa=Ia'*X;
 cont=2;
- u=1e-4;
+ u=1e-1;
 for k=1:substep
     w=w_t(:,k);               %external force
     Xb=Xb0+dXb_t(:,k);         %forced node displacement
@@ -144,7 +144,7 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_CTS,0,1e3,opt);
+            [x,V]=fminbnd(@energy_CTS,0,1e1,opt);
         end
         Xa=Xa+x*dXa;
     end
