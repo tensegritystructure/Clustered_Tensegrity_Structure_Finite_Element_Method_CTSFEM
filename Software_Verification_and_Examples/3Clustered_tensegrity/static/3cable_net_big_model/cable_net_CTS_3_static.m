@@ -152,14 +152,16 @@ l_c=S*l;                % length vector CTS
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-%index_gp=[3;4]; % number of groups with designed force
-% index_gp=[3];
-%fd=[1000; 1000];                       % force in bar is given as -1000
-% fd=[1000];
-% [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=1e4*ones(nec,1);
-% t_c=1e7*[1;1;0.1];
-t=S'*t_c;
+index_gp=[1]; % number of groups with designed force
+
+fd=[10000];                       % force in bar is given as -1000
+
+[q_gp,t_c,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V1(:,end),w0a,index_gp,fd);    %prestress design
+
+% 
+% t_c=1e4*ones(nec,1);
+% % t_c=1e7*[1;1;0.1];
+% t=S'*t_c;
 
 
 

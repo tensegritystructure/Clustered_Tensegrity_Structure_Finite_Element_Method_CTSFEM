@@ -25,8 +25,8 @@ function [Kt_aa,Kg_aa,Ke_aa,K_mode_sort,k_sort]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2
 l0_c=S*l0;
 l_c=S*l;
 A_2ac=A_2a*S';
-
-Kg_aa=Ia'*kron(C'/diag(l)*diag(S'*t_c)*C,eye(3))*Ia-A_2a*diag(S'*t_c)/diag(l)*A_2a';
+q=(S'*t_c)./l;
+Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia-A_2a*diag(q)*A_2a';
 Ke_aa=A_2ac*diag(E_c.*A_c./l0_c)*A_2ac';
 Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
 [K_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix

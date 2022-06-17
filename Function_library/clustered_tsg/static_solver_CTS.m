@@ -87,7 +87,7 @@ for k=1:substep
     
     l_int=l;   f_int=t;
     
-    for i=1:1e4
+    for i=1:1e3
         X=[Ia';Ib']\[Xa;Xb];
         l=sqrt(sum((reshape(X,3,[])*C').^2))'; %bar length
         l_c=S*l;
@@ -115,8 +115,8 @@ for k=1:substep
 A_2a=Ia'*kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
  A_2ac=A_2a*S';    
 % tangent stiffness matrix
-Kg_aa=Ia'*kron(C'*diag(S'*t_c./l)*C,eye(3))*Ia-A_2a*diag(S'*t_c./l)*A_2a';
-Ke_aa=A_2ac*diag(E.*A./(l0.^-1))*A_2ac';
+Kg_aa=Ia'*K*Ia-A_2a*q_bar*A_2a';
+Ke_aa=A_2ac*diag(E.*A./l0)*A_2ac';
 K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
 
 % A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
@@ -132,14 +132,14 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
         %modify the stiffness matrix
         [V_mode,D]=eig(K_taa);                       %刚度矩阵特征根
         d=diag(D);                            %eigen value
-        lmd=min(d)                     %刚度矩阵最小特征根
+        lmd=min(d);                     %刚度矩阵最小特征根
         if lmd>0
             Km=K_taa+u*eye(size(K_taa)); %修正的刚度矩阵
         else
             Km=K_taa+(abs(lmd)+u)*eye(size(K_taa));
         end
         dXa=Km\Fp_a;
-        
+%          dXa=(lmd*eye(size(Km)))\Fp_a;
         x=1;
         % line search
         if use_energy==1
