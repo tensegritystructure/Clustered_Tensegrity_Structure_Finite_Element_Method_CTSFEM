@@ -157,24 +157,26 @@ w0=zeros(numel(N),1); w0a=Ia'*w0;
 %fd=[1000; 1000];                       % force in bar is given as -1000
 % fd=[1000];
 % [q_gp,t_gp,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-t_c=1e5*ones(nec,1);
+t_c=1e7*ones(nec,1);
 t=S'*t_c;
 
 
-%% cross sectional design
-A_c=(6e-3)^2*ones(nec,1);
-E_c=Es*ones(nec,1);
-E=S'*E_c;     %Young's modulus CTS
-A=S'*A_c;     % Cross sectional area CTS
+
 
 %% rest length design
 
 index_b=find(t_c<0);              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 [A_b,A_s,A_c,A,r_b,r_s,r_gp,radius,E_c,l0_c,rho,mass_c]=tenseg_minimass(t_c,l_c,eye(size(S,1)),sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
+%% cross sectional design
+% A_c=(6e-3)^2*ones(nec,1);
+% E_c=Es*ones(nec,1);
 E=S'*E_c;     %Young's modulus CTS
 A=S'*A_c;     % Cross sectional area CTS
+
 l0=(t+E.*A).\E.*A.*l;
+% l0=0.99*l;
+l0_c=S*l0;
 mass=S'*rho.*A.*l0;
 % % Plot the structure with radius
 % R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.03,.1],r_b);

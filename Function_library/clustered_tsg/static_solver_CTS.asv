@@ -130,11 +130,11 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
 
         
         %modify the stiffness matrix
-        [V_mode,D]=eig(K_taa);                       %¸Õ¶È¾ØÕóÌØÕ÷¸ù
+        [V_mode,D]=eig(K_taa);                       %åˆšåº¦çŸ©é˜µç‰¹å¾æ ¹
         d=diag(D);                            %eigen value
-        lmd=min(d)                     %¸Õ¶È¾ØÕó×îÐ¡ÌØÕ÷¸ù
+        lmd=min(d)                     %åˆšåº¦çŸ©é˜µæœ€å°ç‰¹å¾æ ¹
         if lmd>0
-            Km=K_taa+u*eye(size(K_taa)); %ÐÞÕýµÄ¸Õ¶È¾ØÕó
+            Km=K_taa+u*eye(size(K_taa)); %ä¿®æ­£çš„åˆšåº¦çŸ©é˜µ
         else
             Km=K_taa+(abs(lmd)+u)*eye(size(K_taa));
         end
