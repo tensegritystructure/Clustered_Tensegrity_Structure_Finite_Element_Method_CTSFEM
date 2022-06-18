@@ -13,13 +13,12 @@ function tenseg_plot_result(out_tspan,data,legend1,label,name,saveimg)
 % Outputs:
 %%	plot the results
 figure
-% for i=1:size(data,1)
-%     %      n='rb';
-%     %      plot(out_tspan,data(i,:),n(1,i),'linewidth',1);hold on
-%     plot(out_tspan,data(i,:),'linewidth',2);hold on
-% end
-% plot(out_tspan,data,'k-o','linewidth',2);
-plot(out_tspan,data,'linewidth',2);
+for i=1:size(data,1)
+%      n='rb';
+%      plot(out_tspan,data(i,:),n(1,i),'linewidth',1);hold on
+       plot(out_tspan,data(i,:),'-.o','linewidth',2);hold on
+end
+% plot(out_tspan,data,'linewidth',2);
 set(gca,'fontsize',18,'linewidth',1.15);
 legend(legend1,'location','best','fontsize',15);
 ylabel(label(2),'fontsize',18);
@@ -27,5 +26,9 @@ xlabel(label(1),'fontsize',18);
 if saveimg==1
     saveas(gcf,name);
 end
+
+grid on;
+
+
 end
 

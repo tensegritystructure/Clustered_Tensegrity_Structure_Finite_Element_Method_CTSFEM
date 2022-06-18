@@ -5,7 +5,7 @@ function data_out=static_solver_CTS(data)
 
 global E A l0 Ia Ib C S w ne Xb Xa dXa f_int l_int
 % minimize total energy? (1: use, 0: not use) it's time consuming
-use_energy=1;
+use_energy=0;
 
 %% input data
 C=data.C;
@@ -105,7 +105,7 @@ for k=1:substep
         Fp=w-K*X;                                       %unbalanced force
         Fp_a=Ia'*Fp;                                 %see the norm of unbalanced force
         norm(Fp_a)
-        if norm(Fp_a)<1e-2
+        if norm(Fp_a)<1e-6
             break
         end
         N=reshape(X,3,[]);
@@ -144,7 +144,7 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_CTS,0,1e2,opt);
+            [x,V]=fminbnd(@energy_CTS,0,1e1,opt);
         end
         Xa=Xa+x*dXa;
     end

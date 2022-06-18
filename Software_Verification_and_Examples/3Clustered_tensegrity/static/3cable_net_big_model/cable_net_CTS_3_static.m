@@ -51,35 +51,57 @@ T1=[cos(beta1) -sin(beta1) 0
 T2=[cos(beta2) -sin(beta2) 0
     sin(beta2) cos(beta2) 0
     0 0 1];
-N0=Rx*[[1;0;0],rate1*T2*[1;0;0],rate2*[1;0;0]];      %initial N
-N=[];
+N00=Rx*[[1;0;0],rate1*T2*[1;0;0],rate2*[1;0;0]];      %initial N
+N0=[];
 for i=1:p    %rotate nodes
- N=[N,T1^(i-1)*N0];
+ N0=[N0,T1^(i-1)*N00];
 end
+%% Z coordinate for saddle shape
+aaa=15;bbb=12;
 
+N0(2,:)=Ry/Rx*N0(2,:);    %zoom Y
+
+N0(3,:)=-(N0(1,:)/aaa).^2+(N0(2,:)/bbb).^2;
+
+%% base node
+N_base=diag([1,1,0])*N0(:,[1:3:3*p-2]);      %base node
+N_base(3,:)=min(N0(3,:))*ones(1,p)-6;
+N=[N0,N_base];
+C_b_in1=[[1:3:3*p-2]',3*p+[1:p]'];
+C_b1 = tenseg_ind2C(C_b_in1,N);%%     this is for vertical boundary
+%% connectivity matrix 
 % C_b_in=[];
 C_b_in=[[1:3:3*p-2]',[4:3:3*p-2,1]'];
 C_s_in=[[1:3:3*p-2]',[2:3:3*p-1]';[2:3:3*p-1]',[3:3:3*p]';[2:3:3*p-1]',[4:3:3*p-1,1]';[2:3:3*p-1]',[6:3:3*p,3]';[3:3:3*p]',[6:3:3*p,3]'];
 % C_s_in=[[1:3:3*p-2]',[2:3:3*p-1]';[2:3:3*p-1]',[3:3:3*p]';[2:3:3*p-1]',[4:3:3*p-1,1]';[2:3:3*p-1]',[6:3:3*p,3]';[3:3:3*p]',[6:3:3*p,3]';[2:3:3*p-1]',[5:3:3*p-1,2]'];
 
-C_b = tenseg_ind2C(C_b_in,N);%%
+C_b2 = tenseg_ind2C(C_b_in,N);%%   this is for circular boundary
 C_s = tenseg_ind2C(C_s_in,N);
 % index_b=[1:size(C_b,1)]';
-C=C_s;                      % real C
-
+C_b=[C_b1;C_b2];
+C=C_s;                             % only consider string in calculation
+C1=[C_b;C_s];                      % C1 is used in plot
+nb=size(C_b,1);
 [ne,nn]=size(C);        % ne:No.of element;nn:No.of node
 %% Plot the structure to make sure it looks right
+fig_handle=figure
+% tenseg_plot(N1,C_b,C_s,fig_handle);
 % tenseg_plot(N,C_b,C_s);
 % title('Cable net');
+%% %% Group/Clustered information 
+%generate group index
+% gr=[];
+%gr={[1:p,2*p+1:3*p]',[p+1:2*p,3*p+1:4*p]',[4*p+1:5*p]',[5*p+1:6*p]};
+gr={[1:p,2*p+1:3*p]';[p+1:2*p,3*p+1:4*p]';[4*p+1:5*p]'};  % outer diagonal, inner diagonal, inner hoop
+Gp=tenseg_str_gp3(gr,C);    %generate group matrix
+% S=eye(ne);                  % no clustering matrix
+S=Gp';                      % clustering matrix is group matrix
+gr1={nb+[1:p,2*p+1:3*p]';nb+[p+1:2*p,3*p+1:4*p]';nb+[4*p+1:5*p]'};  % outer diagonal, inner diagonal, inner hoop
+Gp1=tenseg_str_gp(gr1,C1);    %generate group matrix
+S_a=Gp1';     % this is used for plot
 
-%% Z coordinate for saddle shape
-aaa=15;bbb=12;
-
-N(2,:)=Ry/Rx*N(2,:);    %zoom Y
-
-N(3,:)=-(N(1,:)/aaa).^2+(N(2,:)/bbb).^2;
-fig_handle=figure
-% tenseg_plot(N,C_b,C_s,fig_handle);
+[nec,ne]=size(S);
+tenseg_plot_CTS(N,C,[],S,fig_handle)
 
 %% vertical brace
 % N_base=diag([1,1,0])*N(:,[1:3:3*p-2]);      %base node
@@ -94,16 +116,16 @@ fig_handle=figure
 % tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (boundary)
 % % axis off
 %% vertical brace  method 2
-N_base=diag([1,1,0])*N(:,[1:3:3*p-2]);      %base node
-N_base(3,:)=min(N(3,:))*ones(1,p)-6;
-N1=[N(:,[1:3:3*p-2]),N_base];
-C_b_in1=[[1:p]',p+[1:p]'];
-C_b1 = tenseg_ind2C(C_b_in1,N1);%%
+% N_base=diag([1,1,0])*N(:,[1:3:3*p-2]);      %base node
+% N_base(3,:)=min(N(3,:))*ones(1,p)-6;
+% N1=[N(:,[1:3:3*p-2]),N_base];
+% C_b_in1=[[1:p]',p+[1:p]'];
+% C_b1 = tenseg_ind2C(C_b_in1,N1);%%
 
 % C_p=[C_b1;C_s1];
 % tenseg_plot(N1,C_b1,C_s1,fig_handle);% plot bars and string without group
-tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
-tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (circle boundary)
+tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (vertical boundary)
+% tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (circle boundary)
 % axis off
 %% plot hyperbolic paraboloid
 if 1
@@ -135,19 +157,9 @@ end
 
 
 %% %% Boundary constraints
-pinned_X=([1:3:3*p-2])'; pinned_Y=([1:3:3*p-2])'; pinned_Z=([1:3:3*p-2])';
+pinned_X=([1:3:3*p-2,3*p+1:4*p])'; pinned_Y=([1:3:3*p-2,3*p+1:4*p])'; pinned_Z=([1:3:3*p-2,3*p+1:4*p])';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
-%% %% Group/Clustered information 
-%generate group index
-% gr=[];
-%gr={[1:p,2*p+1:3*p]',[p+1:2*p,3*p+1:4*p]',[4*p+1:5*p]',[5*p+1:6*p]};
-gr={[1:p,2*p+1:3*p]';[p+1:2*p,3*p+1:4*p]';[4*p+1:5*p]'};  % outer diagonal, inner diagonal, inner hoop
-Gp=tenseg_str_gp3(gr,C);    %generate group matrix
-% S=eye(ne);                  % no clustering matrix
-S=Gp';                      % clustering matrix is group matrix
 
-[nec,ne]=size(S);
-tenseg_plot_CTS(N,C,[],S,fig_handle)
 
 
 %% %% self-stress design
@@ -157,7 +169,7 @@ A_1ac=A_1a*S';          %equilibrium matrix CTS
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
 %SVD of equilibrium matrix
-[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
+[U1,U2,V1,V2,S1]=tenseg_svd(A_2ag);
 
 %external force in equilibrium design
 w0=zeros(numel(N),1); w0a=Ia'*w0;
@@ -167,7 +179,8 @@ index_gp=[1]; % number of groups with designed force
 
 fd=[10000];                       % force in bar is given as -1000
 
-[q_gp,t_c,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V1(:,end),w0a,index_gp,fd);    %prestress design
+% [q_gp,t_c,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V1(:,end),w0a,index_gp,fd);    %prestress design
+[t_c,t]=tenseg_prestress_design2(Gp,l,l_gp,A_2ag,V1(:,end),w0a,index_gp,fd);    %prestress design
 
 % 
 % t_c=1e4*ones(nec,1);
@@ -254,9 +267,10 @@ n_t=data_out1.n_out;          %nodal coordinate in every step
 N_out=data_out1.N_out;
 tenseg_plot( N_out{:},C_b,C_s,[],[],[])
 fig_handle=figure
-tenseg_plot_CTS(N_out{:},C,[],S,fig_handle);
-tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
-tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (circle boundary)
+tenseg_plot_CTS(N_out{:},C1,1:nb,S_a,fig_handle);
+% tenseg_plot_CTS(N_out{:},[C_b],[],[],fig_handle);
+% tenseg_plot(N,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
+% tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (circle boundary)
 tenseg_plot_CTS_dash(N,C,[],S,fig_handle);
 % view([0,0]);
 % view([90,0]);
@@ -295,20 +309,13 @@ V_mode_sort=V_mode(:,I);
 omega=real(sqrt(w_2_sort))/2/pi;                   % frequency in Hz
 plot_mode(V_mode_sort,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg,3);
-fig_handle=gcf;
-tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
-
-N3=[N_out{:},N_base];
-% tenseg_plot_CTS(N_out{:},C,[],S,fig_handle);
-tenseg_plot(N3,C_b1,[],fig_handle);     %plot only bars (boundary)
-tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (boundary)
 
 
 %% Step 2: change rest length of strings
 substep=10;
 ind_dnb=[]; dnb0=[];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
-ind_dl0_c=[1,2,3]'; dl0_c=[-50,-50,50]';
+ind_dl0_c=[1,2]'; dl0_c=[-600,-600]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 data.w_t=w_t;  % external force
@@ -321,18 +328,61 @@ data_out=static_solver_CTS(data);
 t_t=data_out.t_out;          %member force in every step
 n_t=data_out.n_out;          %nodal coordinate in every step
 N_out=data_out.N_out;
-
+t_c_t=pinv(S')*t_t;
 %% plot member force 
-tenseg_plot_result(1:substep,t_t([3*p,4*p,5*p],:),{'1','2','3'},{'Load step','Force (N)'},'plot_member_force.png',saveimg);
-
+tenseg_plot_result(1:substep,t_c_t,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([3*2-2,3*3],:),{'2X','3Z'},{'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([3*3-2],:),{'3X'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
 % tenseg_plot_catenary( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[0,0],[],[],l0_ct(index_s,end))
 % tenseg_plot( reshape(n_t(:,end),3,[]),C_b,C_s,[],[],[])
-tenseg_plot( reshape(n_t(:,10),3,[]),C_b,C_s,[],[],[])
+ j=linspace(0.01,1,3);
+for i=1:3
+    num=ceil(j(i)*size(n_t,2));
+%  tenseg_plot( reshape(n_t(:,num),3,[]),C_b,C_s,[],[],[]);
+tenseg_plot_CTS(reshape(n_t(:,num),3,[]),C1,1:nb,S_a);
+ axis off;
+end
+
+
+%% %%%%%%%%%%%%%%%%% Redesign Prestress%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for i=1:substep
+    N_new=reshape(n_t(:,i),3,[]);
+%Calculate equilibrium matrix and member length
+[A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N_new,C,Gp,Ia);
+A_1ac=A_1a*S';          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
+l_c=S*l;                % length vector CTS
+%SVD of equilibrium matrix
+[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
+
+%external force in equilibrium design
+w0=zeros(numel(N),1); w0a=Ia'*w0;
+
+%prestress design
+index_gp=[1]; % number of groups with designed force
+
+fd=[10000];                       % force in bar is given as -1000
+
+[q_gp,t_c,q,t]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
+
+
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
 
 %% save output data
 if savedata==1
