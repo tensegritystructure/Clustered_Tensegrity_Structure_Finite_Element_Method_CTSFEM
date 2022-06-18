@@ -82,18 +82,29 @@ fig_handle=figure
 % tenseg_plot(N,C_b,C_s,fig_handle);
 
 %% vertical brace
+% N_base=diag([1,1,0])*N(:,[1:3:3*p-2]);      %base node
+% N_base(3,:)=min(N(3,:))*ones(1,p)-6;
+% N1=[N,N_base];
+% C_b_in1=[[1:3:3*p-2]',3*p+[1:p]'];
+% C_b1 = tenseg_ind2C(C_b_in1,N1);%%
+% C_s1 = tenseg_ind2C(C_s_in,N1);
+% % C_p=[C_b1;C_s1];
+% % tenseg_plot(N1,C_b1,C_s1,fig_handle);% plot bars and string without group
+% tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (boundary)
+% tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (boundary)
+% % axis off
+%% vertical brace  method 2
 N_base=diag([1,1,0])*N(:,[1:3:3*p-2]);      %base node
 N_base(3,:)=min(N(3,:))*ones(1,p)-6;
-N1=[N,N_base];
-C_b_in1=[[1:3:3*p-2]',3*p+[1:p]'];
+N1=[N(:,[1:3:3*p-2]),N_base];
+C_b_in1=[[1:p]',p+[1:p]'];
 C_b1 = tenseg_ind2C(C_b_in1,N1);%%
-C_s1 = tenseg_ind2C(C_s_in,N1);
+
 % C_p=[C_b1;C_s1];
 % tenseg_plot(N1,C_b1,C_s1,fig_handle);% plot bars and string without group
-tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (boundary)
-tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (boundary)
+tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
+tenseg_plot(N,C_b,[],fig_handle);     %plot only bars (circle boundary)
 % axis off
-
 %% plot hyperbolic paraboloid
 if 1
 xp=1.1*linspace(-Rx,Rx,40);
@@ -243,10 +254,9 @@ n_t=data_out1.n_out;          %nodal coordinate in every step
 N_out=data_out1.N_out;
 tenseg_plot( N_out{:},C_b,C_s,[],[],[])
 fig_handle=figure
-N3=[N_out{:},N_base];
 tenseg_plot_CTS(N_out{:},C,[],S,fig_handle);
-tenseg_plot(N3,C_b1,[],fig_handle);     %plot only bars (boundary)
-tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (boundary)
+tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
+tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (circle boundary)
 tenseg_plot_CTS_dash(N,C,[],S,fig_handle);
 % view([0,0]);
 % view([90,0]);
@@ -285,6 +295,13 @@ V_mode_sort=V_mode(:,I);
 omega=real(sqrt(w_2_sort))/2/pi;                   % frequency in Hz
 plot_mode(V_mode_sort,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg,3);
+fig_handle=gcf;
+tenseg_plot(N1,C_b1,[],fig_handle);     %plot only bars (vertical boundary)
+
+N3=[N_out{:},N_base];
+% tenseg_plot_CTS(N_out{:},C,[],S,fig_handle);
+tenseg_plot(N3,C_b1,[],fig_handle);     %plot only bars (boundary)
+tenseg_plot(N_out{:},C_b,[],fig_handle);     %plot only bars (boundary)
 
 
 %% Step 2: change rest length of strings
