@@ -319,8 +319,8 @@ mass=S'*rho.*A.*l0;
 %%   stiffness 
 %% tangent stiffness matrix analysis
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
-% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l);   %CTS
-[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,ones(ne),t,A_2a,E,A,l0,l);   % TTS
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l);   %CTS
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,ones(ne),t,A_2a,E,A,l0,l);   % TTS
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
 % plot_mode2(K_mode,k,N2,Ia,C_b,C_s,l,'tangent stiffness matrix',...
