@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=1;                                     %ºÉÔØ×Ó²½
+substep=1;                                     %è·è½½å­æ­¥
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -218,7 +218,7 @@ mass=S'*rho.*A.*l0;
 num_plt=1:4;
 
 % plot_mode2(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
-%     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.9,saveimg,3);
+    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.9,saveimg,3);
 
 plot_mode_CTS2(K_mode,k,N,Ia,C1,1:nb,S_a,l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.9,saveimg,3);
@@ -242,7 +242,7 @@ V_mode_sort=V_mode(:,I);
 omega=real(sqrt(w_2_sort))/2/pi;                   % frequency in Hz
 
 % plot_mode2(V_mode_sort,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
-%     'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.8,saveimg,3);
+    'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.8,saveimg,3);
 
 plot_mode_CTS2(V_mode_sort,omega,N,Ia,C1,1:nb,S_a,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.9,saveimg,3);
@@ -322,10 +322,8 @@ mass=S'*rho.*A.*l0;
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(Ia,C,S,t_c,A_2a,E_c,A_c,l0,l);
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:4;
-% plot_mode2(K_mode,k,N2,Ia,C_b,C_s,l,'tangent stiffness matrix',...
-%     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.8,saveimg,3);
-plot_mode_CTS2(K_mode,k,N2,Ia,C1,1:nb,S_a,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.9,saveimg,3);
+plot_mode2(K_mode,k,N2,Ia,C_b,C_s,l,'tangent stiffness matrix',...
+    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.8,saveimg,3);
 
 figure
 plot(1:10,k(1:10),'k-o','linewidth',1.5);
@@ -341,10 +339,8 @@ w_2=diag(D1);                                    % eigen value of
 V_mode_sort=V_mode(:,I);
 
 omega=real(sqrt(w_2_sort))/2/pi;                   % frequency in Hz
-% plot_mode2(V_mode_sort,omega,N2,Ia,C_b,C_s,l,'natrual vibration',...
-%     'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.8,saveimg,3);
-plot_mode_CTS2(V_mode_sort,omega,N2,Ia,C1,1:nb,S_a,l,'natrual vibration',...
-    'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.9,saveimg,3);
+plot_mode2(V_mode_sort,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
+    'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.8,saveimg,3);
 
 %% Step 2: External force
 substep=8;
@@ -442,11 +438,11 @@ l0_c_stp(:,i)=S*l0_stp(:,i);
 
 end
 %% plot member force 
-% tenseg_plot_result(1:substep,t_t([1,2],:),{'ÍâĞ±Ë÷','ÄÚ»·Ë÷'},{'¼ÓÔØ²½','Á¦/ N'},'plot_member_force.png',saveimg);
+% tenseg_plot_result(1:substep,t_t([1,2],:),{'å¤–æ–œç´¢','å†…ç¯ç´¢'},{'åŠ è½½æ­¥','åŠ›/ N'},'plot_member_force.png',saveimg);
 tenseg_plot_result(1:substep,t_c_stp,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
 
 %% plot rest length 
-% tenseg_plot_result(1:substep,l0_c([1,2],:),{'ÍâĞ±Ë÷','ÄÚ»·Ë÷'},{'¼ÓÔØ²½','Ô­³¤/ N'},'plot_member_force.png',saveimg);
+% tenseg_plot_result(1:substep,l0_c([1,2],:),{'å¤–æ–œç´¢','å†…ç¯ç´¢'},{'åŠ è½½æ­¥','åŸé•¿/ N'},'plot_member_force.png',saveimg);
 tenseg_plot_result(1:substep,l0_c_stp,{'ODC', 'IDC', 'HC'},{'Substep','Rest length /m'},'plot_member_force.png',saveimg);
 
 
