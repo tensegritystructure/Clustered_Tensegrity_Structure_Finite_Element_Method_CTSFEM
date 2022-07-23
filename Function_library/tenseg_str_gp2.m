@@ -44,7 +44,7 @@ med=[]; %intermidiate variable
 % Gp=[Gp1,Gp];
 % end
 
-%% method 3
+%% method 3  gr information places in front
 if ~isempty(gr)
    for i=1:numel(gr)       % this is to combine members in one group
    med=[med,sum(E(:,gr{i}),2)];    
