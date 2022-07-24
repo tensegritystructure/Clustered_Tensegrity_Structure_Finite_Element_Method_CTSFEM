@@ -105,7 +105,7 @@ for k=1:substep
         Fp=w-K*X;                                       %unbalanced force
         Fp_a=Ia'*Fp;                                 %see the norm of unbalanced force
         norm(Fp_a)
-        if norm(Fp_a)<1e-6
+        if norm(Fp_a)<1e-5
             break
         end
         N=reshape(X,3,[]);
