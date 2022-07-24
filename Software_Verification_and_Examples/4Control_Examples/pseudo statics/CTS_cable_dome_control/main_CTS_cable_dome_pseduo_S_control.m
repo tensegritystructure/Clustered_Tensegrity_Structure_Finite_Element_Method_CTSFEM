@@ -138,7 +138,10 @@ mass=S'*rho.*A.*l0;
 % R3Ddata.Nradius=0.1*ones(nn,1);
 % tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
 %% plot CTS
-tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S);
+fig_handle=figure;
+tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,fig_handle);
+
+
 %% tangent stiffness matrix
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 % plot the mode shape of tangent stiffness matrix
@@ -161,6 +164,22 @@ omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
 
+
+%% shape control
+
+
+
+
+
+
+
+
+
+
+
+
+
+return;
 %% external force, forced motion of nodes, shrink of strings
 % time step
 if auto_dt

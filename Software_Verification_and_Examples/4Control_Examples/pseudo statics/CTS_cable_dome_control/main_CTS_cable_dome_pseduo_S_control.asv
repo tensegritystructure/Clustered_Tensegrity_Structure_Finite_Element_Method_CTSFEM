@@ -140,22 +140,6 @@ mass=S'*rho.*A.*l0;
 %% plot CTS
 fig_handle=figure;
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,fig_handle);
-%% plot hyperbolic paraboloid
-if 0
-xp=1.1*linspace(-Rx,Rx,40);
-yp=1.1*linspace(-Ry,Ry,40);
-[Xp,Yp]=meshgrid(xp,yp); %
-Zp=-(Xp/aaa).^2+(Yp/bbb).^2;
-ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
-ss.EdgeColor = 'none';
-
-%  plot cylinder
-
-[Xc,Yc,Zc] = cylinder;
-ss=surf(Rx*Xc,Ry*Yc,Rx*(Zc)+min(N(3,:))-6,'FaceAlpha',0.3);
-ss.EdgeColor = 'none';
-end
-
 
 
 %% tangent stiffness matrix
@@ -180,6 +164,21 @@ omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
 
+
+%% 
+
+
+
+
+
+
+
+
+
+
+
+
+return;
 %% external force, forced motion of nodes, shrink of strings
 % time step
 if auto_dt
