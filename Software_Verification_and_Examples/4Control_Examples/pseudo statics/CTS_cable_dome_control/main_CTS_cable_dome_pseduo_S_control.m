@@ -169,7 +169,7 @@ plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
   % add external force, control the structure back to target
 %% Step 1: External force
 substep=5;
-load=1e2;
+load=3e2;
 ind_w=3*[[1:5:56]';[2:5:57]'];w=-load*ones(2*p,1);
 ind_dnb=[]; dnb0=[];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
@@ -194,15 +194,19 @@ t_c_t1=pinv(S')*t_t1;
 tenseg_plot_result(1:substep,t_c_t1,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t1([2*3,3*3],:),{'2Z','3Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t1([1*3,2*3],:),{'1Z','2Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
 %% make video of the dynamic
+if 0
 name=['cable_net_CTS_load'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video(n_t1,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+end
 
-
-
+%% calculate sensitivity matrix
+K_l0c=-A_2c*diag(E_c.*A_c.*l_c.*l0_c.^(-2));    %sensitivity matrix of l0_c to Kn
+Kt_na,l0c=-Kt_aa\Ia'*K_l0c;         %sensitivity matrix of l0c to na
+Kt_tc,l0c=diag(E_c.*A_c.\l0_c)*(A_2c'*Ia*Kt_na,l0c-diag(l_c.\l0_c));%sensitivity matrix of l0c to tc
 
 
 
