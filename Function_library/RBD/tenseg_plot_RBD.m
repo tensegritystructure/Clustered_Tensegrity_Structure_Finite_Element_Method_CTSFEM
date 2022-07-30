@@ -229,7 +229,7 @@ num_rbd=numel(n_qp);
 for i=1:num_rbd
    N2=reshape(n_qp{i},3,[]);
    X=[1 0 0]*N2;Y=[0 1 0]*N2;Z=[0 0 1]*N2;
-   patch(X',Y',Z','b','FaceAlpha',1,'EdgeColor',[0 0 0]);    
+   patch(X',Y',Z','b','FaceAlpha',0.5,'EdgeColor','black');    
 end
 
 
