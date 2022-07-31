@@ -1,4 +1,4 @@
-function [N0,C_b,n_qp] =N_plate(R,rate,p);
+function [N0,C_b,n_qp] =N_plate(R,rate,p,H);
 %UNTITLED 此处提供此函数的摘要
 %   此处提供详细说明
 % generate node in one unit
@@ -7,7 +7,7 @@ N0=zeros(3,3*p);
 N0(:,1:3)= R*  [rate 0 0; 
         sin(alpha)+rate -cos(alpha) 0;
         -sin(alpha)+rate -cos(alpha) 0]';
-
+N0(3,:)=H;
 T1=[cos(2*alpha) -sin(2*alpha) 0
     sin(2*alpha) cos(2*alpha) 0
     0 0 1];

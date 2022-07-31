@@ -72,7 +72,7 @@ view(3);
 
 %plot cable dome
 h=1e-10*2*R;   %hight of the dome
-m=1;   %number of circle of the vertical bars
+m=2;   %number of circle of the vertical bars
 beta=15*pi/180*ones(m,1);    %all angle of diagonal string
 % [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
 
@@ -88,15 +88,12 @@ rate_n=linspace(0,0.8,num);
 for i=1:num
     rate=rate_n(i);
 
-[N0,C_b,n_qp] =N_plate(R,rate,p,H+0.3);     %nodal coordinate of plate
-[N2,C_b2,C_s2,C2] =N_cable_dome_plate(R,rate,p,m,h,beta);   % coordinate of cable dome
-N2(3,:)=N2(3,:)+H;
+[N0,C_b,n_qp] =N_plate(R,rate,p,H+0.3);
+
 
 % tenseg_plot(N0,C_b,[]);
 fig_handle=figure;
-hold on;
-
-if 0    %plot plate
+if 1
     tenseg_plot_RBD(N0,C_b,[],fig_handle,[],[],[],[],n_qp);
 end
 
@@ -109,8 +106,9 @@ ss.FaceColor=	'#EDB120';
 end
 
 %plot cable dome
-
-if 1
+[N2,C_b2,C_s2,C2] =N_cable_dome_plate(R,rate,p,m,h,beta);
+N2(3,:)=N2(3,:)+H;
+if
 tenseg_plot(N2,C_b2,C_s2,fig_handle);
 end
 
