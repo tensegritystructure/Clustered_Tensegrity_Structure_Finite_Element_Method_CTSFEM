@@ -83,7 +83,7 @@ axis off
 end
 %% different deployment rate
 
-num=4;
+num=3;
 rate_n=linspace(0,0.8,num);
 for i=1:num
     rate=rate_n(i);
@@ -92,31 +92,35 @@ for i=1:num
 [N2,C_b2,C_s2,C2] =N_cable_dome_plate(R,rate,p,m,h,beta);   % coordinate of cable dome
 N2(3,:)=N2(3,:)+H;
 
+if 0    %if split the structure in different level
+    dh=1.5;
+N2(3,:)=N2(3,:)+dh*H;        % enhance cable dome
+[N0,C_b,n_qp] =N_plate(R,rate,p,H+2*dh*H);     %nodal coordinate of plate
+end
+
 % tenseg_plot(N0,C_b,[]);
 fig_handle=figure;
 hold on;
 
-if 0    %plot plate
-    tenseg_plot_RBD(N0,C_b,[],fig_handle,[],[],[],[],n_qp);
-end
-
-%PLOT SHELL
-if 1
+if 1    %PLOT SHELL
 ss=surf(X,Y,Z,'FaceAlpha',0.9);
 % ss.EdgeColor = 'none';
 ss.FaceColor=	'#EDB120';
 % ss.FaceColor=	'#D95319';
 end
 
-%plot cable dome
-
-if 1
+if 1    %plot cable dome
 tenseg_plot(N2,C_b2,C_s2,fig_handle);
+end
+
+if 1    %plot plate
+    tenseg_plot_RBD(N0,C_b,[],fig_handle,[],[],[],[],n_qp);
 end
 
 axis off
 axis(80*[-1 1 -1 1]);
-view(3);
+% view(3);
+view(0,35);
 end
 
 
