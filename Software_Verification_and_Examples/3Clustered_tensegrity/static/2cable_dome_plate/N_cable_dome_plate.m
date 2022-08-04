@@ -40,16 +40,26 @@ beta1=pi/p;
 T1=[cos(beta1) -sin(beta1) 0
     sin(beta1) cos(beta1) 0
     0 0 1];
+% for i=1:m    %rotate nodes
+% %     if rem(i,2)==1 
+%  if rem(i,2)~=rem(m,2)
+%     N0(:,i)=T1* N0(:,i);
+%      N0(:,i+m)=T1* N0(:,i+m);
+%  end
+% end
+% if rem(m,2)==1
+%     N0(:,2*m+1)=T1\N0(:,2*m+1);
+% end
 for i=1:m    %rotate nodes
 %     if rem(i,2)==1 
- if rem(i,2)~=rem(m,2)
-    N0(:,i)=T1* N0(:,i);
-     N0(:,i+m)=T1* N0(:,i+m);
+ if rem(i,2)==0
+    N0(:,i)=T1\N0(:,i);
+     N0(:,i+m)=T1\N0(:,i+m);
  end
 end
-if rem(m,2)==1
+
     N0(:,2*m+1)=T1\N0(:,2*m+1);
-end
+
 
 
 
