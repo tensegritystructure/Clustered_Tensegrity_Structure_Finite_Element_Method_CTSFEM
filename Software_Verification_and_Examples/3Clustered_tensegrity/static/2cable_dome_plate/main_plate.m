@@ -83,7 +83,7 @@ tenseg_plot(N2,C_b2,C_s2,fig_handle);
 axis off
 end
 %% different deployment rate
-
+ 
 num=4;
 rate_n=linspace(0,0.8,num);
 for i=1:num
