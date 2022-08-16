@@ -93,10 +93,13 @@ index_b=find(t<0);              % index of bar in compression
 index_s=setdiff(1:ne,index_b);	% index of strings
 [A_b,A_s,A_gp,A,r_b,r_s,r_gp,radius,E,l0,rho,mass]=tenseg_minimass(t,l,Gp,sigmas,sigmab,Eb,Es,index_b,index_s,c_b,c_s,rho_b,rho_s,thick,hollow_solid);
 % Plot the structure with radius
-R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.2,0.8],r_b);
-R3Ddata.Sradius=interp1([min(radius),max(radius)],[0.2,0.8],r_s);
+R3Ddata.Bradius=interp1([min(radius),max(radius)],[0.2,1.2],r_b);
+R3Ddata.Sradius=interp1([min(radius),max(radius)],[0.4,1.2],r_s);
 R3Ddata.Nradius=ones(nn,1);
 tenseg_plot(N,C_b,C_s,[],[],[],'Double layer prism',R3Ddata);
+
+% tenseg_plot(N,C_b(1,:),[],[],[],[],[],R3Ddata);
+% axis off
 
 %% mass matrix and damping matrix
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
