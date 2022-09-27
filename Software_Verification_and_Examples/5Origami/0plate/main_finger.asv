@@ -33,24 +33,45 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 width=0.1;
 p=3;
 N=width*[0:p,0:p;zeros(1,p+1),ones(1,p+1);zeros(1,2*p+2)];       %nodal coordinate
-C_in_1=[[(1:p)',(2:p+1)'];[p+1+(1:p)',p+1+(2:p+1)'];[(1:p+1)',(p+2:2*p+2)']];   %bar in soft hinge
+C_in_1=[[(1:p)',(2:p+1)'];[p+1+(1:p)',p+1+(2:p+1)'];[1 p+2];[p+1 2*p+2]];   %bar in boundary
 C_in_2=[(1:p)',(p+3:2*p+2)'];      %bar in rigid hinge
-C_in=[C_in_1;C_in_2];
+C_in_3=[(2:p)',(p+3:2*p+1)'];    %bars in rotational hinge
+C_in=[C_in_1;C_in_2;C_in_3];
 C = tenseg_ind2C(C_in,N);
 [ne,nn]=size(C);        % ne:No.of element;nn:No.of node
 C_b=C;C_s=[];
 % Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
-%% connectivity of triangle Ca
-% Ca can be 
-Ca=[1:p]
+%% connectivity of triangle element Ca
+% Ca can be written in a function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-% Plot the structure to make sure it looks right
-tenseg_plot(N,C_b,C_s);
-% title('cantilever truss');
+
+Ca=[[1:p;2:p+1;p+3:2*p+2],[1:p;p+3:2*p+2;p+2:2*p+1]];
+Ca_e=[Ca;Ca(1,:)];    %expand matrix of Ca
+
+% Ca_l is the bars in elements
+[lia,locb1]=ismember(Ca([1],:)',C_in);
+[lia,locb2]=ismember(Ca([2,3],:)',C_in);
+[lia,locb3]=ismember(Ca([1,3],:)',C_in,'rows');
+%% transformation matrix from element to structure
+% C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
+C_in_h=[C_in_2;C_in_3];
+
+n_h=size(C_in_h,1);
+E_n=cell(n_h,1);
+
+for i=1:n_h
+node2=C_in_h(i,1);  % start node of the hinge
+node3=C_in_h(i,2);  % end node of the hinge
+
+[lia,locb1]=ismember(node2,Ca','rows')
+node1=
+
+end
+
 %% Boundary constraints
-pinned_X=[1,12]'; pinned_Y=[1,12]'; pinned_Z=[1:22]';
+pinned_X=[1,2,p+2,p+3]'; pinned_Y=[1,2,p+2,p+3]'; pinned_Z=[1,2,p+2,p+3]';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
 
