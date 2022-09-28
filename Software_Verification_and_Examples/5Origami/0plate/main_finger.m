@@ -44,29 +44,32 @@ C_b=C;C_s=[];
 tenseg_plot(N,C_b,C_s);
 %% connectivity of triangle element Ca
 % Ca can be written in a function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
 Ca=[[1:p;2:p+1;p+3:2*p+2],[1:p;p+3:2*p+2;p+2:2*p+1]];
-Ca_e=[Ca;Ca(1,:)];    %expand matrix of Ca
 
-% Ca_l is the bars in elements
-[lia,locb1]=ismember(Ca([1],:)',C_in);
-[lia,locb2]=ismember(Ca([2,3],:)',C_in);
-[lia,locb3]=ismember(Ca([1,3],:)',C_in,'rows');
+[~,np]=size(Ca);        % ne:No.of element;np:No.of plate
+
 %% transformation matrix from element to structure
 % C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
 C_in_h=[C_in_2;C_in_3];
 
-n_h=size(C_in_h,1);
-E_n=cell(n_h,1);
+n_h=size(C_in_h,1);         % number of hinge
+E_n=cell(n_h,1);            %transformation matrix from element node to total node
+node_in_hinge=zeros(n_h,4);
+I=eye(3*nn);
 
 for i=1:n_h
 node2=C_in_h(i,1);  % start node of the hinge
 node3=C_in_h(i,2);  % end node of the hinge
 
-[lia,locb1]=ismember(node2,Ca','rows')
-node1=
+for j=1:np
+    if (node2==Ca(1,j)&node3==Ca(2,j))|(node2==Ca(2,j)&node3==Ca(3,j))|(node2==Ca(3,j)&node3==Ca(1,j))
+        node1=setdiff(Ca(:,j),[node2;node3]);
+    elseif (node2==Ca(2,j)&node3==Ca(1,j))|(node2==Ca(3,j)&node3==Ca(2,j))|(node2==Ca(1,j)&node3==Ca(3,j))
+        node4=setdiff(Ca(:,j),[node2;node3]);
+    end
+end
+node_in_hinge(i,:)=[node1,node2,node3,node4];
+E_n{i}=I(:,kron(node_in_hinge(i,:),3*ones(1,3))-kron(ones(1,4),[2,1,0]));
 
 end
 
@@ -74,73 +77,53 @@ end
 pinned_X=[1,2,p+2,p+3]'; pinned_Y=[1,2,p+2,p+3]'; pinned_Z=[1,2,p+2,p+3]';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
+%% generate group index for tensegrity torus structure
+gr=[];                      %no group is used
+Gp=tenseg_str_gp(gr,C);    %generate group matrix
+
+%% equilibrium matrix
+%Calculate partial theta/ partial n
+phpn=zeros(12,n_h);     %partial theta/ partial n
+
+for i=1:n_h
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-Rx=1.2*Ry;
-p=20;          %complexity for cable dome
-% rate1=19.319/50;
-
-% rate=linspace(0.2,0.8,4)
-rate=linspace(0.2,0.3,1)
-% rate2=0.25;
-
-
-rate2=rate(j);
-% rate1=2*rate2/(1+rate2);
-rate1=(1+rate2)/2;
-% generate node in one unit
-beta1=2*pi/p;beta2=pi/p;
-T1=[cos(beta1) -sin(beta1) 0
-    sin(beta1) cos(beta1) 0
-    0 0 1];
-T2=[cos(beta2) -sin(beta2) 0
-    sin(beta2) cos(beta2) 0
-    0 0 1];
-N00=Rx*[[1;0;0],rate1*T2*[1;0;0],rate2*[1;0;0]];      %initial N
-N0=[];
-for i=1:p    %rotate nodes
- N0=[N0,T1^(i-1)*N00];
 end
-%% Z coordinate for saddle shape
-aaa=15;bbb=12;
 
-N0(2,:)=Ry/Rx*N0(2,:);    %zoom Y
 
-N0(3,:)=-(N0(1,:)/aaa).^2+(N0(2,:)/bbb).^2;
+[A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 
-%% base node
-N_base=diag([1,1,0])*N0(:,[1:3:3*p-2]);      %base node
-N_base(3,:)=min(N0(3,:))*ones(1,p)-6;
-N=[N0,N_base];
-C_b_in1=[[1:3:3*p-2]',3*p+[1:p]'];
-C_b1 = tenseg_ind2C(C_b_in1,N);%%     this is for vertical boundary
-%% connectivity matrix 
-% C_b_in=[];
-C_b_in=[[1:3:3*p-2]',[4:3:3*p-2,1]'];
-C_s_in=[[1:3:3*p-2]',[2:3:3*p-1]';[2:3:3*p-1]',[3:3:3*p]';[2:3:3*p-1]',[4:3:3*p-1,1]';[2:3:3*p-1]',[6:3:3*p,3]';[3:3:3*p]',[6:3:3*p,3]'];
-% C_s_in=[[1:3:3*p-2]',[2:3:3*p-1]';[2:3:3*p-1]',[3:3:3*p]';[2:3:3*p-1]',[4:3:3*p-1,1]';[2:3:3*p-1]',[6:3:3*p,3]';[3:3:3*p]',[6:3:3*p,3]';[2:3:3*p-1]',[5:3:3*p-1,2]'];
 
-C_b2 = tenseg_ind2C(C_b_in,N);%%   this is for circular boundary
-C_s = tenseg_ind2C(C_s_in,N);
-% index_b=[1:size(C_b,1)]';
-C_b=[C_b1;C_b2];
-C=C_s;                             % only consider string in calculation
-C1=[C_b;C_s];                      % C1 is used in plot
-nb=size(C_b,1);
-[ne,nn]=size(C);        % ne:No.of element;nn:No.of node
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 %% Plot the structure to make sure it looks right
 fig_handle=figure
 % tenseg_plot(N1,C_b,C_s,fig_handle);
