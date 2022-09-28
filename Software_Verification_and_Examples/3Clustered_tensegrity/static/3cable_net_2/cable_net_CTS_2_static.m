@@ -77,7 +77,7 @@ gr={[1:p,2*p+1:3*p]';[p+1:2*p,3*p+1:4*p]';[4*p+1:5*p]'};  % outer diagonal, inne
 Gp=tenseg_str_gp3(gr,C);    %generate group matrix
 % S=eye(ne);                  % no clustering matrix
 S=Gp';                      % clustering matrix is group matrix
-
+ 
 tenseg_plot_CTS(N,C,[],S)
 %% %% self-stress design
 %Calculate equilibrium matrix and member length

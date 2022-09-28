@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=1;                                     %ºÉÔØ×Ó²½
+substep=1;                                     %è·è½½å­æ­¥
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -118,8 +118,7 @@ A_o_a=Ia'*A_o;
 
 
 %% tangent stiffness matrix
-ph2px2=cell(1,n_h);          %ph2px2 is the hessian matrix of theta to nodal coordinate
-ph2px2_e=cell(1,n_h);
+phpx2=cell(1,n_h);          %phpx2 is partial theta
 for i=1:n_h
 r_ij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
 r_kj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
@@ -128,7 +127,7 @@ r_kl=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,4));
 m_temp=cross(r_ij,r_kj);
 n_temp=cross(r_kj,r_kl);
 
-ph2px2_eii= -norm(r_kj)/norm(m_temp)^4*((m_temp*cross(r_kj,m_temp)')+(m_temp*cross(r_kj,m_temp)')');
+
 end
 
 
@@ -515,11 +514,11 @@ l0_c_stp(:,i)=S*l0_stp(:,i);
 
 end
 %% plot member force 
-% tenseg_plot_result(1:substep,t_t([1,2],:),{'ÍâĞ±Ë÷','ÄÚ»·Ë÷'},{'¼ÓÔØ²½','Á¦/ N'},'plot_member_force.png',saveimg);
+% tenseg_plot_result(1:substep,t_t([1,2],:),{'å¤–æ–œç´¢','å†…ç¯ç´¢'},{'åŠ è½½æ­¥','åŠ›/ N'},'plot_member_force.png',saveimg);
 tenseg_plot_result(1:substep,t_c_stp,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
 
 %% plot rest length 
-% tenseg_plot_result(1:substep,l0_c([1,2],:),{'ÍâĞ±Ë÷','ÄÚ»·Ë÷'},{'¼ÓÔØ²½','Ô­³¤/ N'},'plot_member_force.png',saveimg);
+% tenseg_plot_result(1:substep,l0_c([1,2],:),{'å¤–æ–œç´¢','å†…ç¯ç´¢'},{'åŠ è½½æ­¥','åŸé•¿/ N'},'plot_member_force.png',saveimg);
 tenseg_plot_result(1:substep,l0_c_stp,{'ODC', 'IDC', 'HC'},{'Substep','Rest length /m'},'plot_member_force.png',saveimg);
 
 
