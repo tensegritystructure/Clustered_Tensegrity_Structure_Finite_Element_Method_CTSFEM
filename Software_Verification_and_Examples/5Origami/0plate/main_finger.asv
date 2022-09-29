@@ -80,7 +80,7 @@ pinned_X=[1,2,p+2,p+3]'; pinned_Y=[1,2,p+2,p+3]'; pinned_Z=[1,2,p+2,p+3]';
 %% generate group index for tensegrity torus structure
 gr=[];                      %no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
-
+S=Gp';                      % clustering matrix
 %% equilibrium matrix
 %Calculate partial theta/ partial n
 phpn_e=zeros(12,n_h);     %partial theta/ partial n
@@ -103,7 +103,9 @@ end
 
 % equilibrium matrix of truss
 [A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
-
+l_c=S*l;
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_c);          %equilibrium matrix CTS
+A_2ac=A_2a*S';          %equilibrium matrix CTS
 % equilibrium matrix of hinge
 
 Cell_phpn=mat2cell(phpn_e,12,ones(1,size(phpn_e,2)));          % transfer matrix H into a cell: Cell_H
@@ -111,24 +113,83 @@ phpn=E_n_total*blkdiag(Cell_phpn{:});
 
 A_o=[A_2,phpn];
 A_o_a=Ia'*A_o;
+% A_o_a=A_o;
 %% SVD of equilibrium matrix
-[U1,U2,V1,V2,S1]=tenseg_svd(A_o_a);
+[U1,U2,V1,V2,S1]=tenseg_svd(A_o_a);         % equilibrium of truss with hinge
+% [U1,U2,V1,V2,S1]=tenseg_svd(A_2);           % equilibrium of turss without hinge
+
 
 %% cross sectional design
+A=1e-4*ones(ne);
+E=1e9*ones(ne);
+l0=l;
+rho=1;
+mass=rho.*A.*l0;
 
+%% tangent stiffness matrix of bars
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
+[Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 
-%% tangent stiffness matrix
-phpx2=cell(1,n_h);          %phpx2 is partial theta
+%% tangent stiffness matrix of origami
+ph2pn2=cell(1,n_h);          %ph2px2 is the hessian matrix of theta to nodal coordinate
+ph2pn2_e=cell(1,n_h);
 for i=1:n_h
-r_ij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
-r_kj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
-r_kl=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,4));
+rij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
+rkj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
+rkl=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,4));
 
-m_temp=cross(r_ij,r_kj);
-n_temp=cross(r_kj,r_kl);
+rmj=cross(r_ij,r_kj);
+rnk=cross(r_kj,r_kl);
+% ph2px2_eii= -norm(r_kj)/norm(m_temp)^4*((m_temp*cross(r_kj,m_temp)')+(m_temp*cross(r_kj,m_temp)')');
 
 
+%%
+di = norm(rkj)/(rmj'*rmj)*rmj;
+dl = -norm(rkj)/(rnk'*rnk)*rnk;
+dj = (rij'*rkj/(rkj'*rkj)-1)*di-rkl'*rkj/(rkj'*rkj)*dl;
+dk = -rij'*rkj/(rkj'*rkj)*di+(rkl'*rkj/(rkj'*rkj)-1)*dl;
+
+dii = -norm(rkj)/(rmj'*rmj)^2*((rmj*cross(rkj,rmj)')+(rmj*cross(rkj,rmj)')');
+% dii2=-norm(rkj)/(rmj'*rmj)^2*(skew(rkj)*(rmj'*rmj)-2*rmj*rmj'*skew(rkj));
+
+dtempij = -norm(rkj)/(rmj'*rmj)^2*(rmj*(cross(rij-rkj,rmj))'+(cross(rij-rkj,rmj))*rmj');
+dij = -rmj*rkj'/(rmj'*rmj*norm(rkj))+dtempij;
+
+dtempik = norm(rkj)/(rmj'*rmj)^2*(rmj*(cross(rij,rmj))'+(cross(rij,rmj))*rmj');
+dik = rmj*rkj'/(rmj'*rmj*norm(rkj))+dtempik;
+
+dli = zeros(3);
+
+dll = norm(rkj)/(rnk'*rnk)^2*(rnk*cross(rkj,rnk)'+(rnk*cross(rkj,rnk)')');
+
+dtemplk = norm(rkj)/(rnk'*rnk)^2*(rnk*(cross(rkl-rkj,rnk))'+(cross(rkl-rkj,rnk))*rnk');
+dlk = -rnk*rkj'/(rnk'*rnk*norm(rkj))+dtemplk;
+
+dtemplj = norm(rkj)/(rnk'*rnk)^2*(rnk*(cross(rnk,rkl))'+(rnk*(cross(rnk,rkl))')');
+dlj = rnk*rkj'/(rnk'*rnk*norm(rkj))+dtemplj;
+
+dT1jj = 1/(rkj'*rkj)*((-1+2*rij'*rkj/(rkj'*rkj))*rkj-rij);
+dT2jj = 1/(rkj'*rkj)*(2*rkl'*rkj/(rkj'*rkj)*rkj-rkl);
+djj = di*dT1jj'+(rij'*rkj/(rkj'*rkj)-1)*dij-(dl*dT2jj'+rkl'*rkj/(rkj'*rkj)*dlj);
+
+dT1jk = 1/(rkj'*rkj)*(-2*rij'*rkj/(rkj'*rkj)*rkj+rij);
+dT2jk = 1/(rkj'*rkj)*((1-2*rkl'*rkj/(rkj'*rkj))*rkj+rkl);
+djk = di*dT1jk'+(rij'*rkj/(rkj'*rkj)-1)*dik-(dl*dT2jk'+rkl'*rkj/(rkj'*rkj)*dlk);
+
+dT1kk = dT2jk;
+dT2kk = dT1jk;
+dkk = dl*dT1kk'+(rkl'*rkj/(rkj'*rkj)-1)*dlk-(di*dT2kk'+rij'*rkj/(rkj'*rkj)*dik);
+
+ph2pn2_e{i} = [ dii , dij , dik, dli';
+       dij', djj , djk, dlj';
+       dik' , djk' , dkk , dlk' ;
+       dli , dlj, dlk, dll];
+
+ph2pn2{i}=  E_n{i}*ph2pn2_e{i}*E_n{i}';
 end
+
+
+
 
 
 
