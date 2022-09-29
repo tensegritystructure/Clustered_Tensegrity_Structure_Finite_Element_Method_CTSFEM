@@ -217,9 +217,19 @@ plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg,3,Ca);
 
 
-
-
-
+%% mass matrix and damping matrix
+M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
+% damping matrix
+d=0;     %damping coefficient
+D=d*2*max(sqrt(mass.*E_c.*A_c./l0_c))*eye(3*nn);    %critical damping
+%% vibration mode analysis
+[V_mode,D1] = eig(K_t_oa,Ia'*M*Ia);         % calculate vibration mode
+w_2=diag(D1);                                    % eigen value of 
+omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
+% plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
+%     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
+plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'natrual vibration',...
+    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg,3,Ca);
 
 
 
