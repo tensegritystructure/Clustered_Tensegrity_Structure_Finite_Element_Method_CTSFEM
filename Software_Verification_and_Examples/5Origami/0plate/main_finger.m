@@ -41,25 +41,30 @@ C_in=[C_in_1;C_in_2;C_in_3];
 C = tenseg_ind2C(C_in,N);
 [ne,nn]=size(C);        % ne:No.of element;nn:No.of node
 C_b=C;C_s=[];
+%% define hinge, rigid hinge
+% C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
+C_in_h=[C_in_2;C_in_3];
+n_h=size(C_in_h,1);         % number of hinge
+
+[~,index_h]=ismember(C_in_h,C_in,'rows');   % index_h is the index number of hinge
+[~,index_rh]=ismember(C_in_2,C_in,'rows');   % index_h is the index number of rigid hinge
+[~,index_rh_in_h]=ismember(C_in_2,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
+
+C_h=tenseg_ind2C(C_in(setdiff([1:ne]',index_rh),:),N);     % connectivity matrix of all edges
+C_rh=tenseg_ind2C(C_in(index_rh,:),N); % connectivity matrix of rigid edges
 % Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
-% plot the origami configuration
 
 %% connectivity of triangle element Ca
 % Ca can be written in a function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Ca=[[1:p;2:p+1;p+3:2*p+2],[1:p;p+3:2*p+2;p+2:2*p+1]];
-
 [~,np]=size(Ca);        % ne:No.of element;np:No.of plate
 
+% plot the origami configuration
+tenseg_plot_ori(N,[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
+
 %% transformation matrix from element to structure
-% C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
-C_in_h=[C_in_2;C_in_3];
-[~,index_h]=ismember(C_in_h,C_in,'rows');   % index_h is the index number of hinge
-[~,index_rh]=ismember(C_in_2,C_in,'rows');   % index_h is the index number of rigid hinge
 
-[~,index_rh_in_h]=ismember(C_in_2,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
-
-n_h=size(C_in_h,1);         % number of hinge
 E_n=cell(1,n_h);            %transformation matrix from element node to total node
 node_in_hinge=zeros(n_h,4);
 I=eye(3*nn);
@@ -208,8 +213,8 @@ K_t_oa=Kt_aa+Ia'*(phTpn*diag(k_h)*phTpn'+G*kron(M,eye(3*nn)))*Ia;
 k=diag(D1); 
 % plot the mode shape of tangent stiffness matrix
 num_plt=1:6;
-plot_mode(K_mode,k,N,Ia,C_b,C_s,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg,3);
+plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'tangent stiffness matrix',...
+    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg,3,Ca);
 
 
 
