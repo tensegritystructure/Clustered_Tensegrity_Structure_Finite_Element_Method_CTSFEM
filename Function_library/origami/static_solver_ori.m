@@ -74,7 +74,7 @@ E=E0;
 num_slack=ne*zeros(substep+1,1);    %num of string slack
 Xa=Ia'*X;
 cont=2;
-u=1e-1;
+u=1e-2;
 for k=1:substep
     w=w_t(:,k);               %external force
     Xb=Xb0+dXb_t(:,k);         %forced node displacement
@@ -134,7 +134,7 @@ for k=1:substep
         Fp=w-K*X-phTpn*M;                               %unbalanced force
         Fp_a=Ia'*Fp;                                    %see the norm of unbalanced force
         norm(Fp_a)
-        if norm(Fp_a)<1e-5
+        if norm(Fp_a)<1e-7
             break
         end
 

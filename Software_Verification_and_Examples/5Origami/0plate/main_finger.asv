@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=1;                                     %荷载子步
+substep=5;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -118,7 +118,7 @@ index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 %% hinge section design  (of hinge)
 k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
-k_h(index_rh_in_h)=1e3*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
+k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
 %% rest length (of truss), initial angle (of hinge)
 l0_c=l;                     %rest length of truss
 theta_0=pi*ones(n_h,1);     % initial angle of hinge
@@ -166,7 +166,7 @@ end
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
-ind_w=[4*3;8*3];w=-0e-1*ones(2,1);   %external force in Z 
+ind_w=[4*3;8*3];w=-5e-4*ones(2,1);   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
@@ -202,7 +202,7 @@ tenseg_plot_ori(N_out{end},[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
 tenseg_plot_result(1:substep,t_c_t3,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t3([2*3,3*3],:),{'2Z','3Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(1:substep,n_t([3*3,4*3],:),{'3Z','4Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
 %% make video of the dynamic
 name=['cable_net_CTS_load'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
