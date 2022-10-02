@@ -1,11 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%An Origami finger%%%%%%%%
+%%%%%%%%%%%%%An Origami finger%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 %
-% only plot the concept
+%
 
 %EXAMPLE
 clc; clear all; close all;
@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=1;                                     %荷载子步
+substep=10;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -96,7 +96,7 @@ S=Gp';                      % clustering matrix
 %% equilibrium matrix
 %Calculate partial theta/ partial n
 phpn_e=zeros(12,n_h);     %partial theta/ partial n
-
+theta=zeros(n_h,1);      % angle of all hinges in rad
 for i=1:n_h
 r_ij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
 r_kj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
@@ -111,7 +111,16 @@ phpx_j=(r_ij'*r_kj/norm(r_kj)^2-1)*phpx_i-r_kl'*r_kj/norm(r_kj)^2*phpx_l;
 phpx_k=(r_kl'*r_kj/norm(r_kj)^2-1)*phpx_l-r_ij'*r_kj/norm(r_kj)^2*phpx_i;
 phpn_e(:,i)=[phpx_i;phpx_j;phpx_k;phpx_l];
 
+% calculate hinge angle
+if ~m_temp'*r_kl
+    eta=sign(m_temp'*r_kl);
+else
+    eta=1;
 end
+theta(i)=eta*acos(m_temp'*n_temp/(norm(m_temp)*norm(n_temp)));
+end
+
+
 
 % equilibrium matrix of truss
 [A_1,A_1c,A_1a,A_1ac,A_2,A_2c,A_2a,A_2ac,l,l_c]=tenseg_equilibrium_matrix_CTS(N,C,S,Ia);
@@ -137,17 +146,18 @@ M=zeros(n_h,1);
 %% cross sectional design (of truss)
 A_c=1e-4*ones(ne,1);
 E_c=1e9*ones(ne,1);
-l0_c=l;
-rho=1;
-mass=rho.*A_c.*l0_c;
+
 %% hinge section design  (of hinge)
 k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
 k_h(index_rh_in_h)=1e3*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
+%% rest length (of truss), initial angle (of hinge)
+l0_c=l;                     %rest length of truss
+theta_0=pi*ones(n_h,1);     % initial angle of hinge
 %% tangent stiffness matrix of bars
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 
-%% tangent stiffness matrix of hinge
+%% tangent stiffness matrix of hinge(from yangli's code)
 ph2pn2=cell(1,n_h);          %ph2px2 is the hessian matrix of theta to nodal coordinate
 ph2pn2_e=cell(1,n_h);
 for i=1:n_h
@@ -218,6 +228,8 @@ plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'tangent stiffness matrix',...
 
 
 %% mass matrix and damping matrix
+rho=1;
+mass=rho.*A_c.*l0_c;
 M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
 % damping matrix
 d=0;     %damping coefficient
@@ -230,6 +242,36 @@ omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 %     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
 plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg,3,Ca);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%% Nonlinear statics analysis %%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% external force, forced motion of nodes, shrink of strings
+% calculate external force and 
+ind_w=[4*3;8*3];w=1e2*ones(2,1);   %external force in Z 
+ind_dnb=[]; dnb0=[];
+ind_dl0_c=[]; dl0_c=[];
+ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
+% [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+[w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
+
+%% Step1: equilibrium calculation
+% input data
+data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
+data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
+data.consti_data=consti_data;   data.material=material; %constitue info
+data.w_t=w_t;  % external force
+data.dnb_t=dnb_t;           % forced movement of pinned nodes
+data.l0_t=l0_ct;            % forced change of rest length
+data.theta_0_t=theta_0_t;   % forced change of initial angle
+data.k_h=k_h;               % stiffness of hinge
+data.substep=substep;    % substep
+
+% nonlinear analysis
+data_out1=static_solver_ori(data);
+
 
 
 
