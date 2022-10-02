@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=10;                                     %荷载子步
+substep=1;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -72,7 +72,6 @@ I=eye(3*nn);
 for i=1:n_h
 node2=C_in_h(i,1);  % start node of the hinge
 node3=C_in_h(i,2);  % end node of the hinge
-
 for j=1:np
     if (node2==Ca(1,j)&node3==Ca(2,j))|(node2==Ca(2,j)&node3==Ca(3,j))|(node2==Ca(3,j)&node3==Ca(1,j))
         node1=setdiff(Ca(:,j),[node2;node3]);
@@ -82,7 +81,6 @@ for j=1:np
 end
 node_in_hinge(i,:)=[node1,node2,node3,node4];
 E_n{i}=I(:,kron(node_in_hinge(i,:),3*ones(1,3))-kron(ones(1,4),[2,1,0]));
-
 end
 E_n_total=cell2mat(E_n);        % transformation matrix of the whole structure
 %% Boundary constraints
@@ -94,43 +92,13 @@ gr=[];                      %no group is used
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
 S=Gp';                      % clustering matrix
 %% equilibrium matrix
-%Calculate partial theta/ partial n
-phpn_e=zeros(12,n_h);     %partial theta/ partial n
-theta=zeros(n_h,1);      % angle of all hinges in rad
-for i=1:n_h
-r_ij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
-r_kj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
-r_kl=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,4));
-
-m_temp=cross(r_ij,r_kj);
-n_temp=cross(r_kj,r_kl);
-
-phpx_i=norm(r_kj)/norm(m_temp)^2*m_temp;
-phpx_l=-norm(r_kj)/norm(n_temp)^2*n_temp;
-phpx_j=(r_ij'*r_kj/norm(r_kj)^2-1)*phpx_i-r_kl'*r_kj/norm(r_kj)^2*phpx_l;
-phpx_k=(r_kl'*r_kj/norm(r_kj)^2-1)*phpx_l-r_ij'*r_kj/norm(r_kj)^2*phpx_i;
-phpn_e(:,i)=[phpx_i;phpx_j;phpx_k;phpx_l];
-
-% calculate hinge angle
-if ~m_temp'*r_kl
-    eta=sign(m_temp'*r_kl);
-else
-    eta=1;
-end
-theta(i)=eta*acos(m_temp'*n_temp/(norm(m_temp)*norm(n_temp)));
-end
-
-
 
 % equilibrium matrix of truss
 [A_1,A_1c,A_1a,A_1ac,A_2,A_2c,A_2a,A_2ac,l,l_c]=tenseg_equilibrium_matrix_CTS(N,C,S,Ia);
 % [A_1,A_1g,A_2,A_2g,l,l_gp]=tenseg_equilibrium_matrix2(N,C,Gp,Ia);
 
 % equilibrium matrix of hinge
-
-Cell_phpn=mat2cell(phpn_e,12,ones(1,size(phpn_e,2)));          % transfer matrix H into a cell: Cell_H
-phTpn=E_n_total*blkdiag(Cell_phpn{:});
-
+[phpn_e,phTpn,theta]=jacobian_ori(node_in_hinge,N,E_n_total);       % jacobian matrix
 A_o=[A_2,phTpn];
 A_o_a=Ia'*A_o;
 % A_o_a=A_o;
@@ -146,7 +114,8 @@ M=zeros(n_h,1);
 %% cross sectional design (of truss)
 A_c=1e-4*ones(ne,1);
 E_c=1e9*ones(ne,1);
-
+index_b=[1:ne]';              % index of bar in compression
+index_s=setdiff(1:size(S,1),index_b);	% index of strings
 %% hinge section design  (of hinge)
 k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
 k_h(index_rh_in_h)=1e3*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
@@ -157,64 +126,12 @@ theta_0=pi*ones(n_h,1);     % initial angle of hinge
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
 
-%% tangent stiffness matrix of hinge(from yangli's code)
-ph2pn2=cell(1,n_h);          %ph2px2 is the hessian matrix of theta to nodal coordinate
-ph2pn2_e=cell(1,n_h);
-for i=1:n_h
-rij=N(:,node_in_hinge(i,1))-N(:,node_in_hinge(i,2));
-rkj=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,2));
-rkl=N(:,node_in_hinge(i,3))-N(:,node_in_hinge(i,4));
+%% tangent stiffness matrix of hinge
 
-rmj=cross(r_ij,r_kj);
-rnk=cross(r_kj,r_kl);
-% ph2px2_eii= -norm(r_kj)/norm(m_temp)^4*((m_temp*cross(r_kj,m_temp)')+(m_temp*cross(r_kj,m_temp)')');
-
-
-%%
-di = norm(rkj)/(rmj'*rmj)*rmj;
-dl = -norm(rkj)/(rnk'*rnk)*rnk;
-dj = (rij'*rkj/(rkj'*rkj)-1)*di-rkl'*rkj/(rkj'*rkj)*dl;
-dk = -rij'*rkj/(rkj'*rkj)*di+(rkl'*rkj/(rkj'*rkj)-1)*dl;
-
-dii = -norm(rkj)/(rmj'*rmj)^2*((rmj*cross(rkj,rmj)')+(rmj*cross(rkj,rmj)')');
-% dii2=-norm(rkj)/(rmj'*rmj)^2*(skew(rkj)*(rmj'*rmj)-2*rmj*rmj'*skew(rkj));
-
-dtempij = -norm(rkj)/(rmj'*rmj)^2*(rmj*(cross(rij-rkj,rmj))'+(cross(rij-rkj,rmj))*rmj');
-dij = -rmj*rkj'/(rmj'*rmj*norm(rkj))+dtempij;
-
-dtempik = norm(rkj)/(rmj'*rmj)^2*(rmj*(cross(rij,rmj))'+(cross(rij,rmj))*rmj');
-dik = rmj*rkj'/(rmj'*rmj*norm(rkj))+dtempik;
-
-dli = zeros(3);
-
-dll = norm(rkj)/(rnk'*rnk)^2*(rnk*cross(rkj,rnk)'+(rnk*cross(rkj,rnk)')');
-
-dtemplk = norm(rkj)/(rnk'*rnk)^2*(rnk*(cross(rkl-rkj,rnk))'+(cross(rkl-rkj,rnk))*rnk');
-dlk = -rnk*rkj'/(rnk'*rnk*norm(rkj))+dtemplk;
-
-dtemplj = norm(rkj)/(rnk'*rnk)^2*(rnk*(cross(rnk,rkl))'+(rnk*(cross(rnk,rkl))')');
-dlj = rnk*rkj'/(rnk'*rnk*norm(rkj))+dtemplj;
-
-dT1jj = 1/(rkj'*rkj)*((-1+2*rij'*rkj/(rkj'*rkj))*rkj-rij);
-dT2jj = 1/(rkj'*rkj)*(2*rkl'*rkj/(rkj'*rkj)*rkj-rkl);
-djj = di*dT1jj'+(rij'*rkj/(rkj'*rkj)-1)*dij-(dl*dT2jj'+rkl'*rkj/(rkj'*rkj)*dlj);
-
-dT1jk = 1/(rkj'*rkj)*(-2*rij'*rkj/(rkj'*rkj)*rkj+rij);
-dT2jk = 1/(rkj'*rkj)*((1-2*rkl'*rkj/(rkj'*rkj))*rkj+rkl);
-djk = di*dT1jk'+(rij'*rkj/(rkj'*rkj)-1)*dik-(dl*dT2jk'+rkl'*rkj/(rkj'*rkj)*dlk);
-
-dT1kk = dT2jk;
-dT2kk = dT1jk;
-dkk = dl*dT1kk'+(rkl'*rkj/(rkj'*rkj)-1)*dlk-(di*dT2kk'+rij'*rkj/(rkj'*rkj)*dik);
-
-ph2pn2_e{i} = [ dii , dij , dik, dli';
-       dij', djj , djk, dlj';
-       dik' , djk' , dkk , dlk' ;
-       dli , dlj, dlk, dll];
-
-ph2pn2{i}=  E_n{i}*ph2pn2_e{i}*E_n{i}';
-end
+%ph2px2 is the hessian matrix of theta to nodal coordinate
+[ph2pn2_e,ph2pn2]=hessian_ori(node_in_hinge,N,E_n);         % calculate hessian matrix
 G=cell2mat(ph2pn2);
+
 %% tangent stiffness of the whole origami
 
 K_t_oa=Kt_aa+Ia'*(phTpn*diag(k_h)*phTpn'+G*kron(M,eye(3*nn)))*Ia;
@@ -238,11 +155,10 @@ D=d*2*max(sqrt(mass.*E_c.*A_c./l0_c))*eye(3*nn);    %critical damping
 [V_mode,D1] = eig(K_t_oa,Ia'*M*Ia);         % calculate vibration mode
 w_2=diag(D1);                                    % eigen value of 
 omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
-% plot_mode(V_mode,omega,N,Ia,C_b,C_s,l,'natrual vibration',...
-%     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.8,saveimg);
+if 0
 plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg,3,Ca);
-
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%% Nonlinear statics analysis %%%%%%%%%%%%%%%%%%%%%%%%
@@ -250,7 +166,7 @@ plot_mode_ori(K_mode,k,N,Ia,[],[],C_h,C_rh,l,'natrual vibration',...
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
-ind_w=[4*3;8*3];w=1e2*ones(2,1);   %external force in Z 
+ind_w=[4*3;8*3];w=-0e-1*ones(2,1);   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
@@ -267,14 +183,31 @@ data.dnb_t=dnb_t;           % forced movement of pinned nodes
 data.l0_t=l0_ct;            % forced change of rest length
 data.theta_0_t=theta_0_t;   % forced change of initial angle
 data.k_h=k_h;               % stiffness of hinge
+data.E_n=E_n;               % transfer matrix from matrix to structure
+data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
+
 data.substep=substep;    % substep
 
 % nonlinear analysis
 data_out1=static_solver_ori(data);
 
 
+t_t=data_out1.t_out;          %member force in every step
+n_t=data_out1.n_out;          %nodal coordinate in every step
+N_out=data_out1.N_out;
+tenseg_plot_ori(N_out{end},[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
 
 
+%% plot member force 
+tenseg_plot_result(1:substep,t_c_t3,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
+
+%% Plot nodal coordinate curve X Y
+tenseg_plot_result(1:substep,n_t3([2*3,3*3],:),{'2Z','3Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+%% make video of the dynamic
+name=['cable_net_CTS_load'];
+% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
+% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
+tenseg_video(n_t3,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
 
 
 
