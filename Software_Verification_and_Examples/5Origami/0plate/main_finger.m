@@ -166,7 +166,7 @@ end
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
-ind_w=[4*3;8*3];w=-5e-4*ones(2,1);   %external force in Z 
+ind_w=[4*3;8*3];w=-5e-2*ones(2,1);   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
@@ -185,17 +185,23 @@ data.theta_0_t=theta_0_t;   % forced change of initial angle
 data.k_h=k_h;               % stiffness of hinge
 data.E_n=E_n;               % transfer matrix from matrix to structure
 data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
-
 data.substep=substep;    % substep
 
+data.InitialLoadFactor=0.00001;
+data.MaxIcr=100;
+data.StopCriterion=@(U)(norm(U)>0.5);
+
+
+
+
 % nonlinear analysis
-data_out1=static_solver_ori(data);
+data_out1=static_solver_ori_2(data);
 
 
-t_t=data_out1.t_out;          %member force in every step
+% t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
-N_out=data_out1.N_out;
-tenseg_plot_ori(N_out{end},[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
+% N_out=data_out1.N_out;
+tenseg_plot_ori(reshape(n_t(:,end),3,[]),[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
 
 
 %% plot member force 

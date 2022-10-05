@@ -185,8 +185,18 @@ data.theta_0_t=theta_0_t;   % forced change of initial angle
 data.k_h=k_h;               % stiffness of hinge
 data.E_n=E_n;               % transfer matrix from matrix to structure
 data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
-
+data.MaxIcr=100;
 data.substep=substep;    % substep
+
+data= struct('N',N,'C',C,'ne', ne,'nn', nn,'Ia', Ia_new,'Ib', Ib_new,...
+    'E',E_c,'A',A_c,'index_b',index_b,'index_s',index_s,'consti_data',consti_data,...
+    'material',material
+    'InitialLoadFactor', 0.00001,...
+    'MaxIcr', 100,...
+    'StopCriterion',@(Node,U,icrm)(abs(U(5*3))>12));
+
+
+
 
 % nonlinear analysis
 data_out1=static_solver_ori(data);

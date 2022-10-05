@@ -5,7 +5,7 @@ function data_out=static_solver_ori(data)
 
 global E A l0 Ia Ib C S w ne Xb Xa dXa f_int l_int theta_0 k_h E_n_total node_in_hinge
 % minimize total energy? (1: use, 0: not use) it's time consuming
-use_energy=0;
+use_energy=1;
 
 %% input data
 C=data.C;
@@ -175,7 +175,7 @@ for k=1:substep
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_ori,0,1,opt);
+            [x,V]=fminbnd(@energy_ori,0,5,opt);
         end
         Xa=Xa+x*dXa;
     end

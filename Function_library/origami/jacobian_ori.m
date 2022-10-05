@@ -30,7 +30,7 @@ if (m_temp'*rkl)
 else
     eta=1;
 end
-theta(i)=mod(eta*acos(m_temp'*n_temp/(norm(m_temp)*norm(n_temp))),2*pi);
+theta(i)=mod(eta*real(acos(m_temp'*n_temp/(norm(m_temp)*norm(n_temp)))),2*pi);
 end
 
 % jacobian matrix of the whole structure
