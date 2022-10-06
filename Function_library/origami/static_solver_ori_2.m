@@ -66,6 +66,7 @@ U=zeros(3*nn,1);
     data_out.t_out=zeros(ne,MaxIcr);        %output member force
     data_out.theta_out=zeros(numel(theta_0),MaxIcr);      %angle of hinge
     data_out.M_out=zeros(numel(theta_0),MaxIcr);      %moment of hinge
+    data_out.l_out=zeros(ne,MaxIcr);                % member length
     F=w_t(:,end);
     while icrm<MaxIcr && ~data.StopCriterion(U)&& lmd<=1 
         icrm = icrm+1;
@@ -152,6 +153,7 @@ U=zeros(3*nn,1);
             data_out.t_out(:,icrm)=t_c;      %member force
             data_out.theta_out(:,icrm)=theta;      %angle of hinge
             data_out.M_out(:,icrm)=M;      %moment of hinge
+            data_out.l_out(:,icrm)=l_c;      % length of bars
             
         else
             Uhis(:,icrm) = U;
@@ -159,33 +161,55 @@ U=zeros(3*nn,1);
             data_out.t_out(:,icrm)=t_c;      %member force
             data_out.theta_out(:,icrm)=theta;      %angle of hinge
             data_out.M_out(:,icrm)=M;      %moment of hinge
+            data_out.l_out(:,icrm)=l_c;      % length of bars
         end
     end
+elseif strcmpi(data.LoadType, 'Displacement')
+%     Uhis = zeros(3*nn,data.DispStep*2);
+% Fdsp = AnalyInputOpt.Load/AnalyInputOpt.DispStep;
+% ImpDofs = find(Fdsp~=0);
+%     
+%     
+%     
+%     
+%     
+%     
+%     MaxIcr=substep;
+%     Fhis=1:substep;
+%       Uhis = zeros(3*nn,AnalyInputOpt.substep);
+%     FreeDofs = find(sum(Ia,2));
+%     data_out.t_out=zeros(ne,MaxIcr);        %output member force
+%     data_out.theta_out=zeros(numel(theta_0),MaxIcr);      %angle of hinge
+%     data_out.M_out=zeros(numel(theta_0),MaxIcr);      %moment of hinge
+%     data_out.l_out=zeros(ne,MaxIcr);                % member length
+% icrm = 0; 
+% Fhis = zeros(AnalyInputOpt.DispStep,numel(ImpDofs)); 
+% 
+%         while err>tol && iter<MaxIter
+%         icrm = icrm+1;
+%         iter = 0; err = 1; 
+%    fprintf('icrm = %d, dspimps = %6.4f\n',icrm,dspmvd);
+
+
+
+
+
+
+
+
 
  end
-
+%% delete excessive part data
 icrm = icrm+1;
 Uhis(:,icrm:end) = [];
 Fhis(icrm:end,:) = [];
 data_out.t_out(:,icrm:end)=[];      %member force
 data_out.theta_out(:,icrm:end)=[];      %angle of hinge
 data_out.M_out(:,icrm:end)=[];      %moment of hinge
+data_out.l_out(:,icrm:end)=[];     % length of bars
 data_out.n_out=kron(X,ones(1,icrm-1))+Uhis;
 data_out.Fhis=Fhis;
-%         data_out.t_out(:,k)=t;      %member force
-%         data_out.M_out(:,k)=M;      % moment of hinge
-%         data_out.theta_out(:,k)=theta;      %angle of hinge
 
-%     data_out.N_out{k}=reshape(X,3,[]);
-
-%         data_out.l_out(:,k)=l;
-%         data_out.q_out(:,k)=q;
-%         data_out.E_out(:,k)=E;
-%     data_out.t_out(:,k)=t;      %member force
-%     data_out.M_out(:,k)=M;      % moment of hinge
-%     data_out.theta_out(:,k)=theta;      %member force
-%     % data_out.V{k}=energy_cal(data_out);
-%     data_out.Fpn_out(k)=norm(Ia'*Fp);
 end
 
 % return

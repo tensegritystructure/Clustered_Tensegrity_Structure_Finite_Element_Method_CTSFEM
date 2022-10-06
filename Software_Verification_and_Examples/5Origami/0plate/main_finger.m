@@ -112,7 +112,7 @@ q=t./l;             % force density
 %% self-stress design (of hinge)
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
-A_c=1e-4*ones(ne,1);
+A_c=1e-2*ones(ne,1);
 E_c=1e9*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
@@ -187,7 +187,7 @@ data.E_n=E_n;               % transfer matrix from matrix to structure
 data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
 data.substep=substep;    % substep
 data.InitialLoadFactor=0.001;
-data.MaxIcr=100;
+data.MaxIcr=1000;
 data.LoadType='Force'; % 'Force' or 'Displacement'
 data.StopCriterion=@(U)(norm(U)>0.5);
 
@@ -197,34 +197,38 @@ data.StopCriterion=@(U)(norm(U)>0.5);
 % nonlinear analysis
 data_out1=static_solver_ori_2(data);
 
-Fhis=data_out1.Fhis;
+Fhis=data_out1.Fhis;          %load factor
 t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
+M_out=data_out1.M_out;
+l_out=data_out1.l_out;
 icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
 %% Plot final configuration
 
- j=linspace(0.01,1,8);
-for i=1:8
+ j=linspace(1e-5,1,4);
+for i=1:4
     num=ceil(j(i)*size(n_t,2));
 tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,[],[],[30,30],[] ,[],Ca);
 %  axis off;
 end
-tenseg_plot_ori(reshape(n_t(:,end),3,[]),[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
-
-
 %% plot member force 
-tenseg_plot_result(1:icrm,t_t,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
+tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
+%% plot member length 
+tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
+
+%% plot hinge moment
+tenseg_plot_result(Fhis,M_out,{'rgd1','rgd2','rgd3','sft1','sft2'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
 
 
 
 %% Plot nodal coordinate curve X Y
-tenseg_plot_result(1:substep,n_t([3*3,4*3],:),{'3Z','4Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+% tenseg_plot_result(Fhis,n_t([4*3,8*3],:),{'4Z','8Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
 %% make video of the dynamic
-name=['cable_net_CTS_load'];
+name=['origami_finger'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t3,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+tenseg_video_ori(n_t,[],[],C_h,C_rh,Ca,[],min(icrm,50),name,savevideo,[])
 
 
 
