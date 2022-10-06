@@ -49,21 +49,25 @@ l0=l0_t(:,1);         %forced enlongation of string
 theta_0=theta_0_t(:,1);     % initial angle
 % lamda=linspace(0,1,substep);    %coefficient for substep
 num_slack=ne*zeros(substep+1,1);    %num of string slack
-Xa=Ia'*X;
+Xa0=Ia'*X;
+Xa=Xa0;
 cont=2;
 u=1e-2;
 tol = 1e-6; MaxIter = 50; 
 U=zeros(3*nn,1);
 
- if max(abs(w_t(:,end)))             % load type: Force
-    MaxIcr = data.MaxIcr;                   %
-    b_lambda = data.InitialLoadFactor;          %
+ if strcmpi(data.LoadType, 'Force')             % load type: Force
+    MaxIcr = data.MaxIcr;                   
+    b_lambda = data.InitialLoadFactor;          
     Uhis = zeros(3*nn,MaxIcr);        
     FreeDofs = find(sum(Ia,2));
     lmd = 0; icrm = 0; MUL = [U,U];
     Fhis = zeros(MaxIcr,1);
+    data_out.t_out=zeros(ne,MaxIcr);        %output member force
+    data_out.theta_out=zeros(numel(theta_0),MaxIcr);      %angle of hinge
+    data_out.M_out=zeros(numel(theta_0),MaxIcr);      %moment of hinge
     F=w_t(:,end);
-    while icrm<MaxIcr && ~data.StopCriterion(U)
+    while icrm<MaxIcr && ~data.StopCriterion(U)&& lmd<=1 
         icrm = icrm+1;
         iter = 0; err = 1;
         fprintf('icrm = %d, lambda = %6.4f\n',icrm,lmd);
@@ -126,6 +130,7 @@ U=zeros(3*nn,1);
             dlmd=nlsmgd(icrm,iter,dUp,dUr,b_lambda);
             dUt = dlmd*dUp+dUr;
             U = U+dUt;
+            Xa=Xa0+Ia'*U;
             err = norm(Ia'*dUt);
             lmd = lmd+dlmd;
             fprintf('    iter = %d, err = %6.4f, dlambda = %6.4f\n',iter,err,dlmd);
@@ -138,14 +143,22 @@ U=zeros(3*nn,1);
             icrm = icrm-1;
             U = Uhis(:,max(icrm,1));  % restore displacement
             lmd = Fhis(max(icrm,1));   % restore load
+            Xa=Xa0+Ia'*U;
         elseif iter<3
             disp('Increase constraint radius...')
             b_lambda = b_lambda*1.5;
             Uhis(:,icrm) = U;
             Fhis(icrm) = lmd;
+            data_out.t_out(:,icrm)=t_c;      %member force
+            data_out.theta_out(:,icrm)=theta;      %angle of hinge
+            data_out.M_out(:,icrm)=M;      %moment of hinge
+            
         else
             Uhis(:,icrm) = U;
             Fhis(icrm) = lmd;
+            data_out.t_out(:,icrm)=t_c;      %member force
+            data_out.theta_out(:,icrm)=theta;      %angle of hinge
+            data_out.M_out(:,icrm)=M;      %moment of hinge
         end
     end
 
@@ -154,16 +167,24 @@ U=zeros(3*nn,1);
 icrm = icrm+1;
 Uhis(:,icrm:end) = [];
 Fhis(icrm:end,:) = [];
-    data_out.N_out{k}=reshape(X,3,[]);
-    data_out.n_out(:,k)=X;
-    %     data_out.l_out(:,k)=l;
-    %     data_out.q_out(:,k)=q;
-    %     data_out.E_out(:,k)=E;
-    data_out.t_out(:,k)=t;      %member force
-    data_out.M_out(:,k)=M;      % moment of hinge
-    data_out.theta_out(:,k)=theta;      %member force
-    % data_out.V{k}=energy_cal(data_out);
-    data_out.Fpn_out(k)=norm(Ia'*Fp);
+data_out.t_out(:,icrm:end)=[];      %member force
+data_out.theta_out(:,icrm:end)=[];      %angle of hinge
+data_out.M_out(:,icrm:end)=[];      %moment of hinge
+data_out.n_out=kron(X,ones(1,icrm-1))+Uhis;
+%         data_out.t_out(:,k)=t;      %member force
+%         data_out.M_out(:,k)=M;      % moment of hinge
+%         data_out.theta_out(:,k)=theta;      %angle of hinge
+
+%     data_out.N_out{k}=reshape(X,3,[]);
+
+%         data_out.l_out(:,k)=l;
+%         data_out.q_out(:,k)=q;
+%         data_out.E_out(:,k)=E;
+%     data_out.t_out(:,k)=t;      %member force
+%     data_out.M_out(:,k)=M;      % moment of hinge
+%     data_out.theta_out(:,k)=theta;      %member force
+%     % data_out.V{k}=energy_cal(data_out);
+%     data_out.Fpn_out(k)=norm(Ia'*Fp);
 end
 
 % return

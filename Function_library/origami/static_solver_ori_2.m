@@ -56,13 +56,16 @@ u=1e-2;
 tol = 1e-6; MaxIter = 50; 
 U=zeros(3*nn,1);
 
- if max(abs(w_t(:,end)))             % load type: Force
-    MaxIcr = data.MaxIcr;                   %
-    b_lambda = data.InitialLoadFactor;          %
+ if strcmpi(data.LoadType, 'Force')             % load type: Force
+    MaxIcr = data.MaxIcr;                   
+    b_lambda = data.InitialLoadFactor;          
     Uhis = zeros(3*nn,MaxIcr);        
     FreeDofs = find(sum(Ia,2));
     lmd = 0; icrm = 0; MUL = [U,U];
     Fhis = zeros(MaxIcr,1);
+    data_out.t_out=zeros(ne,MaxIcr);        %output member force
+    data_out.theta_out=zeros(numel(theta_0),MaxIcr);      %angle of hinge
+    data_out.M_out=zeros(numel(theta_0),MaxIcr);      %moment of hinge
     F=w_t(:,end);
     while icrm<MaxIcr && ~data.StopCriterion(U)&& lmd<=1 
         icrm = icrm+1;
@@ -146,9 +149,16 @@ U=zeros(3*nn,1);
             b_lambda = b_lambda*1.5;
             Uhis(:,icrm) = U;
             Fhis(icrm) = lmd;
+            data_out.t_out(:,icrm)=t_c;      %member force
+            data_out.theta_out(:,icrm)=theta;      %angle of hinge
+            data_out.M_out(:,icrm)=M;      %moment of hinge
+            
         else
             Uhis(:,icrm) = U;
             Fhis(icrm) = lmd;
+            data_out.t_out(:,icrm)=t_c;      %member force
+            data_out.theta_out(:,icrm)=theta;      %angle of hinge
+            data_out.M_out(:,icrm)=M;      %moment of hinge
         end
     end
 
@@ -157,12 +167,20 @@ U=zeros(3*nn,1);
 icrm = icrm+1;
 Uhis(:,icrm:end) = [];
 Fhis(icrm:end,:) = [];
+data_out.t_out(:,icrm:end)=[];      %member force
+data_out.theta_out(:,icrm:end)=[];      %angle of hinge
+data_out.M_out(:,icrm:end)=[];      %moment of hinge
+data_out.n_out=kron(X,ones(1,icrm-1))+Uhis;
+data_out.Fhis=Fhis;
+%         data_out.t_out(:,k)=t;      %member force
+%         data_out.M_out(:,k)=M;      % moment of hinge
+%         data_out.theta_out(:,k)=theta;      %angle of hinge
 
 %     data_out.N_out{k}=reshape(X,3,[]);
-    data_out.n_out=kron(X,ones(1,icrm-1))+Uhis;
-    %     data_out.l_out(:,k)=l;
-    %     data_out.q_out(:,k)=q;
-    %     data_out.E_out(:,k)=E;
+
+%         data_out.l_out(:,k)=l;
+%         data_out.q_out(:,k)=q;
+%         data_out.E_out(:,k)=E;
 %     data_out.t_out(:,k)=t;      %member force
 %     data_out.M_out(:,k)=M;      % moment of hinge
 %     data_out.theta_out(:,k)=theta;      %member force

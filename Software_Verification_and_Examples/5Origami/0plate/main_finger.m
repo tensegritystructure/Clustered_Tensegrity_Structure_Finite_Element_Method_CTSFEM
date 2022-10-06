@@ -166,7 +166,7 @@ end
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
-ind_w=[4*3;8*3];w=-5e-2*ones(2,1);   %external force in Z 
+ind_w=[4*3;8*3];w=-5e-3*ones(2,1);   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
@@ -186,9 +186,9 @@ data.k_h=k_h;               % stiffness of hinge
 data.E_n=E_n;               % transfer matrix from matrix to structure
 data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
 data.substep=substep;    % substep
-
-data.InitialLoadFactor=0.00001;
+data.InitialLoadFactor=0.001;
 data.MaxIcr=100;
+data.LoadType='Force'; % 'Force' or 'Displacement'
 data.StopCriterion=@(U)(norm(U)>0.5);
 
 
@@ -197,15 +197,26 @@ data.StopCriterion=@(U)(norm(U)>0.5);
 % nonlinear analysis
 data_out1=static_solver_ori_2(data);
 
-
-% t_t=data_out1.t_out;          %member force in every step
+Fhis=data_out1.Fhis;
+t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
+icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
+%% Plot final configuration
+
+ j=linspace(0.01,1,8);
+for i=1:8
+    num=ceil(j(i)*size(n_t,2));
+tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,[],[],[30,30],[] ,[],Ca);
+%  axis off;
+end
 tenseg_plot_ori(reshape(n_t(:,end),3,[]),[],[],C_h,C_rh,[],[],[],[] ,[],Ca);
 
 
 %% plot member force 
-tenseg_plot_result(1:substep,t_c_t3,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
+tenseg_plot_result(1:icrm,t_t,{'ODC', 'IDC', 'HC'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
+
+
 
 %% Plot nodal coordinate curve X Y
 tenseg_plot_result(1:substep,n_t([3*3,4*3],:),{'3Z','4Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
