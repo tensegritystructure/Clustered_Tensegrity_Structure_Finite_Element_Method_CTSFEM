@@ -323,7 +323,7 @@ for i=1:num_rbd
 %    patch(X',Y',Z',[0.9290 0.6940 0.1250],'FaceAlpha',0.5,'EdgeColor','b'); 
 end
 
-
+light; 
 %% Modify plot display
 grid off
 axis equal

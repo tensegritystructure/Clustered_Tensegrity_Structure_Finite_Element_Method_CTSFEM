@@ -30,25 +30,35 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 %% %% N C of the structure
 % Manually specify node positions
-width=0.1;
-p=3;
-N=width*[0:p,0:p;zeros(1,p+1),ones(1,p+1);zeros(1,2*p+2)];       %nodal coordinate
+R=10; h=10; p=5; level=3;        % radius; height; number of edge, level
+% beta=(0.5-1/p)*pi; 	% rotation angle
+beta=15*pi/180; 	% rotation angle
 
-C_in_1=[[(1:p)',(2:p+1)'];[p+1+(1:p)',p+1+(2:p+1)'];[1 p+2];[p+1 2*p+2]];   %bar in boundary
-C_in_2=[(1:p)',(p+3:2*p+2)'];      %bar in rigid hinge
-C_in_3=[(2:p)',(p+3:2*p+1)'];    %bars in rotational hinge
-C_in=[C_in_1;C_in_2;C_in_3];
+angle=kron(ones(1,level+1),2*pi*((1:p)-1)./p)+kron(0:level,beta*ones(1,p));
+N=R*[cos(angle); sin(angle); zeros(1,p*(level+1))]+kron(0:level,[0;0;h]*ones(1,p));
+
+% Manually specify connectivity indices.
+C_b_in_h=[(1:p*(level+1))',kron(ones(level+1,1),[2:p,1]')+kron((0:level)',p*ones(p,1))];% bottom bar
+C_b_in_v=[(1:p*level)',(p+1:(level+1)*p)'];% vertical bar
+C_b_in_d=[(1:p*level)',kron(ones(level,1),[2:p,1]')+kron((1:level)',p*ones(p,1))];% diagonal bar
+
+C_in = [C_b_in_h;C_b_in_v;C_b_in_d];   % This is indicating the bar connection
+% Convert the above matrices into full connectivity matrices.
 C = tenseg_ind2C(C_in,N);
 [ne,nn]=size(C);        % ne:No.of element;nn:No.of node
 C_b=C;C_s=[];
+% Plot the structure to make sure it looks right
+tenseg_plot(N,C_b,[]);
+
 %% define hinge, rigid hinge
 % C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
-C_in_h=[C_in_2;C_in_3];
+C_in_h=[C_b_in_h(p+1:(level)*p,:);C_b_in_v;C_b_in_d];
 n_h=size(C_in_h,1);         % number of hinge
 
 [~,index_h]=ismember(C_in_h,C_in,'rows');   % index_h is the index number of hinge
-[~,index_rh]=ismember(C_in_2,C_in,'rows');   % index_h is the index number of rigid hinge
-[~,index_rh_in_h]=ismember(C_in_2,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
+index_rh=[];index_rh_in_h=[];
+% [~,index_rh]=ismember(C_in_2,C_in,'rows');   % index_h is the index number of rigid hinge
+% [~,index_rh_in_h]=ismember(C_in_2,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
 
 C_h=tenseg_ind2C(C_in(setdiff([1:ne]',index_rh),:),N);     % connectivity matrix of all edges
 C_rh=tenseg_ind2C(C_in(index_rh,:),N); % connectivity matrix of rigid edges
@@ -57,7 +67,7 @@ tenseg_plot(N,C_b,C_s);
 
 %% connectivity of triangle element Ca
 % Ca can be written in a function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Ca=[[1:p;2:p+1;p+3:2*p+2],[1:p;p+3:2*p+2;p+2:2*p+1]];
+Ca=kron(ones(1,level),[[1:p;[2:p,1];[p+2:2*p,p+1]],[1:p;[p+2:2*p,p+1];p+1:2*p]])+kron(0:level-1,p*ones(3,p*2));
 % Ca=generate_Ca(C_in,N);
 % Ca=zeros(3,1)
 
@@ -87,7 +97,7 @@ E_n{i}=I(:,kron(node_in_hinge(i,:),3*ones(1,3))-kron(ones(1,4),[2,1,0]));
 end
 E_n_total=cell2mat(E_n);        % transformation matrix of the whole structure
 %% Boundary constraints
-pinned_X=[1,2,p+2,p+3]'; pinned_Y=[1,2,p+2,p+3]'; pinned_Z=[1,2,p+2,p+3]';
+pinned_X=[1:p]'; pinned_Y=[1:p]'; pinned_Z=[1:p]';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
 
 %% generate group index for tensegrity torus structure
@@ -115,7 +125,7 @@ q=t./l;             % force density
 %% self-stress design (of hinge)
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
-A_c=1e-2*ones(ne,1);
+A_c=1e-4*ones(ne,1);
 E_c=1e9*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
@@ -124,7 +134,7 @@ k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
 k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
 %% rest length (of truss), initial angle (of hinge)
 l0_c=l;                     %rest length of truss
-theta_0=pi*ones(n_h,1);     % initial angle of hinge
+theta_0=theta;     % initial angle of hinge
 %% tangent stiffness matrix of bars
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_c);
@@ -169,7 +179,7 @@ end
 
 %% external force, forced motion of nodes, shrink of strings
 % calculate external force and 
-ind_w=[4*3;8*3];w=-5e-3*ones(2,1);   %external force in Z 
+ind_w=[3*(level*p+1:(level+1)*p)];w=-5e5*ones(p,1);   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
 ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
@@ -192,7 +202,7 @@ data.substep=substep;    % substep
 data.InitialLoadFactor=0.001;
 data.MaxIcr=1000;
 data.LoadType='Force'; % 'Force' or 'Displacement'
-data.StopCriterion=@(U)(norm(U)>0.5);
+data.StopCriterion=@(U)(norm(U)>20);
 
 
 
@@ -218,7 +228,7 @@ end
 %% plot member force 
 tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
 %% plot member length 
-tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
+tenseg_plot_result(Fhis,l_out,{[]},{'Load factor','length / m'},'plot_member_length.png',saveimg);
 
 %% plot hinge moment
 tenseg_plot_result(Fhis,M_out,{'rgd1','rgd2','rgd3','sft1','sft2'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
@@ -226,9 +236,9 @@ tenseg_plot_result(Fhis,M_out,{'rgd1','rgd2','rgd3','sft1','sft2'},{'Load factor
 
 
 %% Plot nodal coordinate curve X Y
-% tenseg_plot_result(Fhis,n_t([4*3,8*3],:),{'4Z','8Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(Fhis,n_t(3*(level*p+1),:),{'top node'},{'Load factor','Coordinate /m)'},'plot_coordinate.png',saveimg);
 %% make video of the dynamic
-name=['origami_finger'];
+name=['origami_tower'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video_ori(n_t,[],[],C_h,C_rh,Ca,[],min(icrm,50),name,savevideo,[])
