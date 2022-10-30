@@ -53,7 +53,7 @@ Xa0=Ia'*X;
 Xa=Xa0;
 cont=2;
 u=1e-2;
-tol = 1e-6; MaxIter = 50; 
+tol = 1e-6; MaxIter = 80; 
 U=zeros(3*nn,1);
 
  if strcmpi(data.LoadType, 'Force')             % load type: Force
@@ -184,6 +184,7 @@ elseif strcmpi(data.LoadType, 'Substep')
         icrm = icrm+1;
         iter = 0; err = 1;
         lmd=icrm/MaxIcr;
+        Fhis(icrm) = lmd;
         w=w_t(:,icrm);               %external force
         Xb=Xb0+dXb_t(:,icrm);         %forced node displacement
         l0=l0_t(:,icrm);         %forced enlongation of string

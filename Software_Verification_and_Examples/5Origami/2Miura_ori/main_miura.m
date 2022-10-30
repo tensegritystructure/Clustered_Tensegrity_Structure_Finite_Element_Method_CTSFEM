@@ -30,7 +30,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 %% %% N C of the structure
 % Manually specify node positions
-N=[0 1 0;1 1 0;0 0 0;1 0 0;0.5 0.5 0]';
+N=[0 1 0;1 1 0;0 0 0;1 0 0;0.7 0.3 0]';
 % Manually specify connectivity indices.
 C_b_in_v=[1 2;2 4;4 3;3 1];% vertical horizontal bar
 C_b_in_d=[1 5;2 5;4 5;3 5];% diagonal bar
@@ -122,8 +122,9 @@ E_c=1e9*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 %% hinge section design  (of hinge)
-k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
-k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
+% k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
+% k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
+k_h=1/12*E_c(index_h).*l(1)*thick^3;
 %% rest length (of truss), initial angle (of hinge)
 l0_c=l;                     %rest length of truss
 theta_0=theta;     % initial angle of hinge (give different value)
@@ -173,13 +174,15 @@ end
 ind_w=[];w=[];   %external force in Z 
 ind_dnb=[]; dnb0=[];
 ind_dl0_c=[]; dl0_c=[];
-ind_theta_0=[1:4]'; dtheta_0=pi/6*[-1 1 -1 -1]';        % initial angel change with time
+ind_theta_0=[1:4]'; dtheta_0=pi*0.99*[1 -1 -1 -1]';        % initial angel change with time
 % [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 [w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
 
+% add initial defect by first mode shape
+N_d=N+0.0*max(l)*reshape(Ia*K_mode(:,1),3,[]);
 %% Step1: equilibrium calculation
 % input data
-data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
+data.N=N_d; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
 data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
@@ -206,17 +209,22 @@ M_out=data_out1.M_out;
 l_out=data_out1.l_out;
 icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
+%% plot member force 
+tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
+
+%% plot hinge moment
+tenseg_plot_result(Fhis,M_out,{'1','2','3','4'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
 
 %% Plot final configuration
-
- j=linspace(1e-5,1,4);
-for i=1:4
+num_t=4
+ j=linspace(1e-5,1,num_t);
+for i=1:num_t
     num=ceil(j(i)*size(n_t,2));
-tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,[],[],[30,30],[] ,[],Ca);
+tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,[],[],[38,30],[] ,[],Ca);
 %  axis off;
 end
 %% make video of the dynamic
-name=['miura_ori'];
+name=['miura_ori_1'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video_ori(n_t,[],[],C_h,C_rh,Ca,[],min(icrm,50),name,savevideo,[])
