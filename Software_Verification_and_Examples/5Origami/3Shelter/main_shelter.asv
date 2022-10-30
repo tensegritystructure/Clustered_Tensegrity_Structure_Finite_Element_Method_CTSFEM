@@ -42,7 +42,7 @@ N(:,5*p+3:6*p+2)=diag([1,1,-1])*N(:,2*p+3:2:4*p+1);
 %center node
 N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
 %pinned node
-N(:,8*p+3:8*p+6)=[0 0 norm([h,b1/2]);0 0 -norm([h,b1/2]);0 b2 norm([h,b1/2]);0 b2 -norm([h,b1/2])]';
+N(:,8*p+3:8*p+6)=[0 0 h;0 0 -h;0 b2 h;0 b2 -h]';
 
 
 % Manually specify connectivity indices.
@@ -149,7 +149,6 @@ q=t./l;             % force density
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
 A_c=1e-4*ones(ne,1);
-A_c(n_b+4*p+1:end)=1e-6*ones(2*p,1);        %reduce the area of vertical string
 E_c=1e9*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
@@ -158,7 +157,7 @@ index_s=setdiff(1:size(S,1),index_b);	% index of strings
 % k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
 k_h=1/12*E_c(index_h).*l(1)*thick^3;
 %% rest length (of truss), initial angle (of hinge)
-l0_c=0.9*l;                     %rest length of truss
+l0_c=l;                     %rest length of truss
 theta_0=theta;     % initial angle of hinge (give different value)
 %% tangent stiffness matrix of bars
 % [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c);
@@ -205,16 +204,16 @@ end
 % calculate external force and 
 ind_w=[];w=[];   %external force in Z 
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[n_b+[1:4*p]]'; dl0_c=-0.3*l0_c(ind_dl0_c);
+ind_dl0_c=[n_b+[1:4*p],n_]'; dl0_c=[];
 ind_theta_0=[]'; dtheta_0=[]';        % initial angel change with time
 % [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 [w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
 
-% % add initial defect by first mode shape
-% N_d=N+0.0*max(l)*reshape(Ia*K_mode(:,1),3,[]);
+% add initial defect by first mode shape
+N_d=N+0.0*max(l)*reshape(Ia*K_mode(:,1),3,[]);
 %% Step1: equilibrium calculation
 % input data
-data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
+data.N=N_d; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
 data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
@@ -252,13 +251,13 @@ num_t=4
  j=linspace(1e-5,1,num_t);
 for i=1:num_t
     num=ceil(j(i)*size(n_t,2));
-tenseg_plot_ori(reshape(n_t(:,num),3,[]),C_b,C_s,[],C_rh,[],[],[38,30],[] ,[],Ca);
+tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,[],[],[38,30],[] ,[],Ca);
 %  axis off;
 end
 %% make video of the dynamic
-name=['shelter'];
+name=['miura_ori_1'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video_ori(n_t,C_b,C_s,[],C_rh,Ca,[],min(icrm,50),name,savevideo,[])
+tenseg_video_ori(n_t,[],[],C_h,C_rh,Ca,[],min(icrm,50),name,savevideo,[])
 
 

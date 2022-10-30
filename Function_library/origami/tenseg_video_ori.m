@@ -41,7 +41,7 @@ if savevideo==1
         %         delete_index = [7,13];
         %         [N,C_b,C_s] = tenseg_delete_extra_nodes(delete_index,N,C_b,C_s);
 %         tenseg_plot(N,C_b,C_s,99,[],[],[],R3Ddata);hold on
-        tenseg_plot_ori(N,[],[],C_h,C_rh,hf,[],[],[],[],Ca);
+        tenseg_plot_ori(N,C_b,C_s,C_h,C_rh,hf,[],[],[],[],Ca);
 
         set(gcf,'color','w');
         axis(axislim)
