@@ -76,16 +76,19 @@ tenseg_plot(N,C_b,C_s);
 
 %% define hinge, rigid hinge
 % C_in_h is the connectivity of higes, can be written in a function!!!!!!!!!
-C_in_h=[C_b_in_5];
+C_in_h=[C_b_in_5;C_b_in_6];
 n_h=size(C_in_h,1);         % number of hinge
 
 [~,index_h]=ismember(C_in_h,C_in,'rows');   % index_h is the index number of hinge
 % index_rh=[];index_rh_in_h=[];
-[~,index_rh]=ismember(C_b_in_6,C_in,'rows');   % index_h is the index number of rigid hinge
-[~,index_rh_in_h]=ismember(C_b_in_6,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
+[~,index_rig_h]=ismember(C_b_in_6,C_in,'rows');   % index_h is the index number of rigid hinge
+[~,index_rot_h]=ismember(C_b_in_5,C_in,'rows');   % index_h is the index number of rotational hinge
 
-C_h=tenseg_ind2C(C_in(setdiff([1:ne]',index_rh),:),N);     % connectivity matrix of all edges
-C_rh=tenseg_ind2C(C_in(index_rh,:),N); % connectivity matrix of rigid edges
+[~,index_roth_in_h]=ismember(C_b_in_5,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
+[~,index_righ_in_h]=ismember(C_b_in_6,C_in_h,'rows');   % index_h is the index of rigid hinge in all hinge
+
+C_h=tenseg_ind2C(C_in(index_h,:),N);     % connectivity matrix of all edges
+C_rh=tenseg_ind2C(C_in(index_rig_h,:),N); % connectivity matrix of rigid edges
 % Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
 
@@ -149,7 +152,7 @@ q=t./l;             % force density
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
 A_c=1e-4*ones(ne,1);
-A_c(n_b+4*p+1:end)=1e-6*ones(2*p,1);        %reduce the area of vertical string
+A_c(n_b+4*p+1:end)=1e-7*ones(2*p,1);        %reduce the area of vertical string
 E_c=1e9*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
@@ -205,7 +208,7 @@ end
 % calculate external force and 
 ind_w=[];w=[];   %external force in Z 
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[n_b+[1:4*p]]'; dl0_c=-0.3*l0_c(ind_dl0_c);
+ind_dl0_c=[n_b+[1:4*p]]'; dl0_c=-0.5*l0_c(ind_dl0_c);
 ind_theta_0=[]'; dtheta_0=[]';        % initial angel change with time
 % [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 [w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
@@ -242,10 +245,16 @@ l_out=data_out1.l_out;
 icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
 %% plot member force 
-tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
+tenseg_plot_result(Fhis,t_t([n_b+1,ne],:),{'horizontal string','vertical string'},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
+% %% plot member length 
+% tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
 
 %% plot hinge moment
-tenseg_plot_result(Fhis,M_out,{'1','2','3','4'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
+tenseg_plot_result(Fhis,M_out(index_roth_in_h,:),{'hinge 1','hinge 2','hinge 3','hinge 4','hinge 5'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
+
+%% Plot nodal coordinate curve X Y
+tenseg_plot_result(Fhis,n_t(3*[(1:p)*2+1]-2,:),{'3X','5X','7X'},{'Load factor','Coordinate /m)'},'plot_coordinate.png',saveimg);
+tenseg_plot_result(Fhis,n_t(3*[(1:p)*2],:),{'2Z','4Z','6Z'},{'Load factor','Coordinate /m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
 num_t=4
@@ -260,5 +269,7 @@ name=['shelter'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video_ori(n_t,C_b,C_s,[],C_rh,Ca,[],min(icrm,50),name,savevideo,[])
-
-
+%% save output data
+if savedata==1
+    save (['shelter','.mat']);
+end

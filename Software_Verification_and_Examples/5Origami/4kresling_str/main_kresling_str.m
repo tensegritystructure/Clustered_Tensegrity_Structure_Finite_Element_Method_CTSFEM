@@ -232,8 +232,8 @@ tenseg_plot_ori(reshape(n_t(:,num),3,[]),C_b,C_s,[],C_rh,[],[],[30,30],[] ,[],Ca
 end
 %% plot member force 
 tenseg_plot_result(Fhis,t_t([55,60,65],:),{'bottom string','middle string','top string'},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
-%% plot member length 
-tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
+% %% plot member length 
+% tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
 
 %% plot hinge moment
 tenseg_plot_result(Fhis,M_out([(level-1)*p,(level-1)*p+level*p,(level-1)*p+2*level*p],:),{'horizontal hinge','vertical hinge','diagonal hinge'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
@@ -245,7 +245,7 @@ name=['krseling with string 0'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video_ori(n_t,C_b,C_s,[],C_rh,Ca,[],min(icrm,50),name,savevideo,[])
-
+%% save output data
 if savedata==1
     save (['kresling str','.mat']);
 end
