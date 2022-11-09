@@ -16,7 +16,8 @@ switch nargin
 end
 
 figure
-plot(1:numel(value),value,'k-o','linewidth',1.5);
+% plot(1:numel(value),value,'k-o','linewidth',1.5); % original plot
+semilogy(1:numel(value),value,'k-o','linewidth',1.5); %semilogy
 set(gca,'fontsize',18);
 xlabel(xlb,'fontsize',18,'Interpreter','latex');
 ylabel(ylb,'fontsize',18,'Interpreter','latex');
