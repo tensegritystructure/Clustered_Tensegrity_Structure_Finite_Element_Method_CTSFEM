@@ -60,7 +60,7 @@ C_h=tenseg_ind2C(C_in(setdiff([1:ne]',index_rh),:),N);     % connectivity matrix
 C_rh=tenseg_ind2C(C_in(index_rh,:),N); % connectivity matrix of rigid edges
 % Plot the structure to make sure it looks right
 tenseg_plot(N,C_b,C_s);
-
+% axis off
 
 %% connectivity of triangle element Ca
 % Ca can be written in a function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
