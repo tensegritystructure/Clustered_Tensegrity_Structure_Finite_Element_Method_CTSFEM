@@ -91,7 +91,9 @@ for j=1:np
 end
 node_in_hinge(i,:)=[node1,node2,node3,node4];
 E_n{i}=I(:,kron(node_in_hinge(i,:),3*ones(1,3))-kron(ones(1,4),[2,1,0]));
+% E_ntt{i}=E_n{i}(1:3:end,1:3:end);
 end
+
 E_n_total=cell2mat(E_n);        % transformation matrix of the whole structure
 %% Boundary constraints
 pinned_X=[1 2 5]'; pinned_Y=[1 2 5]'; pinned_Z=[1 2 5]';
