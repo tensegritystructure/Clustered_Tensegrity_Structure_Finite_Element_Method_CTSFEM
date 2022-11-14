@@ -35,7 +35,7 @@ function [fig_out] = tenseg_plot_ori_dash( N,C_b,C_s,C_h,C_rh,fig_handle,highlig
 %% Object size options (for line plots)
 
 
-BarWidth = 3; % Width of bar lines
+BarWidth = 1; % Width of bar lines
 StringWidth = 1.5; % Width of string lines
 NodeSize = 13; % Size of node marker
 
