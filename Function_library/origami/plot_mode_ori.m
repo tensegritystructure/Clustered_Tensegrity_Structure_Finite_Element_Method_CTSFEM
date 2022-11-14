@@ -28,11 +28,12 @@ end
 
 for i=1:numel(num_plt)
     f1=figure;
-%     title2=({['mode ',num2str(num_plt(i))];['eigenvalue=',num2str(value(num_plt(i)),'%.4f')]});
-     title2=({['mode ',num2str(num_plt(i)),'  \lambda_',num2str(num_plt(i)),' = ',num2str(value(num_plt(i)),'%.1e')]});
+%      title2=({['Mode ',num2str(num_plt(i)),'  \lambda_',num2str(num_plt(i)),' = ',num2str(value(num_plt(i)),'%.1e')]});
+title2=[];
 %plot buckling mode
     tenseg_plot_ori(N+ampli*max(l)*reshape(Ia*Mode(:,num_plt(i))/norm(Mode(:,num_plt(i))),3,[]),C_b,C_s,C_h,C_rh,f1,[],[],title2,[],Ca);
-    tenseg_plot_ori_dash(N,C_b,C_s,C_h,C_rh,f1,[],[],title2,[],[]);
+    tenseg_plot_ori_dash(N,C_b,C_s,C_h,C_rh,f1,[],[],title2,[],Ca);
+
      axis off;
         view(view_vec);
     if saveimg==1

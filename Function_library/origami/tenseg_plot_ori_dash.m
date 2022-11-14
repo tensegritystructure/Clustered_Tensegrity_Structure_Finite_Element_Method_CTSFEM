@@ -319,7 +319,7 @@ num_rbd=size(Ca,2);
 for i=1:num_rbd
    N2=N(:,Ca(:,i));
    X=[1 0 0]*N2;Y=[0 1 0]*N2;Z=[0 0 1]*N2;
-   patch(X',Y',Z','b','FaceAlpha',0.5,'EdgeColor','none');    
+   patch(X',Y',Z','FaceAlpha',0.2,'FaceColor','#00FF00');    
 %    patch(X',Y',Z',[0.9290 0.6940 0.1250],'FaceAlpha',0.5,'EdgeColor','b'); 
 end
 

@@ -276,7 +276,7 @@ Kt_aa=Kt_aa_out{num};       %tangent stiffness of truss
 K_t_oa=K_t_oa_out{num};     %tangent stiffness of whole struct.
     
 num_tot=1e4;
-dir=linspace(0,2*pi,num_tot)';            %direction
+dir=linspace(0,2.5*pi,num_tot)';            %direction
 F_dir=zeros(3*nn,numel(dir));
 F_dir([4*3-1,4*3],:)=1e-5*[cos(dir)';sin(dir)'];   % force with direction
 % stiff coefficient of origami
@@ -308,8 +308,8 @@ grid on;
 %plot configuration
  hf=figure
 % tenseg_plot(N,C_b,C_s,hf);
-tenseg_plot_ori(reshape(n_t(:,num)+3e5*Ia*disp_dir(:,5*num_tot/8),3,[]),[],[],C_h,C_rh,hf,[],[38,30],[] ,[],Ca);
-tenseg_plot(reshape(n_t(:,num),3,[]),C_b,C_s,hf);
+tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,hf,[],[38,30],[] ,[],Ca);
+tenseg_plot(N+reshape(disp_dir(:,num_tot/,3,[]),C_b,C_s,hf);
 
 figure
 % plot(stiff_dir.*cos(dir),stiff_dir.*sin(dir),'ko','linewidth',1.5);
