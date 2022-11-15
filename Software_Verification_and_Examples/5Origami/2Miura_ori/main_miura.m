@@ -219,29 +219,74 @@ M_out=data_out1.M_out;
 l_out=data_out1.l_out;
 Kt_aa_out= data_out1.Kt_aa_out;       %tangent stiffness of truss
 K_t_oa_out= data_out1.K_t_oa_out;       %tangent stiffness of whole struct.
-   
+theta_t=data_out1.theta_out;
+
 icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
+%% Large deformation analysis
 %% plot member force 
 tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
 
-%% plot hinge moment
-tenseg_plot_result(Fhis,M_out,{'1','2','3','4'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
+%% plot angle, rest angle, hinge moment 
+
+%plot moment
+tenseg_plot_result2(Fhis,M_out,{'M_1','M_2','M_3','M_4'},{'Load factor','Moment / N \times m'},...
+    'plot_hinge_moment.png',saveimg,{'-or','-.vg','--xb',':^k'});
+legend('NumColumns',2);
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
+
+% plot angle, rest angle
+tenseg_plot_result2(Fhis,180/pi*[theta_0_t;theta_t],{'\theta_{0,1}','\theta_{0,2}','\theta_{0,3}','\theta_{0,4}','\theta_{1}','\theta_{2}','\theta_{3}','\theta_{4}'}...
+    ,{'Load factor','Folding Angle ({\circ})'},'plot_hinge_angle.png',saveimg,{'-r','-.g','--b',':k','-or','-.vg','--xb',':^k'});
+legend('NumColumns',2);
+fig=gcf;
+fig.Position(3:4)=[800,350];
+%% plot stiffness in large deformation in XYZ direction
+
+F_dir=zeros(3*nn,3);
+F_dir([4*3-2:4*3],:)=eye(3);   % force with direction X Y Z
+
+compliance_dir=zeros(3,substep);    % compliance with direction X Y Z
+stiff_dir=zeros(3,substep);         % stiff with direction X Y Z
+
+for i=1:substep
+    K_t_oa=K_t_oa_out{i};
+disp_dir=K_t_oa\(Ia'*F_dir);
+compliance_dir(:,i)=diag(disp_dir'*K_t_oa'*disp_dir);     
+stiff_dir(:,i)=1./compliance_dir(:,i);
+end 
+
+%plot stiffness
+figure
+semilogy(Fhis,stiff_dir(1,:),'-r',...
+    Fhis,stiff_dir(2,:),'-.g',...
+    Fhis,stiff_dir(3,:),'--b','linewidth',2); %semilogy
+set(gca,'fontsize',18);
+xlabel('Load factor','fontsize',18,'Interpreter','tex');
+ylabel('Stiffness (N/m)','fontsize',18);
+lgd =legend('X','Y','Z');
+legend('NumColumns',3);
+title(lgd,'Direction')
+grid on;
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
 
 %% Plot final configuration
-num_t=4
+num_t=6
  j=linspace(1e-5,1,num_t);
 
 for i=1:num_t
     hf=figure;
     num=ceil(j(i)*size(n_t,2));
-    tenseg_plot(N,C_b,C_s,hf);
+%     tenseg_plot(N,C_b,C_s,hf);
 tenseg_plot_ori(reshape(n_t(:,num),3,[]),[],[],C_h,C_rh,hf,[],[45,30],[] ,[],Ca);
+ tenseg_plot_ori_dash(N,C_b,C_s,C_h,C_rh,hf,[],[45,30],[],[],Ca);
 
 xlim([min(n_t(1:3:end,:),[],'all'),max(n_t(1:3:end,:),[],'all')]);
 ylim([min(n_t(2:3:end,:),[],'all'),max(n_t(2:3:end,:),[],'all')]);
 zlim([min(n_t(3:3:end,:),[],'all'),max(n_t(3:3:end,:),[],'all')]);
-%  axis off;
+ axis off;
 end
 %% make video of the dynamic
 name=['miura_ori_1'];
@@ -283,7 +328,7 @@ semilogy(dir*180/pi,stiff_dir_ori,'r-',...
     dir(1:num_tot/8e1:end)*180/pi,stiff_dir_truss(1:num_tot/8e1:end),'kx',...
     dir*180/pi,stiff_dir_hinge,'c-.','linewidth',1.5); %semilogy
 set(gca,'fontsize',18);
-xlabel('Angle \theta ({\circ})','fontsize',18,'Interpreter','tex');
+xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
 ylabel('Stiffness (N/m)','fontsize',18,'Interpreter','latex');
 legend('Origami','Bars','Hinges')
 xlim([0 360]);

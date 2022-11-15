@@ -21,7 +21,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=40;                                     %荷载子步
+substep=400;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -223,19 +223,54 @@ theta_t=data_out1.theta_out;
 
 icrm=size(n_t,2);               % increment
 % N_out=data_out1.N_out;
+%% Large deformation analysis
 %% plot member force 
 tenseg_plot_result(Fhis,t_t,{},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
 
 %% plot angle, rest angle, hinge moment 
-%plot angle
-subplot(2,1,1);
 
-tenseg_plot_result(Fhis,M_out,{'M_1','M_2','M_3','M_4'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
-ax1 = gca;
+%plot moment
+tenseg_plot_result2(Fhis,M_out,{'M_1','M_2','M_3','M_4'},{'Load factor','Moment / N \times m'},...
+    'plot_hinge_moment.png',saveimg,{'-or','-.vg','--xb',':^k'});
+legend('NumColumns',2);
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
+
+% plot angle, rest angle
 tenseg_plot_result2(Fhis,180/pi*[theta_0_t;theta_t],{'\theta_{0,1}','\theta_{0,2}','\theta_{0,3}','\theta_{0,4}','\theta_{1}','\theta_{2}','\theta_{3}','\theta_{4}'}...
-    ,{'Load factor','Angle ({\circ})'},'plot_hinge_angle.png',saveimg,{'-r','-.g','--b',':k','-or','-.vg','--xb',':^k'});
-ax1 = gca;
-tenseg_plot_result(Fhis,theta_t,{'1','2','3','4'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
+    ,{'Load factor','Folding Angle ({\circ})'},'plot_hinge_angle.png',saveimg,{'-r','-.g','--b',':k','-or','-.vg','--xb',':^k'});
+legend('NumColumns',2);
+fig=gcf;
+fig.Position(3:4)=[800,350];
+%% plot stiffness in large deformation in XYZ direction
+
+F_dir=zeros(3*nn,3);
+F_dir([4*3-2:4*3],:)=eye(3);   % force with direction X Y Z
+
+compliance_dir=zeros(3,substep);    % compliance with direction X Y Z
+stiff_dir=zeros(3,substep);         % stiff with direction X Y Z
+
+for i=1:substep
+    K_t_oa=K_t_oa_out{i};
+disp_dir=K_t_oa\(Ia'*F_dir);
+compliance_dir(:,i)=diag(disp_dir'*K_t_oa'*disp_dir);     
+stiff_dir(:,i)=1./compliance_dir(:,i);
+end 
+
+%plot stiffness
+figure
+semilogy(Fhis,stiff_dir(1,:),'-r',...
+    Fhis,stiff_dir(2,:),'-.g',...
+    Fhis,stiff_dir(3,:),'--b','linewidth',2); %semilogy
+set(gca,'fontsize',18);
+xlabel('Load factor','fontsize',18,'Interpreter','tex');
+ylabel('Stiffness (N/m)','fontsize',18);
+lgd =legend('X','Y','Z');
+legend('NumColumns',3);
+title(lgd,'Direction')
+grid on;
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
 
 %% Plot final configuration
 num_t=6
@@ -293,7 +328,7 @@ semilogy(dir*180/pi,stiff_dir_ori,'r-',...
     dir(1:num_tot/8e1:end)*180/pi,stiff_dir_truss(1:num_tot/8e1:end),'kx',...
     dir*180/pi,stiff_dir_hinge,'c-.','linewidth',1.5); %semilogy
 set(gca,'fontsize',18);
-xlabel('Angle \theta ({\circ})','fontsize',18,'Interpreter','tex');
+xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
 ylabel('Stiffness (N/m)','fontsize',18,'Interpreter','latex');
 legend('Origami','Bars','Hinges')
 xlim([0 360]);
