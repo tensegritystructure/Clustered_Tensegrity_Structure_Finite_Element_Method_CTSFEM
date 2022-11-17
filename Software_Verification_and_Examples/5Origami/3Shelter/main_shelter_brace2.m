@@ -46,8 +46,8 @@ N(:,5*p+3:6*p+2)=diag([1,1,-1])*N(:,2*p+3:2:4*p+1);
 N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
 %pinned node
 N(:,8*p+3:8*p+6)=[0 0 norm([h,b1/2]);0 0 -norm([h,b1/2]);0 b2 norm([h,b1/2]);0 b2 -norm([h,b1/2])]';
-%center node in bottom
-N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
+% %center node in bottom
+% N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
 
 % Manually specify connectivity indices.
 % C_b_in_v=[1 2;2 4;4 3;3 1];% vertical horizontal bar
@@ -58,15 +58,17 @@ C_b_in_2=[[1:2:2*p-1,3:2:2*p+1];kron(ones(1,2),4*p+3:5*p+2)]'; % bottom bar
 C_b_in_3=[[2*p+2:2:4*p,2*p+4:2:4*p+2];kron(ones(1,2),5*p+3:6*p+2)]'; % bottom bar 2
 C_b_in_4=[1 2*p+1;2*p+2 4*p+2]';     %2 edge 
 C_b_in_5=[2:2*p;2*p+3:4*p+1]';  % rotational hinge
-C_b_in_6=[2:2*p;2*p+3:4*p+1]';  % diagonal braces in bottom
 % bending hinge
 C_b_in_6=kron(ones(2*p,1),[1 2 2*p+2 2*p+3;(6*p+3)*ones(1,4)]')+kron([0:2*p-1]',ones(4,2));
+ % diagonal braces in bottom
+C_b_in_7=[1:2:2*p-1,4*p+3:5*p+2,2*p+2:2:4*p,5*p+3:6*p+2;5*p+3:6*p+2,2*p+4:2:4*p+2,4*p+3:5*p+2,3:2:2*p+1]';% diagonal braces in bottom
+
 % strings
 C_s_in_1=[8*p+3 2:2:2*p-2 8*p+5 2*p+3:2:4*p-1;2:2:2*p 2*p+3:2:4*p+1]'; %top string
 C_s_in_2=[8*p+4 4*p+3:5*p+1 8*p+6 5*p+3:6*p+1;4*p+3:5*p+2 5*p+3:6*p+2]'; %bottom string
 C_s_in_3=[[2:2:2*p 2*p+3:2:4*p+1];[4*p+3:6*p+2]]';                      %vertical string
 % C_in = [C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6;C_s_in_1;C_s_in_2];
-C_b_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6];
+C_b_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6;C_b_in_7];
 C_s_in=[C_s_in_1;C_s_in_2;C_s_in_3];
 C_in=[C_b_in;C_s_in];
 % Convert the above matrices into full connectivity matrices.
@@ -75,8 +77,9 @@ C = tenseg_ind2C(C_in,N);
 
 C_b=tenseg_ind2C(C_b_in,N);C_s=tenseg_ind2C(C_s_in,N);
 n_b=size(C_b,1);n_s=size(C_s,1);        % number of bars and string
+
 % connectivity matrix for plot
-C_bar_in=[C_b_in_1;C_b_in_2;C_b_in_3];      % real bars
+C_bar_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_7];      % real bars
 C_bar=tenseg_ind2C(C_bar_in,N);
 C_rot_h_in=[C_b_in_4;C_b_in_5];             %rotational hinges
 C_rot_h=tenseg_ind2C(C_rot_h_in,N);
@@ -170,15 +173,15 @@ q=t./l;             % force density
 %% self-stress design (of hinge)
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
-A_c=1e-4*ones(ne,1);
-A_c(1:n_b)
+A_c=1e-4*ones(ne,1);                % area for bars and strings
+A_c(index_rig_h)=1e-7*ones(numel(index_rig_h),1);   % area for bending hinges
 A_c(n_b+4*p+1:end)=1e-7*ones(2*p,1);        %reduce the area of vertical string
 E_c=1e6*ones(ne,1);
-index_b=[1:ne]';              % index of bar in compression
+index_b=[1:n_b]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 %% hinge section design  (of hinge)
 k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
-k_h(index_righ_in_h)=1e2*1/12*E_c(index_rig_h).*l(index_rig_h)*thick^3;      % increase stiffness of rigid hinge
+k_h(index_righ_in_h)=1e4*1/12*E_c(index_rig_h).*l(index_rig_h)*thick^3;      % increase stiffness of rigid hinge
 % k_h=1/12*E_c(index_h).*l(1)*thick^3;
 %% rest length (of truss), initial angle (of hinge)
 l0_c=0.9*l;                     %rest length of truss
@@ -341,13 +344,13 @@ k=diag(D1);
 [k, ind] = sort(k);
 K_mode = K_mode(:, ind);
 % plot the mode shape of tangent stiffness matrix
-num_plt=1:9;
-plot_mode_ori(round(K_mode,12),k,N,Ia,C_bar,C_s,C_rot_h,C_rig_h,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.3,saveimg,3,Ca);
+num_plt=1:10;
+plot_mode_ori(round(K_mode(:,num_plt),12),k(num_plt),N,Ia,C_bar,C_s,C_rot_h,C_rig_h,l,'tangent stiffness matrix',...
+    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.5,saveimg,[0,30],Ca);
    
 
 %% make video of the dynamic
-name=['shelter'];
+name=['shelter with brace'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
 tenseg_video_ori(n_t,C_b,C_s,[],C_rig_h,Ca,[],min(icrm,50),name,savevideo,[])

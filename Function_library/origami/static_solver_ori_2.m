@@ -53,7 +53,7 @@ Xa0=Ia'*X;
 Xa=Xa0;
 cont=2;
 u=1e-2;
-tol = 1e-6; MaxIter = 80; 
+tol = 1e-6; MaxIter = 150; 
 U=zeros(3*nn,1);
 
  if strcmpi(data.LoadType, 'Force')             % load type: Force
@@ -266,7 +266,7 @@ elseif strcmpi(data.LoadType, 'Substep')
 
 
     data_out.n_out(:,icrm)=X;
-    %     data_out.l_out(:,k)=l;
+    data_out.l_out(:,icrm)=l;
     %     data_out.q_out(:,k)=q;
     %     data_out.E_out(:,k)=E;
     data_out.t_out(:,icrm)=t;      %member force

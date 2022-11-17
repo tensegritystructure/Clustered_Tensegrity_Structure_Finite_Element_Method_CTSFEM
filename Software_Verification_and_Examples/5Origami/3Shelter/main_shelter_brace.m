@@ -5,7 +5,7 @@
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 %
-%
+% origami+D bar tensegrity with bottom bracing
 
 %EXAMPLE
 clc; clear all; close all;
@@ -32,10 +32,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % Manually specify node positions
 % N=[0 1 0;1 1 0;0 0 0;1 0 0;0.7 0.3 0]';
 p=3;        %complexity of shelter
-alpha=40;
-l_b=0.1*sqrt(2); 
-b1=2*l_b*cosd(alpha);b2=l_b;h=l_b*sind(alpha);
-% b1=0.4;b2=0.4;h=0.1;        % geometry coefficient
+b1=0.2;b2=0.2;h=0.1;        % geometry coefficient
 N=zeros(3,8*p+6);           % initialize N
 N(1,1:2:2*p+1)=[b1*(0:p)];
 N(:,2:2:2*p)=[b1*(0.5+0:p);zeros(1,p);h*ones(1,p)];
@@ -46,8 +43,7 @@ N(:,5*p+3:6*p+2)=diag([1,1,-1])*N(:,2*p+3:2:4*p+1);
 N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
 %pinned node
 N(:,8*p+3:8*p+6)=[0 0 norm([h,b1/2]);0 0 -norm([h,b1/2]);0 b2 norm([h,b1/2]);0 b2 -norm([h,b1/2])]';
-%center node in bottom
-N(:,6*p+3:8*p+2)=[b1/2*(0.5:2*p-0.5);b2/2*ones(1,2*p);h/2*ones(1,2*p)];
+
 
 % Manually specify connectivity indices.
 % C_b_in_v=[1 2;2 4;4 3;3 1];% vertical horizontal bar
@@ -58,15 +54,16 @@ C_b_in_2=[[1:2:2*p-1,3:2:2*p+1];kron(ones(1,2),4*p+3:5*p+2)]'; % bottom bar
 C_b_in_3=[[2*p+2:2:4*p,2*p+4:2:4*p+2];kron(ones(1,2),5*p+3:6*p+2)]'; % bottom bar 2
 C_b_in_4=[1 2*p+1;2*p+2 4*p+2]';     %2 edge 
 C_b_in_5=[2:2*p;2*p+3:4*p+1]';  % rotational hinge
-C_b_in_6=[2:2*p;2*p+3:4*p+1]';  % diagonal braces in bottom
 % bending hinge
 C_b_in_6=kron(ones(2*p,1),[1 2 2*p+2 2*p+3;(6*p+3)*ones(1,4)]')+kron([0:2*p-1]',ones(4,2));
+ % diagonal braces in bottom
+C_b_in_7=[1:2:2*p-1,4*p+3:5*p+2,2*p+2:2:4*p,5*p+3:6*p+2;5*p+3:6*p+2,2*p+4:2:4*p+2,4*p+3:5*p+2,3:2:2*p+1]';% diagonal braces in bottom
 % strings
 C_s_in_1=[8*p+3 2:2:2*p-2 8*p+5 2*p+3:2:4*p-1;2:2:2*p 2*p+3:2:4*p+1]'; %top string
 C_s_in_2=[8*p+4 4*p+3:5*p+1 8*p+6 5*p+3:6*p+1;4*p+3:5*p+2 5*p+3:6*p+2]'; %bottom string
 C_s_in_3=[[2:2:2*p 2*p+3:2:4*p+1];[4*p+3:6*p+2]]';                      %vertical string
 % C_in = [C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6;C_s_in_1;C_s_in_2];
-C_b_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6];
+C_b_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_4;C_b_in_5;C_b_in_6;C_b_in_7];
 C_s_in=[C_s_in_1;C_s_in_2;C_s_in_3];
 C_in=[C_b_in;C_s_in];
 % Convert the above matrices into full connectivity matrices.
@@ -76,7 +73,7 @@ C = tenseg_ind2C(C_in,N);
 C_b=tenseg_ind2C(C_b_in,N);C_s=tenseg_ind2C(C_s_in,N);
 n_b=size(C_b,1);n_s=size(C_s,1);        % number of bars and string
 % connectivity matrix for plot
-C_bar_in=[C_b_in_1;C_b_in_2;C_b_in_3];      % real bars
+C_bar_in=[C_b_in_1;C_b_in_2;C_b_in_3;C_b_in_7];      % real bars
 C_bar=tenseg_ind2C(C_bar_in,N);
 C_rot_h_in=[C_b_in_4;C_b_in_5];             %rotational hinges
 C_rot_h=tenseg_ind2C(C_rot_h_in,N);
@@ -171,15 +168,14 @@ q=t./l;             % force density
 M=zeros(n_h,1);
 %% cross sectional design (of truss)
 A_c=1e-4*ones(ne,1);
-A_c(1:n_b)
 A_c(n_b+4*p+1:end)=1e-7*ones(2*p,1);        %reduce the area of vertical string
 E_c=1e6*ones(ne,1);
 index_b=[1:ne]';              % index of bar in compression
 index_s=setdiff(1:size(S,1),index_b);	% index of strings
 %% hinge section design  (of hinge)
-k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
-k_h(index_righ_in_h)=1e2*1/12*E_c(index_rig_h).*l(index_rig_h)*thick^3;      % increase stiffness of rigid hinge
-% k_h=1/12*E_c(index_h).*l(1)*thick^3;
+% k_h=1/12*E_c(index_h).*l(index_h)*thick^3;
+% k_h(index_rh_in_h)=1e2*1/12*E_c(index_rh).*l(index_rh)*thick^3;      % increase stiffness of rigid hinge
+k_h=1/12*E_c(index_h).*l(1)*thick^3;
 %% rest length (of truss), initial angle (of hinge)
 l0_c=0.9*l;                     %rest length of truss
 theta_0=theta;     % initial angle of hinge (give different value)
@@ -230,7 +226,7 @@ end
 % calculate external force and 
 ind_w=[];w=[];   %external force in Z 
 ind_dnb=[]; dnb0=[];
-ind_dl0_c=[n_b+[1:4*p]]'; dl0_c=-0.7*l0_c(ind_dl0_c);
+ind_dl0_c=[n_b+[1:4*p]]'; dl0_c=-0.5*l0_c(ind_dl0_c);
 ind_theta_0=[]'; dtheta_0=[]';        % initial angel change with time
 % [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
 [w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
@@ -264,54 +260,12 @@ t_t=data_out1.t_out;          %member force in every step
 n_t=data_out1.n_out;          %nodal coordinate in every step
 M_out=data_out1.M_out;
 l_out=data_out1.l_out;
-Kt_aa_out= data_out1.Kt_aa_out;       %tangent stiffness of truss
-K_t_oa_out= data_out1.K_t_oa_out;       %tangent stiffness of whole struct.
-theta_t=data_out1.theta_out;
-
 icrm=size(n_t,2);               % increment
-%% Large deformation analysis
-%% plot stiffness in large deformation in XYZ direction
-
-F_dir=zeros(3*nn,3);
-F_dir([(2*p+1)*3-2:(2*p+1)*3,(4*p+2)*3-2:(4*p+2)*3],:)=kron([1;1],eye(3));   % force with direction X Y Z
-
-compliance_dir=zeros(3,substep);    % compliance with direction X Y Z
-stiff_dir=zeros(3,substep);         % stiff with direction X Y Z
-
-for i=1:substep
-    K_t_oa=K_t_oa_out{i};
-disp_dir=K_t_oa\(Ia'*F_dir);
-compliance_dir(:,i)=diag(disp_dir'*K_t_oa'*disp_dir);     
-stiff_dir(:,i)=1./compliance_dir(:,i);
-end 
-
-%plot stiffness
-figure
-semilogy(Fhis,stiff_dir(1,:),'-r',...
-    Fhis,stiff_dir(2,:),'-.g',...
-    Fhis,stiff_dir(3,:),'--b','linewidth',2); %semilogy
-set(gca,'fontsize',18);
-xlabel('Load factor','fontsize',18,'Interpreter','tex');
-ylabel('Stiffness (N/m)','fontsize',18);
-lgd =legend('X','Y','Z');
-legend('NumColumns',3);
-title(lgd,'Direction')
-grid on;
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-
+% N_out=data_out1.N_out;
 %% plot member force 
-tenseg_plot_result2(Fhis,t_t([4*p+1,n_b+1,ne],:),{'bar','horizontal string','vertical string'}...
-    ,{'Load factor','Force (N)'},'plot_member_force.png',saveimg,{'-or','-.vg','--xb'});
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-
-%% plot member length 
-tenseg_plot_result2(Fhis,[l0_ct([4*p+1,n_b+1,ne],:);l_out([4*p+1,n_b+1,ne],:)],{'l_{0,b}','l_{0,hs}','l_{0,vs}','l_{b}','l_{hs}','l_{vs}'}...
-    ,{'Load factor','Length (m)'},'plot_member_length.png',saveimg,{'-r','-.g','--b','-or','-.vg','--xb'});
-legend('NumColumns',2);
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
+tenseg_plot_result(Fhis,t_t([n_b+1,ne],:),{'horizontal string','vertical string'},{'Load factor','Force / N'},'plot_member_force.png',saveimg);
+% %% plot member length 
+% tenseg_plot_result(Fhis,l_out,{},{'Load factor','length / m'},'plot_member_length.png',saveimg);
 
 %% plot hinge moment
 tenseg_plot_result(Fhis,M_out(index_roth_in_h,:),{'hinge 1','hinge 2','hinge 3','hinge 4','hinge 5'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
@@ -321,31 +275,13 @@ tenseg_plot_result(Fhis,n_t(3*[(1:p)*2+1]-2,:),{'3X','5X','7X'},{'Load factor','
 tenseg_plot_result(Fhis,n_t(3*[(1:p)*2],:),{'2Z','4Z','6Z'},{'Load factor','Coordinate /m)'},'plot_coordinate.png',saveimg);
 
 %% Plot final configuration
-num_t=3
+num_t=4
  j=linspace(1e-5,1,num_t);
 for i=1:num_t
     num=ceil(j(i)*size(n_t,2));
-tenseg_plot_ori(reshape(n_t(:,num),3,[]),C_bar,C_s,C_rot_h,C_rig_h,[],[],[45,30],[] ,[],Ca);
- axis off;
+tenseg_plot_ori(reshape(n_t(:,num),3,[]),C_b,C_s,[],C_rig_h,[],[],[38,30],[] ,[],Ca);
+%  axis off;
 end
-
-%% Stiffness analysis
-percent=0.1; num=round(percent*substep);
-
-
-Kt_aa=Kt_aa_out{num};       %tangent stiffness of truss
-K_t_oa=K_t_oa_out{num};     %tangent stiffness of whole struct.
-
-[K_mode,D1] = eig(K_t_oa);         % eigenvalue of tangent stiffness matrix
-k=diag(D1); 
-[k, ind] = sort(k);
-K_mode = K_mode(:, ind);
-% plot the mode shape of tangent stiffness matrix
-num_plt=1:9;
-plot_mode_ori(round(K_mode,12),k,N,Ia,C_bar,C_s,C_rot_h,C_rig_h,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.3,saveimg,3,Ca);
-   
-
 %% make video of the dynamic
 name=['shelter'];
 % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);

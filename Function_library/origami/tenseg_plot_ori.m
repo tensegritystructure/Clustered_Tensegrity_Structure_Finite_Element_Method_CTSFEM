@@ -37,7 +37,7 @@ function [fig_out] = tenseg_plot_ori( N,C_b,C_s,C_h,C_rh,fig_handle,highlight_no
 
 BarWidth = 3; % Width of bar lines
 StringWidth = 1.5; % Width of string lines
-NodeSize = 13; % Size of node marker
+NodeSize = 2; % Size of node marker
 
 hingeWidth=2; % Width of hinges
 rgdhingeWidth=2;  % Width of rgd hinges
@@ -267,7 +267,7 @@ if ~isempty(C_rh)
         end
     else % Normal line plot;
 %         quiver3(bar_start_nodes(1,:),bar_start_nodes(2,:),bar_start_nodes(3,:),B(1,:),B(2,:),B(3,:),'y-.','Autoscale','off','LineWidth',rgdhingeWidth)
-       quiver3(bar_start_nodes(1,:),bar_start_nodes(2,:),bar_start_nodes(3,:),B(1,:),B(2,:),B(3,:),'magenta-.','Autoscale','off','LineWidth',rgdhingeWidth,'ShowArrowHead','off')
+       quiver3(bar_start_nodes(1,:),bar_start_nodes(2,:),bar_start_nodes(3,:),B(1,:),B(2,:),B(3,:),'k-.','Autoscale','off','LineWidth',rgdhingeWidth,'ShowArrowHead','off')
         hold on
     end
     % Write bar labels

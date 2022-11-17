@@ -186,7 +186,7 @@ if ~isempty(C_s)
             hold on
         end
     else % Normal line plot
-        quiver3(string_start_nodes(1,:),string_start_nodes(2,:),string_start_nodes(3,:),S(1,:),S(2,:),S(3,:),'red.','Autoscale','off','LineWidth',StringWidth);
+        quiver3(string_start_nodes(1,:),string_start_nodes(2,:),string_start_nodes(3,:),S(1,:),S(2,:),S(3,:),'black.','Autoscale','off','LineWidth',StringWidth);
         hold on
     end
     
@@ -319,7 +319,8 @@ num_rbd=size(Ca,2);
 for i=1:num_rbd
    N2=N(:,Ca(:,i));
    X=[1 0 0]*N2;Y=[0 1 0]*N2;Z=[0 0 1]*N2;
-   patch(X',Y',Z','FaceAlpha',0.2,'FaceColor','#00FF00');    
+   patch(X',Y',Z','g','FaceAlpha',0.2,'EdgeColor','none');
+%    patch(X',Y',Z','FaceAlpha',0.2,'FaceColor','#00FF00','EdgeColor','none');    
 %    patch(X',Y',Z',[0.9290 0.6940 0.1250],'FaceAlpha',0.5,'EdgeColor','b'); 
 end
 
