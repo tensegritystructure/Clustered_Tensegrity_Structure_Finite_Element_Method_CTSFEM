@@ -304,13 +304,13 @@ fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
 %% plot member force 
-tenseg_plot_result2(Fhis,t_t([4*p+1,n_b+1,ne],:),{'bar','horizontal string','vertical string'}...
+tenseg_plot_result2(Fhis,t_t([8*p,n_b+,ne],:),{'bar','horizontal string','vertical string'}...
     ,{'Load factor','Force (N)'},'plot_member_force.png',saveimg,{'-or','-.vg','--xb'});
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
 %% plot member length 
-tenseg_plot_result2(Fhis,[l0_ct([4*p+1,n_b+1,ne],:);l_out([4*p+1,n_b+1,ne],:)],{'l_{0,b}','l_{0,hs}','l_{0,vs}','l_{b}','l_{hs}','l_{vs}'}...
+tenseg_plot_result2(Fhis,[l0_ct([8*p,n_b+1,ne],:);l_out([4*p+1,n_b+1,ne],:)],{'l_{0,b}','l_{0,hs}','l_{0,vs}','l_{b}','l_{hs}','l_{vs}'}...
     ,{'Load factor','Length (m)'},'plot_member_length.png',saveimg,{'-r','-.g','--b','-or','-.vg','--xb'});
 legend('NumColumns',2);
 fig=gcf;
