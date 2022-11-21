@@ -122,8 +122,16 @@ tenseg_plot_ori(N,[],[],C_rot_h,C_rig_h,[],[],[0,30],[] ,[],Ca);
 axis off
 % plot the bars and strings
 tenseg_plot_ori(N,C_bar,C_s,[],[],[],[],[0,30],[] ,[],[]);
-ylim([-0.1,0.1])
 axis off
+% plot the planer D bar
+tenseg_plot_ori(N,C_bar(1:8*p,:),C_s,[],[],[],[],[0,30],[] ,[],[]);
+% ylim([-0.1,0.1])
+axis off
+% plot the planer braces
+tenseg_plot_ori(N,C_bar(8*p+1:end,:),[],[],[],[],[],[0,30],[] ,[],[]);
+% ylim([-0.1,0.1])
+axis off
+
 %% transformation matrix from element to structure
 
 E_n=cell(1,n_h);            %transformation matrix from element node to total node
@@ -273,6 +281,7 @@ theta_t=data_out1.theta_out;
 
 icrm=size(n_t,2);               % increment
 %% Large deformation analysis
+
 %% plot stiffness in large deformation in XYZ direction
 
 F_dir=zeros(3*nn,3);
@@ -304,13 +313,13 @@ fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
 %% plot member force 
-tenseg_plot_result2(Fhis,t_t([8*p,n_b+,ne],:),{'bar','horizontal string','vertical string'}...
+tenseg_plot_result2(Fhis,t_t([2*p-1,n_b+p,ne],:),{'bar','horizontal string','vertical string'}...
     ,{'Load factor','Force (N)'},'plot_member_force.png',saveimg,{'-or','-.vg','--xb'});
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
 %% plot member length 
-tenseg_plot_result2(Fhis,[l0_ct([8*p,n_b+1,ne],:);l_out([4*p+1,n_b+1,ne],:)],{'l_{0,b}','l_{0,hs}','l_{0,vs}','l_{b}','l_{hs}','l_{vs}'}...
+tenseg_plot_result2(Fhis,[l0_ct([2*p-1,n_b+p,ne],:);l_out([2*p-1,n_b+p,ne],:)],{'l_{0,b}','l_{0,hs}','l_{0,vs}','l_{b}','l_{hs}','l_{vs}'}...
     ,{'Load factor','Length (m)'},'plot_member_length.png',saveimg,{'-r','-.g','--b','-or','-.vg','--xb'});
 legend('NumColumns',2);
 fig=gcf;
@@ -356,5 +365,5 @@ name=['shelter with brace'];
 tenseg_video_ori(n_t,C_b,C_s,[],C_rig_h,Ca,[],min(icrm,50),name,savevideo,[])
 %% save output data
 if savedata==1
-    save (['shelter','.mat']);
+    save (['shelter brace','.mat']);
 end
