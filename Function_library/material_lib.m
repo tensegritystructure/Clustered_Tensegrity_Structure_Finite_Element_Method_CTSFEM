@@ -72,6 +72,11 @@ switch bar_material
         rho_b = 2700;
         sigma_b = 78e06;
         [data_b1,data_b2]=blin_consti_data(Eb,sigma_b);
+    case 'Paper'
+        Eb=1e6;
+        rho_b=1000;
+        sigma_b=110e6;
+         [data_b1,data_b2]=blin_consti_data(Eb,sigma_b);
     otherwise
         disp('Edit the material database')
 end
@@ -112,7 +117,11 @@ switch string_material
         rho_s = 1700;
         sigma_s = 1e10;
         [data_s1,data_s2]=blin_consti_data(Es,sigma_s);
-
+    case 'Paper'
+        Es=1e6;
+        rho_s=1000;
+        sigma_s=110e6;
+        [data_s1,data_s2]=blin_consti_data(Es,sigma_s);
         
     otherwise
         disp('Edit the material database')

@@ -10,7 +10,7 @@
 %EXAMPLE
 clc; clear all; close all;
 % Global variable
-[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
+[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Paper','Paper');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
@@ -30,7 +30,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 %% %% N C of the structure
 % Manually specify node positions
-R=10; h=10; p=5; level=3;        % radius; height; number of edge, level
+R=10; h=10; p=5; level=1;        % radius; height; number of edge, level
 % beta=(0.5-1/p)*pi; 	% rotation angle
 beta=15*pi/180; 	% rotation angle
 
@@ -256,7 +256,7 @@ end
 
 %plot stiffness
 figure
-semilogy(Fhis,stiff_dir(1,:),'-r',...
+plot(Fhis,stiff_dir(1,:),'-r',...
     Fhis,stiff_dir(3,:),'-.g',...
     Fhis,stiff_dir(4,:),'--b','linewidth',2); %semilogy
 set(gca,'fontsize',18);

@@ -22,7 +22,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=20;                                     %荷载子步
+substep=40;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -98,8 +98,10 @@ Ca=kron(ones(1,level),[[1:p;[2:p,1];[p+2:2*p,p+1]],[1:p;[p+2:2*p,p+1];p+1:2*p]])
 [~,np]=size(Ca);        % ne:No.of element;np:No.of plate
 
 % plot the origami configuration
+if 0
 tenseg_plot_ori(N,C_b,C_s,[],C_rig_h,[],[],[],[] ,[],Ca);
 axis off;
+end
 %% transformation matrix from element to structure
 
 E_n=cell(1,n_h);            %transformation matrix from element node to total node
@@ -251,33 +253,35 @@ colorbar
 %% plot contour in subplot
 % plot countor stiff in string 
 figure
-subplot(2,2,1)
+subplot(2,2,3)
 contourf(X,Y,stiff_str,'ShowText','on')
-xlabel('height','fontsize',18,'Interpreter','tex');
-ylabel('angle','fontsize',18);
-title('stiff in str');
+xlabel('Height (m)','fontsize',18,'Interpreter','tex');
+ylabel('Angle ({\circ})','fontsize',18);
+title('stiffness in string actuation','fontsize',18);
 colorbar
 % plot stiff in X
-subplot(2,2,2)
+subplot(2,2,1)
 contourf(X,Y,stiff_X,'ShowText','on')
-xlabel('height','fontsize',18,'Interpreter','tex');
-ylabel('angle','fontsize',18);
-title('stiff in X');
+xlabel('Height (m)','fontsize',18,'Interpreter','tex');
+ylabel('Angle ({\circ})','fontsize',18);
+title('stiffness in X direction','fontsize',18);
 colorbar
 % plot stiff in Z
-subplot(2,2,3)
+subplot(2,2,2)
 contourf(X,Y,stiff_Z,'ShowText','on')
-xlabel('height','fontsize',18,'Interpreter','tex');
-ylabel('angle','fontsize',18);
-title('stiff in Z');
+xlabel('Height (m)','fontsize',18,'Interpreter','tex');
+ylabel('Angle ({\circ})','fontsize',18);
+title('stiffness in Z direction','fontsize',18);
 colorbar
 % plot stiff in R
 subplot(2,2,4)
 contourf(X,Y,stiff_R,'ShowText','on')
-xlabel('height','fontsize',18,'Interpreter','tex');
-ylabel('angle','fontsize',18);
-title('stiff in R');
+xlabel('Height (m)','fontsize',18,'Interpreter','tex');
+ylabel('Angle ({\circ})','fontsize',18);
+title('stiffness in rotation','fontsize',18);
 colorbar
+
+
 %% plot mesh
 % plot stiff in string 
 subplot(2,2,1)
@@ -318,185 +322,3 @@ colorbar
 
 
 
-
-
-
-%plot stiffness
-figure
-semilogy(Fhis,stiff_dir(1,:),'-r',...
-    Fhis,stiff_dir(3,:),'-.g',...
-    Fhis,stiff_dir(4,:),'--b','linewidth',2); %semilogy
-set(gca,'fontsize',18);
-xlabel('Load factor','fontsize',18,'Interpreter','tex');
-ylabel('Stiffness (N/m)','fontsize',18);
-lgd =legend('X,Y','Z','R');
-legend('NumColumns',3);
-title(lgd,'Direction')
-grid on;
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-
-
-
-
-
-
-
-
-
-
-
-
-%% mass matrix and damping matrix
-rho=1;
-mass=rho.*A_c.*l0_c;
-M=tenseg_mass_matrix(mass,C,lumped); % generate mass matrix
-% damping matrix
-d=0;     %damping coefficient
-D=d*2*max(sqrt(mass.*E_c.*A_c./l0_c))*eye(3*nn);    %critical damping
-%% vibration mode analysis
-[V_mode,D1] = eig(K_t_oa,Ia'*M*Ia);         % calculate vibration mode
-w_2=diag(D1);                                    % eigen value of 
-omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
-if 0
-plot_mode_ori(K_mode,k,N,Ia,C_b,C_s,[],C_rig_h,l,'natrual vibration',...
-    'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg,3,Ca);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%% Nonlinear statics analysis %%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% external force, forced motion of nodes, shrink of strings
-% calculate external force and 
-ind_w=[];w=[];   %external force in Z 
-ind_dnb=[]; dnb0=[];
-ind_dl0_c=[n_b+1:ne]'; dl0_c=-0.8*l0_c(ind_dl0_c);
-ind_theta_0=[]; dtheta_0=[];        % initial angel change with time
-% [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
-[w_t,dnb_t,l0_ct,theta_0_t,Ia_new,Ib_new]=tenseg_load_prestress_ori(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,ind_theta_0,dtheta_0,theta_0,l0_c,b,gravity,[0;9.8;0],C,mass);
-
-%% Step1: equilibrium calculation
-% input data
-data.N=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
-data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
-data.consti_data=consti_data;   data.material=material; %constitue info
-data.w_t=w_t;  % external force
-data.dnb_t=dnb_t;           % forced movement of pinned nodes
-data.l0_t=l0_ct;            % forced change of rest length
-data.theta_0_t=theta_0_t;   % forced change of initial angle
-data.k_h=k_h;               % stiffness of hinge
-data.E_n=E_n;               % transfer matrix from matrix to structure
-data.node_in_hinge=node_in_hinge;       % node in triangle element in hinge
-data.substep=substep;    % substep
-data.InitialLoadFactor=0.001;
-data.MaxIcr=1000;
-data.LoadType='Substep'; % 'Force' or 'Displacement'
-data.StopCriterion=@(U)(norm(U)>20);
-
-
-% nonlinear analysis
-data_out1=static_solver_ori_2(data);
-
-Fhis=data_out1.Fhis;          %load factor
-t_t=data_out1.t_out;          %member force in every step
-n_t=data_out1.n_out;          %nodal coordinate in every step
-M_out=data_out1.M_out;
-l_out=data_out1.l_out;
-Kt_aa_out= data_out1.Kt_aa_out;       %tangent stiffness of truss
-K_t_oa_out= data_out1.K_t_oa_out;       %tangent stiffness of whole struct.
-theta_t=data_out1.theta_out;
-
-icrm=size(n_t,2);               % increment
-%% Large deformation analysis
-
-%% plot stiffness in large deformation in XYZ direction
-
-F_dir=zeros(3*nn,4);
-F_dir([3*(level*p+1)-2:3*(level*p+p)],1:3)=kron(ones(p,1),eye(3));   % force with direction X Y Z
-
-
-compliance_dir=zeros(4,substep);    % compliance with direction X Y Z
-stiff_dir=zeros(4,substep);         % stiff with direction X Y Z
-
-for i=1:substep
-    K_t_oa=K_t_oa_out{i};
-
-    % rotation direction force
-    F_dir([3*(level*p+1)-2:3*(level*p+p)],4)=reshape(cross([0 0 1]'*ones(1,p),reshape(n_t([3*(level*p+1)-2:3*(level*p+p)],i),3,[])),[],1);
-F_dir=F_dir/diag(sqrt(diag(F_dir'*F_dir))); %normalized
-
-    disp_dir=K_t_oa\(Ia'*F_dir);
-compliance_dir(:,i)=diag(disp_dir'*K_t_oa'*disp_dir);     
-stiff_dir(:,i)=1./compliance_dir(:,i);
-end 
-
-%plot stiffness
-figure
-semilogy(Fhis,stiff_dir(1,:),'-r',...
-    Fhis,stiff_dir(3,:),'-.g',...
-    Fhis,stiff_dir(4,:),'--b','linewidth',2); %semilogy
-set(gca,'fontsize',18);
-xlabel('Load factor','fontsize',18,'Interpreter','tex');
-ylabel('Stiffness (N/m)','fontsize',18);
-lgd =legend('X,Y','Z','R');
-legend('NumColumns',3);
-title(lgd,'Direction')
-grid on;
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-%% plot member force 
-tenseg_plot_result2(Fhis,t_t([55,22,37,7],:),{'string','vertical bar','diagonal bar','horizontal bar'}...
-    ,{'Load factor','Force (N)'},'plot_member_force.png',saveimg,{'-or','-.vg','--xb','-^k'});
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-%% plot member length 
-tenseg_plot_result2(Fhis,[l0_ct([55,22,37,7],:);l_out([55,22,37,7],:)],{'l_{0,s}','l_{0,vb}','l_{0,db}','l_{0,hb}','l_{s}','l_{vb}','l_{db}','l_{hb}'}...
-    ,{'Load factor','Length (m)'},'plot_member_length.png',saveimg,{'-r','-.g','--b','-k','-or','-.vg','--xb','-^k'});
-legend('NumColumns',2);
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-
-%% Plot nodal coordinate curve Z
-tenseg_plot_result2(Fhis,n_t(3*[(1:level)*p+1],:),{'1 level','2 level','3 level'},...
-    {'Load factor','Z Coordinate /m)'},'plot_coordinate.png',saveimg,{'-or','-.vg','--xb'});
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
-%% plot hinge moment
-tenseg_plot_result(Fhis,M_out([(level-1)*p,(level-1)*p+level*p,(level-1)*p+2*level*p],:),{'horizontal hinge','vertical hinge','diagonal hinge'},{'Load factor','Moment / N \times m'},'plot_hinge_moment.png',saveimg);
-
-%% Plot final configuration
-num_t=4
- j=linspace(1e-5,1,num_t);
-for i=1:num_t
-    num=ceil(j(i)*size(n_t,2));
-tenseg_plot_ori(reshape(n_t(:,num),3,[]),C_bar,C_s,C_rot_h,C_rig_h,[],[],[45,30],[] ,[],Ca);
- axis off;
-end
-%% Stiffness analysis
-percent=0.8; num=round(percent*substep);
-
-
-Kt_aa=Kt_aa_out{num};       %tangent stiffness of truss
-K_t_oa=K_t_oa_out{num};     %tangent stiffness of whole struct.
-
-[K_mode,D1] = eig(K_t_oa);         % eigenvalue of tangent stiffness matrix
-k=real(diag(D1)); 
-[k, ind] = sort(k);
-K_mode = K_mode(:, ind);
-% plot the mode shape of tangent stiffness matrix
-num_plt=1:10;
-plot_mode_ori(round(K_mode(:,num_plt),12),k(num_plt),N,Ia,C_bar,C_s,C_rot_h,C_rig_h,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.5,saveimg,[0,30],Ca);
-   
-
-
-%% make video of the dynamic
-name=['krseling with string 0'];
-% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video_ori(n_t,C_b,C_s,[],C_rig_h,Ca,[],min(icrm,50),name,savevideo,[])
-%% save output data
-if savedata==1
-    save (['kresling str','.mat']);
-end

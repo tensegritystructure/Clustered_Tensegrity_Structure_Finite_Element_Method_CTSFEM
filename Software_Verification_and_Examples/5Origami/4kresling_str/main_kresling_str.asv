@@ -10,7 +10,7 @@
 %EXAMPLE
 clc; clear all; close all;
 % Global variable
-[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
+[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Paper','Paper');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
@@ -256,13 +256,13 @@ end
 
 %plot stiffness
 figure
-semilogy(Fhis,stiff_dir(1,:),'-r',...
-    Fhis,stiff_dir(2,:),'-.g',...
-    Fhis,stiff_dir(3,:),'--b','linewidth',2); %semilogy
+plot(Fhis,stiff_dir(1,:),'-r',...
+    Fhis,stiff_dir(3,:),'-.g',...
+    Fhis,stiff_dir(4,:),'--b','linewidth',2); %semilogy
 set(gca,'fontsize',18);
 xlabel('Load factor','fontsize',18,'Interpreter','tex');
 ylabel('Stiffness (N/m)','fontsize',18);
-lgd =legend('X','Y','Z');
+lgd =legend('X,Y','Z','R');
 legend('NumColumns',3);
 title(lgd,'Direction')
 grid on;
