@@ -175,7 +175,7 @@ end
 
 
 %% sensitivity analysis t/l0
-K_l0c=-A_o*T_
+K_l0c=-A_2*
 K_na_l0c=-K_t_oa\Ia'*K_l0c
 
 
