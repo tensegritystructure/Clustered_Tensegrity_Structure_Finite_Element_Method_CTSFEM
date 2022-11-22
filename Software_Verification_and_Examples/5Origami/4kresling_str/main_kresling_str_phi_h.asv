@@ -22,7 +22,7 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=20;                                     %∫…‘ÿ◊”≤Ω
+substep=40;                                     %Ëç∑ËΩΩÂ≠êÊ≠•
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -98,8 +98,8 @@ Ca=kron(ones(1,level),[[1:p;[2:p,1];[p+2:2*p,p+1]],[1:p;[p+2:2*p,p+1];p+1:2*p]])
 [~,np]=size(Ca);        % ne:No.of element;np:No.of plate
 
 % plot the origami configuration
-tenseg_plot_ori(N,C_b,C_s,[],C_rig_h,[],[],[],[] ,[],Ca);
-axis off;
+% tenseg_plot_ori(N,C_b,C_s,[],C_rig_h,[],[],[],[] ,[],Ca);
+
 %% transformation matrix from element to structure
 
 E_n=cell(1,n_h);            %transformation matrix from element node to total node
@@ -219,7 +219,7 @@ end
     
 
 [X,Y] = meshgrid(h_t,beta_t*180/pi);
-%% plot countor stiff in string 
+% plot countor stiff in string 
 figure
 contour(X,Y,stiff_str,'ShowText','on')
 xlabel('height','fontsize',18,'Interpreter','tex');
@@ -248,32 +248,32 @@ ylabel('angle','fontsize',18);
 title('stiff in R');
 colorbar
 
-%% plot contour in subplot
+%% plot contour 
 % plot countor stiff in string 
 figure
 subplot(2,2,1)
-contourf(X,Y,stiff_str,'ShowText','on')
+contour(X,Y,stiff_str,'ShowText','on')
 xlabel('height','fontsize',18,'Interpreter','tex');
 ylabel('angle','fontsize',18);
 title('stiff in str');
 colorbar
 % plot stiff in X
 subplot(2,2,2)
-contourf(X,Y,stiff_X,'ShowText','on')
+contour(X,Y,stiff_X,'ShowText','on')
 xlabel('height','fontsize',18,'Interpreter','tex');
 ylabel('angle','fontsize',18);
 title('stiff in X');
 colorbar
 % plot stiff in Z
 subplot(2,2,3)
-contourf(X,Y,stiff_Z,'ShowText','on')
+contour(X,Y,stiff_Z,'ShowText','on')
 xlabel('height','fontsize',18,'Interpreter','tex');
 ylabel('angle','fontsize',18);
 title('stiff in Z');
 colorbar
 % plot stiff in R
 subplot(2,2,4)
-contourf(X,Y,stiff_R,'ShowText','on')
+contour(X,Y,stiff_R,'ShowText','on')
 xlabel('height','fontsize',18,'Interpreter','tex');
 ylabel('angle','fontsize',18);
 title('stiff in R');
