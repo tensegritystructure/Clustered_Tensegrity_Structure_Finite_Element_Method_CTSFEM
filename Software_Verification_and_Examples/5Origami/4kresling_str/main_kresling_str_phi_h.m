@@ -31,17 +31,17 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 %% %% N C of the structure
 
-h_t=linspace(5,15,substep);
-beta_t=linspace(-pi/6,pi/6,substep);
+h_t=linspace(5,15,substep);         %height 
+beta_t=linspace(-pi/6,pi/6,substep);    % angle
 stiff_str=zeros(substep,substep);   % stiff in string
 stiff_X=zeros(substep,substep);     % stiff in X
 stiff_Z=zeros(substep,substep);     % stiff in Z
 stiff_R=zeros(substep,substep);     % stiff in R
+R=10;  p=5; level=3;        % radius; height; number of edge, level
 
 for ii=1:substep
     for jj=1:substep
 % Manually specify node positions
-R=10;  p=5; level=3;        % radius; height; number of edge, level
 h=h_t(ii);  % height
 beta=beta_t(jj);
 % beta=15*pi/180; 	% rotation angle
