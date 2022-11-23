@@ -30,7 +30,12 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % move_ground=0;          % for earthquake, use pinned nodes motion(1) or add inertia force in free node(0) 
 %% %% N C of the structure
 % Manually specify node positions
-R=10; h=10; p=5; level=1;        % radius; height; number of edge, level
+R=10; h=10; p=5; level=3;        % radius; height; number of edge, level
+% AB BC
+sym
+AB=2*R*sin(pi/p);
+BC=norm([h,2*R*sin(pi/p)])
+
 % beta=(0.5-1/p)*pi; 	% rotation angle
 beta=15*pi/180; 	% rotation angle
 

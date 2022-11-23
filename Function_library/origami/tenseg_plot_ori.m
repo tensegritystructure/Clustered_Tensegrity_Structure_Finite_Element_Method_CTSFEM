@@ -36,7 +36,7 @@ function [fig_out] = tenseg_plot_ori( N,C_b,C_s,C_h,C_rh,fig_handle,highlight_no
 
 
 BarWidth = 3; % Width of bar lines
-StringWidth = 1.5; % Width of string lines
+StringWidth = 3; % Width of string lines
 NodeSize = 2; % Size of node marker
 
 hingeWidth=2; % Width of hinges
