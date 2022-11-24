@@ -10,7 +10,7 @@
 %EXAMPLE
 clc; clear all; close all;
 % Global variable
-[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Steel_Q345','Steel_string');
+[consti_data,Eb,Es,sigmab,sigmas,rho_b,rho_s]=material_lib('Paper','Paper');
 material{1}='linear_elastic'; % index for material properties: multielastic, plastic.
 material{2}=0; % index for considering slack of string (1) for yes,(0) for no (for compare with ANSYS)
 
@@ -21,7 +21,8 @@ c_b=0.1;           % coefficient of safty of bars 0.5
 c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
-substep=40;                                     %荷载子步
+% substep=40;                                     %荷载子步
+substep=100;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -273,7 +274,7 @@ fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
 %% Plot final configuration
-num_t=6
+num_t=6;
  j=linspace(1e-5,1,num_t);
 
 for i=1:num_t
@@ -301,16 +302,19 @@ end
 
 return
 %% Inifinitesimal deformation analysis
-percent=0.8; num=round(percent*substep);
+percent=0.85; num=round(percent*substep);
 
 
 Kt_aa=Kt_aa_out{num};       %tangent stiffness of truss
 K_t_oa=K_t_oa_out{num};     %tangent stiffness of whole struct.
     
-num_tot=8e3;
-dir=linspace(0,2*pi,num_tot)';            %direction
-F_dir=zeros(3*nn,numel(dir));
-F_dir([4*3-1,4*3],:)=[cos(dir)';sin(dir)'];   % force with direction
+num_tot=9e3;
+dir_angle=[linspace(0,5/6*pi,0.1*num_tot),linspace(5/6*pi,7/6*pi,0.4*num_tot),...
+    linspace(7/6*pi,11/6*pi,0.1*num_tot),linspace(11/6*pi,12/6*pi,0.4*num_tot)]';            %direction
+% dir_angle=linspace(0,2*pi,num_tot)';            %direction
+F_dir=zeros(3*nn,numel(dir_angle));
+F_dir([4*3-1,4*3],:)=[cos(dir_angle)';sin(dir_angle)'];   % force with direction
+F_dir=F_dir/diag(sqrt(diag(F_dir'*F_dir))); %normalized
 %displacement
 disp_dir=K_t_oa\(Ia'*F_dir);
 % disp_dir=Ia'*F_dir;
@@ -324,19 +328,40 @@ stiff_dir_truss=stiff_dir_ori.*complaint_dir_truss./complaint_dir_ori;
 stiff_dir_hinge=stiff_dir_ori.*complaint_dir_hinge./complaint_dir_ori;
 % plot stiffness in Bode
 figure
-semilogy(dir*180/pi,stiff_dir_ori,'r-',...
-    dir(1:num_tot/8e1:end)*180/pi,stiff_dir_truss(1:num_tot/8e1:end),'kx',...
-    dir*180/pi,stiff_dir_hinge,'c-.','linewidth',1.5); %semilogy
+semilogy(dir_angle*180/pi,stiff_dir_ori,'r-',...
+    dir_angle*180/pi,stiff_dir_truss,'k--',...
+    dir_angle*180/pi,stiff_dir_hinge,'c-.','linewidth',1.5); %semilogy
 set(gca,'fontsize',18);
 xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
 ylabel('Stiffness (N/m)','fontsize',18,'Interpreter','latex');
 legend('Origami','Bars','Hinges')
 xlim([0 360]);
 grid on;
+% plot percentage
+figure
+plot(dir_angle*180/pi,stiff_dir_ori./stiff_dir_ori,'r-',...
+    dir_angle*180/pi,stiff_dir_truss./stiff_dir_ori,'k--',...
+    dir_angle*180/pi,stiff_dir_hinge./stiff_dir_ori,'c-.','linewidth',1.5); %semilogy
+set(gca,'fontsize',18);
+xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
+ylabel('Percentage of Stiffness','fontsize',18,'Interpreter','latex');
+legend('Origami','Bars','Hinges')
+xlim([0 360]);
+grid on;
+% plot change of theta
+[phpn_e,phTpn,theta]=jacobian_ori(node_in_hinge,reshape(n_t(:,num),3,[]),E_n_total);       % jacobian matrix
+
+dp=phTpn'*Ia*disp_dir;
+figure
+plot(dir_angle*180/pi,diag(dp'*dp))
+xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
+ylabel('Change of Folding angle','fontsize',18,'Interpreter','latex');
+xlim([0 360]);
+grid on;
 %plot configuration
  hf=figure
 % tenseg_plot(N,C_b,C_s,hf);
-tenseg_plot_ori(reshape(n_t(:,num)+5e-1*Ia*disp_dir(:,1*num_tot/8),3,[]),[],[],C_h,C_rh,hf,[],[38,30],[] ,[],Ca);
+tenseg_plot_ori(reshape(n_t(:,num)+5e-5*Ia*disp_dir(:,1*num_tot/8),3,[]),[],[],C_h,C_rh,hf,[],[38,30],[] ,[],Ca);
 % tenseg_plot(reshape(n_t(:,num)+1e1*Ia*disp_dir_2(:,1*num_tot/8),3,[]),[],C_b,hf); 
 tenseg_plot(reshape(n_t(:,num),3,[]),C_b,C_s,hf);
 view(45,45)
@@ -346,7 +371,7 @@ view(45,45)
 % plot stiffness in circle
 figure
 
-plot(stiff_dir_log.*cos(dir),stiff_dir_log.*sin(dir),'k-','linewidth',1.5);
+plot(stiff_dir_log.*cos(dir_angle),stiff_dir_log.*sin(dir_angle),'k-','linewidth',1.5);
 hold on;
 rectangle('Position',[-r_max,-r_max,2*r_max,2*r_max],'Curvature',[1 1]);
 rectangle('Position',[-r_min,-r_min,2*r_min,2*r_min],'Curvature',[1 1]);

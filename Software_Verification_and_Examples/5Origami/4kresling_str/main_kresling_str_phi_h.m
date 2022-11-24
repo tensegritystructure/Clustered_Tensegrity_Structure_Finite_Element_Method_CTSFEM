@@ -32,7 +32,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %% %% N C of the structure
 
 h_t=linspace(5,15,substep);         %height 
-beta_t=linspace(-pi/6,pi/6,substep);    % angle
+beta_t=linspace(-pi/4,pi/4,substep);    % angle
 stiff_str=zeros(substep,substep);   % stiff in string
 stiff_X=zeros(substep,substep);     % stiff in X
 stiff_Z=zeros(substep,substep);     % stiff in Z

@@ -31,13 +31,14 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 %% %% N C of the structure
 % Manually specify node positions
 R=10; h=10; p=5; level=3;        % radius; height; number of edge, level
-% AB BC
-sym
+% AB=BC solve rotation angle
+syms x
 AB=2*R*sin(pi/p);
-BC=norm([h,2*R*sin(pi/p)])
-
-% beta=(0.5-1/p)*pi; 	% rotation angle
-beta=15*pi/180; 	% rotation angle
+BC=norm([h,2*R*sin(x/2)]);
+beta_x=eval(solve(BC==AB,x));
+beta=beta_x(1);
+% give rotation angle
+% beta=15*pi/180; 	% rotation angle
 
 angle=kron(ones(1,level+1),2*pi*((1:p)-1)./p)+kron(0:level,beta*ones(1,p));
 N=R*[cos(angle); sin(angle); zeros(1,p*(level+1))]+kron(0:level,[0;0;h]*ones(1,p));
