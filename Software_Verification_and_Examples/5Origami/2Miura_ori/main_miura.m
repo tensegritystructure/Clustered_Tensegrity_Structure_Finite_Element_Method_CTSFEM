@@ -22,7 +22,7 @@ c_s=0.1;           % coefficient of safty of strings 0.3
 
 % static analysis set
 % substep=40;                                     %荷载子步
-substep=100;                                     %荷载子步
+substep=40;                                     %荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=1;             % save data or not (1) yes (0)no
@@ -300,7 +300,7 @@ if savedata==1
     save (['mirua_ori','.mat']);
 end
 
-return
+
 %% Inifinitesimal deformation analysis
 percent=0.85; num=round(percent*substep);
 
@@ -351,11 +351,34 @@ grid on;
 % plot change of theta
 [phpn_e,phTpn,theta]=jacobian_ori(node_in_hinge,reshape(n_t(:,num),3,[]),E_n_total);       % jacobian matrix
 
-dp=phTpn'*Ia*disp_dir;
+K_t_hinge_m=Ia'*phTpn*diag(k_h)*phTpn'*Ia;
+K_t_hinge_g=K_t_oa-Kt_aa-K_t_hinge_m;
+
+compliance_dir_hinge_m=diag(disp_dir'*(K_t_hinge_m)'*disp_dir);
+compliance_dir_hinge_g=diag(disp_dir'*(K_t_hinge_g)'*disp_dir);
+stiff_dir_hinge_m=stiff_dir_ori.*compliance_dir_hinge_m./complaint_dir_ori;
+stiff_dir_hinge_g=stiff_dir_ori.*compliance_dir_hinge_g./complaint_dir_ori;
+
 figure
-plot(dir_angle*180/pi,diag(dp'*dp))
+semilogy(dir_angle*180/pi,stiff_dir_hinge,'r-',...
+    dir_angle*180/pi,stiff_dir_hinge_m,'k--',...
+    dir_angle*180/pi,stiff_dir_hinge_g,'c-.','linewidth',1.5); %semilogy
 xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
-ylabel('Change of Folding angle','fontsize',18,'Interpreter','latex');
+ylabel('Material stiffness of hinges(N/m)','fontsize',18,'Interpreter','latex');
+legend('Hinge stiffness','Hinge material','Hinge geometry');
+xlim([0 360]);
+grid on;
+
+%%
+dp=phTpn'*Ia*disp_dir;      % change of theta
+angle_norm=sqrt(diag(dp'*dp));   % norm of angle
+
+complaint_dir_hinge_g=diag(disp_dir'*(K_t_oa-Kt_aa)'*disp_dir);
+
+figure
+plot(dir_angle*180/pi,angle_norm,'linewidth',1.5);
+xlabel('Angle \alpha ({\circ})','fontsize',18,'Interpreter','tex');
+ylabel('Norm of angle difference','fontsize',18,'Interpreter','latex');
 xlim([0 360]);
 grid on;
 %plot configuration
