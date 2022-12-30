@@ -324,10 +324,11 @@ if savedata==1
     save (['cable_dome_control','.mat']);
 end
 %% make video of the dynamic
-name=['CTS_cable_dome_color'];
+name=['CTS_cable_dome'];
 % % tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
 % tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2})
+tenseg_video(n_t,C_b,C_s,[],50,name,savevideo,material{2});
+name=['CTS_cable_dome_color'];
 tenseg_video_CTS(n_t,C,[gr_whg,gr_nhg],S,[],[],[1,2],[],[],[],t_t,[],min(numel(out_tspan),50),tf,name,savevideo)
 
 %output data to tecplot
