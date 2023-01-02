@@ -158,7 +158,7 @@ plot_mode(K_mode,k,N,E_na,C_b,C_s,l,'natrual vibration',...
 substep=8;
 
 ind_w=[];w=[];
-ind_dnb=[]; dnb0=[];
+ind_db=[]; dnb0=[];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
 ind_dl0_c=[]'; dl0_c=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
