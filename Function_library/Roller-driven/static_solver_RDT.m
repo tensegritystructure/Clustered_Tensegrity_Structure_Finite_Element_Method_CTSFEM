@@ -1,7 +1,7 @@
 function data_out=static_solver_RDT(data)
 %solve nonlinear equilibrium equations using modified Newton method
-%converge to stable equilibrium, considering substep, for CTS( including
-%TTS)
+%converge to stable equilibrium, considering substep, for Roller-Driven
+%Tensegrity
 
 global E A l0 Ia Ib C S w ne Xb Xa dXa f_int l_int
 % minimize total energy? (1: use, 0: not use) it's time consuming
@@ -32,11 +32,11 @@ else
 end
 
 % dXb=data.dXb;
-if  isfield(data,'dnb_t')
-    if size(data.dnb_t,2)==substep
-        dXb_t=data.dnb_t;
-    elseif size(data.dnb_t,2)==1
-        dXb_t=data.dnb_t*linspace(0,1,substep);
+if  isfield(data,'dqb_t')
+    if size(data.dqb_t,2)==substep
+        dXb_t=data.dqb_t;
+    elseif size(data.dqb_t,2)==1
+        dXb_t=data.dqb_t*linspace(0,1,substep);
     end
 else
     dXb_t=linspace(0,0,substep);

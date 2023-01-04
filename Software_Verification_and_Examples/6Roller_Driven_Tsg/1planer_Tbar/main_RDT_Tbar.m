@@ -72,6 +72,7 @@ E_sa=E_s(:,free_sld);
 E_sb=E_s(:,fixed_sld);
 % transformation matrix of generalized coordinate
 E_qa=blkdiag(E_na,E_sa);
+E_qb=blkdiag(E_nb,E_sb);
 %% Group/Clustered information 
 %generate group index
 gr={[3,4]};     % number of elements in one group
@@ -111,6 +112,7 @@ t=pinv(A_RDT)*[f_ena;f_esa]+V2*z;
 
 % member rest length
 l0=E.*A.*l./(t+E.*A);
+mass=rho_s.*A.*l0;
 %% tangent stiffness matrix
 Kn=kron(C'*diag(l.\t)*C,eye(3));
 
@@ -137,6 +139,7 @@ K_mode_sort(:,1)'*E_qa'*K_Tg*E_qa*K_mode_sort(:,1)
 K_mode_sort(:,1)'*E_qa'*K_Te*E_qa*K_mode_sort(:,1)
 
 %% tangent stiffness of Clustered Tsg
+if 0
 t_c=S'\t;E_c=S'\E;A_c=S'\A;l0_c=S*l0;q=l.\t;A_2ac=E_na'*A_2*S';
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(E_na,C,S,t_c,E_na'*A_2,E_c,A_c,l0,l);
 
@@ -151,23 +154,27 @@ num_plt=4:8;
 %     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg,3);
 plot_mode(K_mode,k,N,E_na,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
-
+end
 %% compare tangent stiffness of RDT and CTS
 
 %% statics analysis
 substep=8;
 
 ind_w=[];w=[];
-ind_db=[]; dnb0=[];
+ind_dqb=[18]; dqb0=[0.5];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
 ind_dl0_c=[]'; dl0_c=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
-[w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+[w_t,dqb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
+% input data
+data.N=N; data.C=C; data.ne=ne; data.n=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
+data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
+data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
-data.dnb_t=dnb_t;% forced movement of pinned nodes
+data.dqb_t=dqb_t;% forced movement of pinned nodes
 data.l0_t=l0_ct;% forced movement of pinned nodes
-data.N=N_out{end};
 data.substep=substep;    % substep
+
 
 data_out3=static_solver_RDT(data);
 t_t3=data_out3.t_out;          %member force in every step
