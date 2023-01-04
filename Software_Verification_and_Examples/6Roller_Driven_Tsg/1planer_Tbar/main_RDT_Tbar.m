@@ -165,7 +165,7 @@ ind_dqb=[18]; dqb0=[0.5];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
 ind_dl0_c=[]'; dl0_c=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
-[w_t,dqb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
+[w_t,dqb_t,l0_ct,_new,Ib_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
 % input data
 data.N=N; data.C=C; data.ne=ne; data.n=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
 data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
