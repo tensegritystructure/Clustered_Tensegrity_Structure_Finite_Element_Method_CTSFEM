@@ -3,16 +3,17 @@ function data_out=static_solver_RDT(data)
 %converge to stable equilibrium, considering substep, for Roller-Driven
 %Tensegrity
 
-global E A l0 Ia Ib C S w ne Xb Xa dXa f_int l_int
+global A E l0 E_qa E_qb C qa qb dqa  w  f_int l_int
 % minimize total energy? (1: use, 0: not use) it's time consuming
 use_energy=0;
-
+tol = 1e-6;
 %% input data
 C=data.C;
 ne=data.ne;
-Ia=data.Ia;
-Ib=data.Ib;
-S=data.S;
+nn=data.nn;
+E_qa=data.E_qa;
+E_qb=data.E_qb;
+% S=data.S;
 index_b=data.index_b;
 index_s=data.index_s;
 substep=data.substep;
@@ -39,7 +40,7 @@ if  isfield(data,'dqb_t')
         dXb_t=data.dqb_t*linspace(0,1,substep);
     end
 else
-    dXb_t=linspace(0,0,substep);
+    dqb_t=linspace(0,0,substep);
 end
 % l0_0=data.l0;
 if size(data.l0_t,2)==substep
@@ -54,92 +55,94 @@ else
     subsubstep=30;          %default ssubstep
 end
 
-X0=data.N(:);
+q0=data.q;
 data_out=data;     %initialize output data
 data_out.E_out=E0*ones(1,substep);
 
 
 %% calculate equilibrium
-X=X0;               %initialize configuration
-Xb0=Ib'*X;           %pinned node
+qb0=E_qb'*q0;           %pinned node
+q=q0;               %initialize configuration
 E=E0;
 % lamda=linspace(0,1,substep);    %coefficient for substep
 num_slack=ne*zeros(substep+1,1);    %num of string slack
-Xa=Ia'*X;
-cont=2;
+qa=E_qa'*q;
  u=1e-1;
-for k=1:substep
-    w=w_t(:,k);               %external force
-    Xb=Xb0+dXb_t(:,k);         %forced node displacement
-    l0=l0_t(:,k);         %forced enlongation of string
-    disp(k);
+
+
+    MaxIcr =substep;                   
+%     b_lambda = data.InitialLoadFactor;          
+%     Uhis = zeros(3*nn,MaxIcr);        
+%     FreeDofs = find(sum(Ia,2));
+    lmd = 0; icrm = 0; MUL = [U,U];
+    Fhis = zeros(MaxIcr,1);
+    data_out.t_out=zeros(ne,MaxIcr);        %output member force
+    data_out.l_out=zeros(ne,MaxIcr);                % member length
+    data_out.q_out=zeros(3*nn,MaxIcr);                % generalized coordinate
+%     data_out.Kt_aa_out=cell(1,MaxIcr);       %tangent stiffness of truss
+%     data_out.K_t_oa_out=cell(1,MaxIcr);       %tangent stiffness of whole struct.
    
-    
-    X=[Ia';Ib']\[Xa;Xb];
-    l=sqrt(sum((reshape(X,3,[])*C').^2))'; %bar length
-    l_c=S*l;
-    strain=(l_c-l0)./l0;        %strain of member
-    [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
-    t_c=sigma.*A;         %member force
-    t=S'*t_c;
-    q_c=t_c./l_c;
-    q=t./l;      %reculate force density
-    
-    l_int=l;   f_int=t;
-    
-    for i=1:1e3
-        X=[Ia';Ib']\[Xa;Xb];
-        l=sqrt(sum((reshape(X,3,[])*C').^2))'; %bar length
-        l_c=S*l;
-        %         q=E.*A.*(1./l0-1./l);      %force density
-        strain=(l_c-l0)./l0;        %strain of member
-        [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
-        t_c=sigma.*A;         %member force
-        t=S'*t_c;
-        q_c=t_c./l_c;
-        q=t./l;      %reculate force density
-        
-        q_bar=diag(q);
-        
-        K=kron(C'*q_bar*C,eye(3));                      %stiffness matrix
-        Fp=w-K*X;                                       %unbalanced force
-        Fp_a=Ia'*Fp;                                 %see the norm of unbalanced force
-        norm(Fp_a)
-        if norm(Fp_a)<1e-5
-            break
-        end
-        N=reshape(X,3,[]);
-        H=N*C';
-       Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
+    F=w_t(:,end);
+ while icrm<MaxIcr %&& ~data.StopCriterion(U)&& lmd<=1 
+        icrm = icrm+1;
+        iter = 0; err = 1;
+        lmd=icrm/MaxIcr;
+        Fhis(icrm) = lmd;
+        w=w_t(:,icrm);               %external force
+        qb=qb0+dqb_t(:,icrm);         %forced node displacement
+        l0=l0_t(:,icrm);         %forced enlongation of string
+%         theta_0=theta_0_t(:,icrm);     % initial angle
 
-A_2a=Ia'*kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
- A_2ac=A_2a*S';    
-% tangent stiffness matrix
-Kg_aa=Ia'*K*Ia-A_2a*q_bar*A_2a';
-Ke_aa=A_2ac*diag(E.*A./l0)*A_2ac';
-K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
+        fprintf('icrm = %d, lambda = %6.4f\n',icrm,lmd);
 
-% A_2c=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1)*S';     % equilibrium matrix
-% K_t=K+A_2c*diag(E.*A./(l0.^-1))*A_2c';
-%         K_taa=Ia'*0.5*(K_t+K_t')*Ia;
+        while err>tol && iter<MaxIter
+            iter = iter+1;
+%% equilibrium & tangent stiffness matrix
 
-%         for j=1:ne
-%             Ki{j,1}=q_bar(j,j)*eye(3)+E(j)*A(j)*l(j)^(-3)*B(:,j)*B(:,j)';
-%         end
-%         K_t=kron(C',eye(3))*blkdiag(Ki{:})*kron(C,eye(3));
+            q=[Ia';Ib']\[qa;qb];
+            N=reshape(q(1:3*nn),3,[]);
+            sld=q(3*nn+1:end);
+            l=sqrt(sum((reshape(q,3,[])*C').^2))'; %bar length
+%             l_c=S*l;
 
-        
-        %modify the stiffness matrix
-        [V_mode,D]=eig(K_taa);                       %刚度矩阵特征根
+            % member force (of truss)
+            %         q=E.*A.*(1./l0-1./l);      %force density
+            l0s=l0-C*sld;
+            strain=(l-l0s)./l0s;        %strain of member
+            [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
+            t=sigma.*A;         %member force
+
+           
+            % equilibrium matrix (of truss)
+            H=N*C';
+            Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
+            A_2=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
+            Kn=kron(C'*diag(l.\t)*C,eye(3));       %stiffness matrix of truss
+
+            % unbalanced force
+            IFa=E_qa'*(-[K_n*N(:);C'*t]+w);
+
+%             IF=w-(Ki*q+phTpn*M);                   %unbalanced force
+%             IFa=Ia'*(w-(Ki*q+phTpn*M));            %unbalanced force
+%             Fp_a=Ia'*Fp;                   %see the norm of unbalanced force
+            % tangent stiffness matrix (of truss)
+            K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
+            C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
+            K_T=0.5*(K_T+K_T');
+            K_Taa=E_qa'*K_T*E_qa;
+
+            %modify the stiffness matrix
+        [V_mode,D]=eig(K_Taa);                       %刚度矩阵特征根
         d=diag(D);                            %eigen value
         lmd=min(d);                     %刚度矩阵最小特征根
         if lmd>0
-            Km=K_taa+u*eye(size(K_taa)); %修正的刚度矩阵
+            Km=K_Taa+u*eye(size(K_Taa)); %修正的刚度矩阵
         else
-            Km=K_taa+(abs(lmd)+u)*eye(size(K_taa));
+            Km=K_Taa+(abs(lmd)+u)*eye(size(K_Taa));
         end
-        dXa=Km\Fp_a;
-%          dXa=(lmd*eye(size(Km)))\Fp_a;
+
+           
+            dqa = K_Taa\IFa;
         x=1;
         % line search
         if use_energy==1
@@ -147,73 +150,35 @@ K_taa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to
             [x,V]=fminbnd(@energy_CTS,0,1e1,opt);
         end
         Xa=Xa+x*dXa;
+
+
+            err = norm(IFa);
+            qa=qa+dqa;
+            fprintf(' iter = %d, err = %6.4f\n',iter,err);
+            if err > 1e8, disp('Divergence!'); break; end
+        end
+
+    data_out.q_out(:,icrm)=q;
+    data_out.l_out(:,icrm)=l;
+    data_out.t_out(:,icrm)=t;      %member force
+
     end
-    %
-    %     % change youngs mudulus if string slack
-    %     strain=(l-l0)./l0;        %strain of member
-    %     [E,stress]=stress_strain(consti_data,index_b,index_s,strain,material);
-    % %     [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,slack,plastic);
-    %     f=stress.*A;         %member force
-    %     q=f./l;      %reculate force density
-    %     num_slack(k+1)=numel(find(E==0));
-    %        % if string slack, recalculate with more steps
-    %     if num_slack(k+1)>num_slack(k)
-    %         p_s=k-1;
-    %           p_e=k;
-    %         [E,f,q] = nonlinear_solver(data,Xb0,w_t,dXb_t,l0_t,data_out.E_out(:,k-1),p_s,p_e,subsubstep,material);
-    %     end
-    %     num_slack(k+1)=numel(find(E==0));
-    %
-    %     if min(E)==0
-    %         if cont<2
-    %             [d_sort,idx]=sort(d);               %sorted eigenvalue
-    %             D_sort=diag(d_sort);                  %sorted eigenvalue matrix
-    %             V_mode_sort=V_mode(:,idx);              %sorted eigenvector
-    %             index_bk=find(d_sort<1e-5);             %index for buckling mode
-    %             cont=cont+1;
-    %             Xa=Xa+0.0*min(l)*real(mean(V_mode_sort(:,index_bk),2));    %add unstable mode if needed
-    %         end
-    %     end
-    
-    
-    %     if slack
-    %         if sum(q_i(index_s)<1e-6)
-    %             index_slack=find(q_i(index_s)<0);
-    %             index_string_slack=index_s(index_slack);       %slack stings'number
-    %             % change youngs mudulus of slack string E_ss=0
-    %             E=E0;
-    %             E(index_string_slack)=0;
-    %             q=E.*A.*(1./l0-1./l);      %reculate force density
-    %             q_bar=diag(q);
-    %
-    %             %give initial error in coordinate, prevent unstable solution
-    %             if cont<3
-    %             [d_sort,idx]=sort(d);               %sorted eigenvalue
-    %             D_sort=diag(d_sort);                  %sorted eigenvalue matrix
-    %             V_mode_sort=V_mode(:,idx);              %sorted eigenvector
-    %             index_bk=find(d_sort<1e-5);             %index for buckling mode
-    %             cont=cont+1;
-    %             end
-    %             Xa=Xa+0*min(l)*real(mean(V_mode_sort(:,index_bk),2));    %add unstable mode if needed
-    %         else
-    %             E=E0;              %use initial young's muldus
-    %         end
-    %     end
-    
-    
-    %% output data
-    
-    data_out.N_out{k}=reshape(X,3,[]);
-    data_out.n_out(:,k)=X;
-    %     data_out.l_out(:,k)=l;
-    %     data_out.q_out(:,k)=q;
-    %     data_out.E_out(:,k)=E;
-    data_out.t_out(:,k)=t;      %member force
-    % data_out.V{k}=energy_cal(data_out);
-    data_out.Fpn_out(k)=norm(Ia'*Fp);
-end
-data_out.E=E;
-data_out.N=reshape(X,3,[]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

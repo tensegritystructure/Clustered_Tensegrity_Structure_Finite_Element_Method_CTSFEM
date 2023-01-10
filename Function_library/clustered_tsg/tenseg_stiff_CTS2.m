@@ -4,7 +4,8 @@ function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(Ia,C,q,A_2ac,E_c,A_c,l0_
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 %
 % This function calculates the tangent stiffness matrix information of
-% CTS(clustered tensegrity structures)
+% CTS(clustered tensegrity structures). This is wrong one, please use
+% 'tenseg_stiff_CTS3'
 %
 % Inputs:
 %   b_material: bar material name

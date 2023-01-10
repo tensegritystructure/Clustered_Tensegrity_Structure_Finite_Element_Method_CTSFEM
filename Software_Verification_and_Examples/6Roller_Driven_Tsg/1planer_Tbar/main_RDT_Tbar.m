@@ -70,6 +70,9 @@ free_sld=3; fixed_sld=setdiff(1:nn,free_sld);
 E_s=eye(nn);
 E_sa=E_s(:,free_sld);
 E_sb=E_s(:,fixed_sld);
+%% generalized coordinate q
+% generalized coordinate 
+q=[N(:);sld];
 % transformation matrix of generalized coordinate
 E_qa=blkdiag(E_na,E_sa);
 E_qb=blkdiag(E_nb,E_sb);
@@ -97,7 +100,7 @@ A_RDT=E_qa'*[A_2;C_end'-C_sta'];
 % cross sectional area
 A=1e-5*[100*[1;1];ones(4,1)];
 % young's modulus
-E=2.06e11*ones(ne,1);
+E=Eb*ones(ne,1);
 % external force
 f_ena=zeros(size(E_na,2),1);
 f_esa=zeros(size(E_sa,2),1);
@@ -110,17 +113,20 @@ e_d=E_nb(:,index_gp); % e_d is the matrix to select group of member with designe
 z=(e_d'*V2)\(e_d'*(fd-pinv(A_RDT)*[f_ena;f_esa]));   %self-stress coefficient
 t=pinv(A_RDT)*[f_ena;f_esa]+V2*z;
 
+index_b=find(t<0);              % index of bar in compression
+index_s=setdiff(1:size(S,1),index_b);	% index of strings
+
 % member rest length
 l0=E.*A.*l./(t+E.*A);
 mass=rho_s.*A.*l0;
 %% tangent stiffness matrix
 Kn=kron(C'*diag(l.\t)*C,eye(3));
 
-K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*(C_end-C_sta);...
-    (C_end-C_sta)'*diag(E.*A./l0)*A_2',(C_end-C_sta)'*diag(E.*A./l0)*(C_end-C_sta)];
+K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
+    C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
 K_Tg=blkdiag(Kn-A_2*diag(l.\t)*A_2',zeros(numel(sld)));%geometry stiffness
-K_Te=[A_2*diag(E.*A./l0)*A_2',A_2*diag(E.*A./l0)*(C_end-C_sta);...
-    (C_end-C_sta)'*diag(E.*A./l0)*A_2',(C_end-C_sta)'*diag(E.*A./l0)*(C_end-C_sta)];
+K_Te=[A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
+    C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
 
 K_T=0.5*(K_T+K_T');
 [K_mode,D1] = eig(E_qa'*K_T*E_qa);         % eigenvalue of tangent stiffness matrix
@@ -140,14 +146,15 @@ K_mode_sort(:,1)'*E_qa'*K_Te*E_qa*K_mode_sort(:,1)
 
 %% tangent stiffness of Clustered Tsg
 if 0
-t_c=S'\t;E_c=S'\E;A_c=S'\A;l0_c=S*l0;q=l.\t;A_2ac=E_na'*A_2*S';
+t_c=S'\t;E_c=S'\E;A_c=S'\A;l0_c=S*l0;A_2ac=E_na'*A_2*S';
 [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS3(E_na,C,S,t_c,E_na'*A_2,E_c,A_c,l0,l);
 
 K_mode(:,1)'*Kt_aa*K_mode(:,1)      %eigenvalue
 K_mode(:,1)'*Kg_aa*K_mode(:,1)      % eigenvalue of geometry stiffness
 K_mode(:,1)'*Ke_aa*K_mode(:,1)      % eigenvalue of material stiffness
 
-% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(E_na,C,q,A_2ac,E_c,A_c,l0_c);
+% [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS2(E_na,C,l.\t,A_2ac,E_c,A_c,l0_c);%
+% this is wrong tangent stiffness matrix
 % plot the mode shape of tangent stiffness matrix
 num_plt=4:8;
 % plot_mode_CTS2(K_mode,k,N,Ia,C,1:2,S,l,'tangent stiffness matrix',...
@@ -165,9 +172,9 @@ ind_dqb=[18]; dqb0=[0.5];
 %ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
 ind_dl0_c=[]'; dl0_c=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
-[w_t,dqb_t,l0_ct,_new,Ib_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
+[w_t,dqb_t,l0_ct,E_qa_new,E_qb_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
 % input data
-data.N=N; data.C=C; data.ne=ne; data.n=nn; data.Ia=Ia_new; data.Ib=Ib_new;data.S=S;
+data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
 data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
