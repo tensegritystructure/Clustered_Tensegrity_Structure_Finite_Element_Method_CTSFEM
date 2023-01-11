@@ -6,7 +6,8 @@ function data_out=static_solver_RDT(data)
 global A E l0 E_qa E_qb C qa qb dqa  w  f_int l_int
 % minimize total energy? (1: use, 0: not use) it's time consuming
 use_energy=0;
-tol = 1e-6;
+modify_stiff=1;
+tol = 1e-6;MaxIter = 150; 
 %% input data
 C=data.C;
 ne=data.ne;
@@ -35,9 +36,9 @@ end
 % dXb=data.dXb;
 if  isfield(data,'dqb_t')
     if size(data.dqb_t,2)==substep
-        dXb_t=data.dqb_t;
+        dqb_t=data.dqb_t;
     elseif size(data.dqb_t,2)==1
-        dXb_t=data.dqb_t*linspace(0,1,substep);
+        dqb_t=data.dqb_t*linspace(0,1,substep);
     end
 else
     dqb_t=linspace(0,0,substep);
@@ -61,12 +62,12 @@ data_out.E_out=E0*ones(1,substep);
 
 
 %% calculate equilibrium
-qb0=E_qb'*q0;           %pinned node
+qb0=E_qb\q0;           %pinned node
 q=q0;               %initialize configuration
 E=E0;
 % lamda=linspace(0,1,substep);    %coefficient for substep
 num_slack=ne*zeros(substep+1,1);    %num of string slack
-qa=E_qa'*q;
+qa=E_qa\q;
  u=1e-1;
 
 
@@ -74,11 +75,11 @@ qa=E_qa'*q;
 %     b_lambda = data.InitialLoadFactor;          
 %     Uhis = zeros(3*nn,MaxIcr);        
 %     FreeDofs = find(sum(Ia,2));
-    lmd = 0; icrm = 0; MUL = [U,U];
+    lmd = 0; icrm = 0; %MUL = [U,U];
     Fhis = zeros(MaxIcr,1);
     data_out.t_out=zeros(ne,MaxIcr);        %output member force
     data_out.l_out=zeros(ne,MaxIcr);                % member length
-    data_out.q_out=zeros(3*nn,MaxIcr);                % generalized coordinate
+    data_out.q_out=zeros(numel(q),MaxIcr);                % generalized coordinate
 %     data_out.Kt_aa_out=cell(1,MaxIcr);       %tangent stiffness of truss
 %     data_out.K_t_oa_out=cell(1,MaxIcr);       %tangent stiffness of whole struct.
    
@@ -93,16 +94,16 @@ qa=E_qa'*q;
         l0=l0_t(:,icrm);         %forced enlongation of string
 %         theta_0=theta_0_t(:,icrm);     % initial angle
 
-        fprintf('icrm = %d, lambda = %6.4f\n',icrm,lmd);
+        fprintf('\n icrm = %d, lambda = %6.4f\n',icrm,lmd);
 
         while err>tol && iter<MaxIter
             iter = iter+1;
 %% equilibrium & tangent stiffness matrix
 
-            q=[Ia';Ib']\[qa;qb];
+            q=[E_qa,E_qb]*[qa;qb];
             N=reshape(q(1:3*nn),3,[]);
             sld=q(3*nn+1:end);
-            l=sqrt(sum((reshape(q,3,[])*C').^2))'; %bar length
+            l=sqrt(sum((reshape(N,3,[])*C').^2))'; %bar length
 %             l_c=S*l;
 
             % member force (of truss)
@@ -120,18 +121,19 @@ qa=E_qa'*q;
             Kn=kron(C'*diag(l.\t)*C,eye(3));       %stiffness matrix of truss
 
             % unbalanced force
-            IFa=E_qa'*(-[K_n*N(:);C'*t]+w);
+            IFa=E_qa'*(-[Kn*N(:);C'*t]+w);
 
 %             IF=w-(Ki*q+phTpn*M);                   %unbalanced force
 %             IFa=Ia'*(w-(Ki*q+phTpn*M));            %unbalanced force
 %             Fp_a=Ia'*Fp;                   %see the norm of unbalanced force
             % tangent stiffness matrix (of truss)
-            K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
-            C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
+            K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0s)*C;...
+            C'*diag(E.*A./l0s)*A_2',C'*diag(E.*A./l0s)*C];
             K_T=0.5*(K_T+K_T');
             K_Taa=E_qa'*K_T*E_qa;
-
+            Km=K_Taa;
             %modify the stiffness matrix
+        if modify_stiff==1
         [V_mode,D]=eig(K_Taa);                       %刚度矩阵特征根
         d=diag(D);                            %eigen value
         lmd=min(d);                     %刚度矩阵最小特征根
@@ -140,22 +142,22 @@ qa=E_qa'*q;
         else
             Km=K_Taa+(abs(lmd)+u)*eye(size(K_Taa));
         end
-
+        end
            
-            dqa = K_Taa\IFa;
+            dqa = Km\IFa;
         x=1;
         % line search
         if use_energy==1
             opt=optimset('TolX',1e-5);
-            [x,V]=fminbnd(@energy_CTS,0,1e1,opt);
+            [x,V]=fminbnd(@energy_RDT,0,1e1,opt);
         end
-        Xa=Xa+x*dXa;
+        
 
 
             err = norm(IFa);
-            qa=qa+dqa;
-            fprintf(' iter = %d, err = %6.4f\n',iter,err);
-            if err > 1e8, disp('Divergence!'); break; end
+            qa=qa+x*dqa;
+            fprintf(' iter = %d, err = %6.4e\n',iter,err);
+            if err > 1e12, disp('Divergence!'); break; end
         end
 
     data_out.q_out(:,icrm)=q;

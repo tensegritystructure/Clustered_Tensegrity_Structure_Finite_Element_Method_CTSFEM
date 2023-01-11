@@ -108,8 +108,8 @@ f_esa=zeros(size(E_sa,2),1);
 % member force design
 index_gp=[1];
 fd=-1e3;
-E_nb=eye(ne);
-e_d=E_nb(:,index_gp); % e_d is the matrix to select group of member with designed force
+e_nb=eye(ne);
+e_d=e_nb(:,index_gp); % e_d is the matrix to select group of member with designed force
 z=(e_d'*V2)\(e_d'*(fd-pinv(A_RDT)*[f_ena;f_esa]));   %self-stress coefficient
 t=pinv(A_RDT)*[f_ena;f_esa]+V2*z;
 
@@ -168,14 +168,13 @@ end
 substep=8;
 
 ind_w=[];w=[];
-ind_dqb=[18]; dqb0=[0.5];
-%ind_dl0_c=[1,2,3,4]'; dl0_c=[-400,-300,200,100]';
+ind_dqb=[[1;5]*3-2;[1;5]*3-1;;18]; dqb0=[zeros(4,1);0.4];
 ind_dl0_c=[]'; dl0_c=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
-[w_t,dqb_t,l0_ct,E_qa_new,E_qb_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qb,gravity,[0;9.8;0],C,mass);
+[w_t,dqb_t,l0_ct,E_qa_new,E_qb_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
 % input data
 data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
-data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
+data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
 data.dqb_t=dqb_t;% forced movement of pinned nodes
@@ -183,8 +182,47 @@ data.l0_t=l0_ct;% forced movement of pinned nodes
 data.substep=substep;    % substep
 
 
-data_out3=static_solver_RDT(data);
-t_t3=data_out3.t_out;          %member force in every step
-n_t3=data_out3.n_out;          %nodal coordinate in every step
-N_out3=data_out3.N_out;
-t_c_t3=pinv(S')*t_t3;
+data_out=static_solver_RDT(data);
+t_t=data_out.t_out;          %member force in every step
+q_t=data_out.q_out;          %nodal coordinate in every step
+l_t=data_out.l_out;          %member length in every step
+
+n_t=q_t(1:3*nn,:);          % nodal coordinate n
+sld_t=q_t(3*nn+1:end,:);    % sliding distance
+%% plot member force 
+tenseg_plot_result(1:substep,t_t,{'1', '2', '3','4','5','6'},{'Substep','Force / N'},'plot_member_force.png',saveimg);
+
+%% Plot nodal coordinate curve X Y
+tenseg_plot_result(1:substep,n_t([2*3,3*3],:),{'2Z','3Z'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+%% Plot configurations
+ j=linspace(0.01,1,5);
+for i=1:numel(j)
+    num=ceil(j(i)*size(n_t,2));
+%  tenseg_plot( reshape(n_t(:,num),3,[]),C_b,C_s,[],[],[]);
+tenseg_plot_CTS(reshape(n_t(:,num),3,[]),C,index_b,S);
+%  axis off;
+end
+
+%% make video of the statics
+name=['T-bar_RDT'];
+% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
+% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
+tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+
+%% dynamics analysis
+% time step
+dt=1e-5;
+out_dt=1e-4;
+tf=0.5;
+tspan=0:dt:tf;
+out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
+
+% calculate external force and 
+ind_w=[];w=[];
+ind_dl0=[]; dl0=[];
+[w_t,l0_t]=tenseg_load_prestress_RDT(tspan,ind_w,w,'ramp',ind_dl0,dl0,l0,gravity,[0;0;0],C,mass);
+% boundary node motion info
+[~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
+
+% give initial speed of free coordinates
+n0a_d=zeros(numel(a),1);                    %initial speed in X direction

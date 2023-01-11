@@ -1,4 +1,4 @@
-function [w_t,dnb_t,l0_t,Ia,Ib]=tenseg_load_prestress_RDT(substep,ind_w,w0,ind_dn,dn0,ind_l0,dl0,l0,E_qb,gravity,acc,C,mass)
+function [w_t,db_t,l0_t,Ia,Ib]=tenseg_load_prestress_RDT(substep,ind_w,w0,ind_dn,dn0,ind_l0,dl0,l0,E_qb,gravity,acc,C,mass)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -29,29 +29,37 @@ function [w_t,dnb_t,l0_t,Ia,Ib]=tenseg_load_prestress_RDT(substep,ind_w,w0,ind_d
 %   Ib: transform matrix of fixed coordinates
 %% external force
 %gravity force vector
-G=(gravity)*-0.5*kron(abs(C)'*mass,acc);
+% G=(gravity)*[-0.5*kron(abs(C)'*mass,acc)];
+G=zeros(size(E_qb,1),1);        %zero gravity force
 %initialize force 
 w=zeros(size(G,1),1); %zero external force
 w(ind_w)=w0;  %force exerted on bottom nodes
 w_t=w*linspace(0,1,substep)+G*linspace(1,1,substep);
 
 %% nodal displacement
-b_new=sort(unique([find(sum(E_qb,2));ind_dn]));
-a_new=setdiff(1:size(E_qb,1),b_new);  %index of free node direction
+[row,col,v]=find(E_qa(ind_dqb,:));
+index_E_qa=setdiff(1:size(E_qa,2),col);
 
+E_qa_new=E_qa(:,index_E_qa);        % new E_qa
+E_qb_new=[E_qb,E_qa(:,col)];        % new E_qb
+%% forced node movement
+dq=zeros(size(E_qb_new,1),1);
+% d3nn=zeros(size(E_qb_new,1),1);
+dq(ind_dqb)=dqb0;
+dqb=E_qb_new\dq;
+% dq=d3nn(b_new);
+% dn(ind_dn)=dn0;
+dqb_t=dqb*linspace(0,1,substep);
+
+% b_new=sort(unique([find(sum(E_qb,2));ind_dqb]));
+% a_new=setdiff(1:size(E_qb,1),b_new);  %index of free node direction
 
 % b_new=sort(unique([b;ind_dn]));
 % a_new=setdiff(1:size(G,1),b_new);  %index of free node direction
-I=eye(size(E_qb,1));
-Ia=I(:,a_new);  %free node index
-Ib=I(:,b_new);  %pinned nod index
-dn=zeros(size(b_new));
+% I=eye(size(E_qb,1));
+% Ia=I(:,a_new);  %free node index
+% Ib=I(:,b_new);  %pinned nod index
 
-d3nn=zeros(size(E_qb,1),1);
-d3nn(ind_dn)=dn0;
-dn=d3nn(b_new);
-% dn(ind_dn)=dn0;
-dnb_t=dn*linspace(0,1,substep);
 
 %% rest length
 dl0_i=zeros(size(l0));
