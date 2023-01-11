@@ -1,4 +1,4 @@
-function [w_t,db_t,l0_t,Ia,Ib]=tenseg_load_prestress_RDT(substep,ind_w,w0,ind_dn,dn0,ind_l0,dl0,l0,E_qb,gravity,acc,C,mass)
+function [w_t,dqb_t,l0_ct,E_qa_new,E_qb_new]=tenseg_load_prestress_RDT(substep,ind_w,w0,ind_dn,dn0,ind_l0,dl0,l0,E_qb,gravity,acc,C,mass)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
