@@ -76,6 +76,8 @@ q=[N(:);sld];
 % transformation matrix of generalized coordinate
 E_qa=blkdiag(E_na,E_sa);
 E_qb=blkdiag(E_nb,E_sb);
+[nq,nqa]=size(E_qa);
+[~,nqb]=size(E_qb);
 %% Group/Clustered information 
 %generate group index
 gr={[3,4]};     % number of elements in one group
@@ -168,17 +170,17 @@ end
 substep=8;
 
 ind_w=[];w=[];
-ind_dqb=[[1;5]*3-2;[1;5]*3-1;;18]; dqb0=[zeros(4,1);0.4];
-ind_dl0_c=[]'; dl0_c=[]';
+ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
+ind_dl0=[]'; dl0=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
-[w_t,dqb_t,l0_ct,E_qa_new,E_qb_new]=tenseg_load_prestress_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0_c,dl0_c,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
+[w_t,dqb_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_static_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
 % input data
 data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
 data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
 data.dqb_t=dqb_t;% forced movement of pinned nodes
-data.l0_t=l0_ct;% forced movement of pinned nodes
+data.l0_t=l0_t;% forced movement of pinned nodes
 data.substep=substep;    % substep
 
 
@@ -220,9 +222,33 @@ out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data t
 % calculate external force and 
 ind_w=[];w=[];
 ind_dl0=[]; dl0=[];
-[w_t,l0_t]=tenseg_load_prestress_RDT(tspan,ind_w,w,'ramp',ind_dl0,dl0,l0,gravity,[0;0;0],C,mass);
-% boundary node motion info
-[~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
+ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
+[w_t,dqb_t,dqb_d_t,dqb_dd_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_dyna_RDT(tspan,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
+% % boundary node motion info
+% [~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
 
 % give initial speed of free coordinates
-n0a_d=zeros(numel(a),1);                    %initial speed in X direction
+q0a_d=zeros(nqa,1);                    %initial speed in X direction
+
+   %% dynamics calculation
+
+% input data
+data.=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia; data.Ib=Ib;data.S=S;
+data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
+data.consti_data=consti_data;   data.material=material; %constitue info
+data.w_t=w_t;           % external force
+data.dnb_t=dnb_t; data.dnb_d_t=dnb_d_t;  data.dnb_dd_t=dnb_dd_t; % forced movement of pinned nodes
+data.l0_t=l0_ct;         % forced movement of pinned nodes
+data.n0a_d=n0a_d;        %initial speed of free coordinates
+data.M=M;data.D=D;
+data.rho=rho_s;
+data.tf=tf;data.dt=dt;data.tspan=tspan;data.out_tspan=out_tspan;
+
+%% dynamic analysis
+% solve dynamic equation
+data_out=dynamic_solver_RDT(data);        %solve ODE of dynamic equation
+% time history of structure
+t_t=data_out.t_t;   %time history of members' force
+n_t=data_out.n_t;   %time history of nodal coordinate 
+l_t=data_out.l_t;   %time history of members' length 
+nd_t=data_out.nd_t;   %time history of nodal coordinate
