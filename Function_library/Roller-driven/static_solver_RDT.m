@@ -77,9 +77,9 @@ qa=E_qa\q;
 %     FreeDofs = find(sum(Ia,2));
     lmd = 0; icrm = 0; %MUL = [U,U];
     Fhis = zeros(MaxIcr,1);
-    data_out.t_out=zeros(ne,MaxIcr);        %output member force
-    data_out.l_out=zeros(ne,MaxIcr);                % member length
-    data_out.q_out=zeros(numel(q),MaxIcr);                % generalized coordinate
+    data_out.t_t=zeros(ne,MaxIcr);        %output member force
+    data_out.l_t=zeros(ne,MaxIcr);                % member length
+    data_out.q_t=zeros(numel(q),MaxIcr);                % generalized coordinate
 %     data_out.Kt_aa_out=cell(1,MaxIcr);       %tangent stiffness of truss
 %     data_out.K_t_oa_out=cell(1,MaxIcr);       %tangent stiffness of whole struct.
    
@@ -160,9 +160,9 @@ qa=E_qa\q;
             if err > 1e12, disp('Divergence!'); break; end
         end
 
-    data_out.q_out(:,icrm)=q;
-    data_out.l_out(:,icrm)=l;
-    data_out.t_out(:,icrm)=t;      %member force
+    data_out.q_t(:,icrm)=q;
+    data_out.l_t(:,icrm)=l;
+    data_out.t_t(:,icrm)=t;      %member force
 
     end
 

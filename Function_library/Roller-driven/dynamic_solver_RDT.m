@@ -17,17 +17,17 @@ function data_out=dynamic_solver_RDT(data_in)
 %		[].l_t: %time history of members' length
 %% input data
 
-Ia=data_in.Ia;
-n0=data_in.N(:);
+E_qa=data_in.E_qa;
+q0=data_in.q;
 tspan=data_in.tspan;
-n0a_d=data_in.n0a_d;    %initial speed of free coordinates
+q0a_d=data_in.q0a_d;    %initial speed of free coordinates
 %% dynamic iteration
 
 % initial value
-n0a=Ia'*n0;
+q0a=E_qa\q0;
 % n0a_d=zeros(size(n0a));
-Y0a=[n0a;n0a_d];
+Q0a=[q0a;q0a_d];
 % Perform simulation
-data_out = ode4_CTS(@tenseg_dyn_x_xdot_CTS,tspan,Y0a,data_in);
+data_out = ode4_RDT(@tenseg_dyn_q_qdot_RDT,tspan,Q0a,data_in);
 
 

@@ -116,7 +116,7 @@ z=(e_d'*V2)\(e_d'*(fd-pinv(A_RDT)*[f_ena;f_esa]));   %self-stress coefficient
 t=pinv(A_RDT)*[f_ena;f_esa]+V2*z;
 
 index_b=find(t<0);              % index of bar in compression
-index_s=setdiff(1:size(S,1),index_b);	% index of strings
+index_s=setdiff(1:ne,index_b);	% index of strings
 
 % member rest length
 l0=E.*A.*l./(t+E.*A);
@@ -164,8 +164,13 @@ num_plt=4:8;
 plot_mode(K_mode,k,N,E_na,C_b,C_s,l,'natrual vibration',...
     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
 end
-%% compare tangent stiffness of RDT and CTS
+%% mass matrix
 
+%% damping matrix
+ksi=0.03;    %damping coefficient of steel
+d_c=2/sqrt(3)*sqrt(rho)*A.*E.^0.5;                  % cricital damping 
+
+D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% statics analysis
 substep=8;
 
@@ -185,9 +190,9 @@ data.substep=substep;    % substep
 
 
 data_out=static_solver_RDT(data);
-t_t=data_out.t_out;          %member force in every step
-q_t=data_out.q_out;          %nodal coordinate in every step
-l_t=data_out.l_out;          %member length in every step
+t_t=data_out.t_t;          %member force in every step
+q_t=data_out.q_t;          %nodal coordinate in every step
+l_t=data_out.l_t;          %member length in every step
 
 n_t=q_t(1:3*nn,:);          % nodal coordinate n
 sld_t=q_t(3*nn+1:end,:);    % sliding distance
@@ -206,10 +211,12 @@ tenseg_plot_CTS(reshape(n_t(:,num),3,[]),C,index_b,S);
 end
 
 %% make video of the statics
-name=['T-bar_RDT'];
-% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,R3Ddata);
-% tenseg_video_slack(n_t,C_b,C_s,l0_ct,index_s,[],[],[],min(substep,50),name,savevideo,material{2})
-tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+% name=['T-bar_RDT'];
+% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+
+name=['Tbar_static_elasto_plastic'];
+% tenseg_video(n_t,C_b,C_s,[],min(substep,50),name,savevideo,material{2})
+tenseg_video_CTS(n_t,C,[1,2],S,[],[],[],[],[],[],t_t,[],min(substep,50),tf,name,savevideo)
 
 %% dynamics analysis
 % time step
@@ -228,27 +235,42 @@ ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
 % [~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
 
 % give initial speed of free coordinates
-q0a_d=zeros(nqa,1);                    %initial speed in X direction
+q0a_d=zeros(size(E_qa_new,2),1);                    %initial speed in X direction
 
-   %% dynamics calculation
-
+   %% input data
 % input data
-data.=N; data.C=C; data.ne=ne; data.nn=nn; data.Ia=Ia; data.Ib=Ib;data.S=S;
-data.E=E_c; data.A=A_c; data.index_b=index_b; data.index_s=index_s;
+data.q=q; data.C=C; data.ne=ne; data.nq=nq;data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
+data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
-data.w_t=w_t;           % external force
-data.dnb_t=dnb_t; data.dnb_d_t=dnb_d_t;  data.dnb_dd_t=dnb_dd_t; % forced movement of pinned nodes
-data.l0_t=l0_ct;         % forced movement of pinned nodes
-data.n0a_d=n0a_d;        %initial speed of free coordinates
-data.M=M;data.D=D;
-data.rho=rho_s;
+data.w_t=w_t;  % external force
+data.dqb_t=dqb_t; data.dqb_d_t=dqb_d_t;  data.dqb_dd_t=dqb_dd_t; % forced movement of pinned nodes
+data.l0_t=l0_t;% forced movement of pinned nodes
+data.q0a_d=q0a_d;        %initial speed of free coordinates
+% data.M=M;data.D=D;
+data.rho=rho_s; data.ksi=ksi;
 data.tf=tf;data.dt=dt;data.tspan=tspan;data.out_tspan=out_tspan;
 
-%% dynamic analysis
+
+%% solve ODE
 % solve dynamic equation
-data_out=dynamic_solver_RDT(data);        %solve ODE of dynamic equation
+data_out2=dynamic_solver_RDT(data);        %solve ODE of dynamic equation
 % time history of structure
-t_t=data_out.t_t;   %time history of members' force
-n_t=data_out.n_t;   %time history of nodal coordinate 
-l_t=data_out.l_t;   %time history of members' length 
-nd_t=data_out.nd_t;   %time history of nodal coordinate
+t_t2=data_out2.t_t;          %member force in every step
+q_t2=data_out2.q_t;          %nodal coordinate in every step
+l_t2=data_out2.l_t;          %member length in every step
+
+n_t2=q_t2(1:3*nn,:);          % nodal coordinate n
+sld_t2=q_t2(3*nn+1:end,:);    % sliding distance
+
+%% Plot configurations
+ j=linspace(0.01,1,5);
+for i=1:numel(j)
+    num=ceil(j(i)*size(n_t2,2));
+%  tenseg_plot( reshape(n_t(:,num),3,[]),C_b,C_s,[],[],[]);
+tenseg_plot_CTS(reshape(n_t2(:,num),3,[]),C,index_b,S);
+%  axis off;
+end
+%% make video of the dynamic
+name=['Tbar_dynamic_',num2str(tf)];
+% tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
+tenseg_video_CTS(n_t2,C,index_b,S,[],[],[],[],[],[],t_t2,[],min(numel(out_tspan),50),tf,name,savevideo)
