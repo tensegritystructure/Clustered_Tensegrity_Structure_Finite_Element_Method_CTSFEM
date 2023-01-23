@@ -1,4 +1,4 @@
-function tenseg_video_CTS(n_t,C,index_b,S,axislim,fig_handle,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele_t,lb_nod_t,num_pic,time,name,savevideo)
+function tenseg_video_RDT(n_t,C,R,index_b,S,axislim,fig_handle,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele_t,lb_nod_t,num_pic,time,name,savevideo)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -42,7 +42,8 @@ if savevideo==1
         %         delete_index = [7,13];
         %         [N,C_b,C_s] = tenseg_delete_extra_nodes(delete_index,N,C_b,C_s);
 %         tenseg_plot_CTS(N,C_b,C_s,99,[],[],[],R3Ddata);hold on
-        tenseg_plot_CTS(N,C,index_b,S,99,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,[min(lb_ele_t),max(lb_ele_t)]);
+%         tenseg_plot_CTS(N,C,index_b,S,99,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,[min(lb_ele_t),max(lb_ele_t)]);
+        tenseg_plot_RDT(N,C,R,index_b,S,99,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,[min(lb_ele_t),max(lb_ele_t)]);
         set(gcf,'color','w');
         axis(axislim);
         tenseg_savegif_forever_CTS(name,time/num_pic);

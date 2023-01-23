@@ -1,4 +1,4 @@
-function [Yd,t,l,q]=tenseg_dyn_q_qdot_RDT(time,Y,data_in)
+function [Yd,f,l,q]=tenseg_dyn_q_qdot_RDT(t,Y,data_in)
 % Input:
 %   t: current time
 %   Y0: current X, Xd values:   Y0=[X;Xd];
@@ -37,7 +37,7 @@ qa=Y(1:nq,:);               %free node cooridnate
 qa_d=Y(nq+1:end,:);         %free node velocity
 %%
 % tspan=0:dt:tf;
-ind=floor(time/dt)+1;
+ind=floor(t/dt)+1;
 % dnb=dnb_t(:,ind);
 % nb_d=dnb_d_t(:,ind); %this is the velocity of fixed node
 % nb_dd=dnb_dd_t(:,ind); %this is the acceleration of fixed node
@@ -92,22 +92,20 @@ qb=E_qb\q0+dqb;
 q=E_qa*qa+E_qb*qb;
 q_d=E_qa*qa_d+E_qb*qb_d;
 sld=q(3*nn+1:end);              % sliding vector
-l0s=l0-C*sld;
-
 N=reshape(q(1:3*nn),3,[]);
 H=N*C';                     % element's direction matrix
 Cell_H=mat2cell(H,3,ones(1,size(H,2)));  % transfer matrix H into a cell: Cell_H
 
 n=q(1:3*nn);
 l=sqrt(sum((N*C').^2))'; %bar length
-
-strain=(l-l0s)./l0s;        %strain of member
+l0s=l-C'*
+strain=(l-l0)./l0;        %strain of member
 [E,stress]=stress_strain(consti_data,index_b,index_s,strain,material);
 E_sct=stress./strain;           %secant modulus
-t=stress.*A;         %member force
+f=stress.*A;         %member force
 
 
-Kn=kron(C'*diag(t./l)*C,eye(3));                      %stiffness matrix
+Kn=kron(C'*diag(f./l)*C,eye(3));                      %stiffness matrix
 
 %% calculate mass matrix
 
@@ -129,5 +127,5 @@ d_c=2/sqrt(3)*sqrt(rho)*A.*E.^0.5;                  % cricital damping
 
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% calculate accerlation
-qa_dd=(E_qa'*M*E_qa)\(E_qa\(w-M*E_qb*qb_dd-[Kn*n;C'*t]-D*q_d));      %dynamic equation
+qa_dd=(E_qa'*M*E_qa)\(E_qa\(w-M*E_qb*qb_dd-[Kn*n;C'*f]-D*q_d));      %dynamic equation
 Yd=[qa_d;qa_dd];

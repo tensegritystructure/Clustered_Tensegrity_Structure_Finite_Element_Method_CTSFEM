@@ -90,9 +90,6 @@ for i = 2:N+1
     
         
     end
-    if i==N+1
-        break;
-    end
 %         f_int=f_c; l_int=l_c;               %store the force and length(for plastic calculation)
     [F(:,2),~,~,~] = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,1),data_in);
     [F(:,3),~,~,~] = feval(odefun,ti+0.5*hi,yi+0.5*hi*F(:,2),data_in);
@@ -100,6 +97,19 @@ for i = 2:N+1
     Y(:,i) = yi + (hi/6)*(F(:,1) + 2*F(:,2) + 2*F(:,3) + F(:,4));
 end
 close(wb);
+%% calculate the time history data
+
+if  sum(out_tspan==tspan(end))
+    disp(ti);
+    data_out.t_t(:,out_tspan==tspan(end))=f;      %member force
+    data_out.l_t(:,out_tspan==tspan(end))=l;
+   
+end
+
+
+% feval(odefun,tspan(end),Y(:,end),data_in);
+%   data_out.t_t(:,end)=f;      %member force
+%     data_out.n_t(:,end)=n;
 
 %% output data
 data_out.Ya_t=Y;

@@ -1,6 +1,11 @@
-function [fig_out] = tenseg_plot_CTS_dash( N,C,index_b,S,fig_handle,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,bound)
+function [fig_out] = tenseg_plot_RDT(N,C,R,index_b,S,fig_handle,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,bound)
+
+% [fig_out] = tenseg_plot_RDT_size(n,fai_cij,h_ij,l_ij,R_ba,l,gr,S_Tij,C_sta,mue,C_end,R,ne,index_b,S,fig_handle,highlight_nodes,view_vec, PlotTitle, R3Ddata,lb_ele,lb_nod,bound)
+
+
 % [fig_out] = TENSEG_PLOT( N,C_b,C_s,fig_handle,highlight_nodes,view_vec )
 % creates a rough visualization figure for a given tensegrity structure
+% with 3D pulley, contour plot of member information
 %
 % Inputs:
 %	N: node matrix (3 x n array for n nodes)
@@ -29,8 +34,8 @@ function [fig_out] = tenseg_plot_CTS_dash( N,C,index_b,S,fig_handle,highlight_no
 
 %% Object size options (for line plots)
 BarWidth = 4; % Width of bar lines
-StringWidth = 1.5; % Width of string lines
-NodeSize = 12; % Size of node marker
+StringWidth = 2; % Width of string lines
+NodeSize = 4; % Size of node marker
 
 %% Labeling options
 % Write labels? (1: show, 0: suppress)
@@ -41,7 +46,7 @@ Label_colorbar=1;  % 1 colorbar, 2 legned, 0 nothing,
 
 FontBars = 15; % Font of bar labels
 FontStrings = 10; % Font of string labels
-FontNodes = 18; % Font of node labels
+FontNodes = 12; % Font of node labels
 
 
 FractionDistance = 0.005; % Distance between object and label (relative to overall axis size)
@@ -52,39 +57,103 @@ BarSurfColor = [0.2, 0.2, 0.6];
 StringSurfColor = [0.9, 0.1, 0.1];
 LightAmbientStrength = 0.7;% [0,1], 0.3 is Matlab's default
 
-%%
-switch nargin
-    case 6
-        view_vec = [];
-    case 5
-        view_vec = [];
-        highlight_nodes = [];
-    case 4
-        view_vec = [];
-        highlight_nodes = [];
-        fig_handle = [];
-end
+%% prepare data
+ C_sta=C;
+ C_sta(find(C==1))=0;
+ C_sta=abs(C_sta);
+ C_end=C;
+ C_end(find(C==-1))=0;
 
-if nargin < 8 % Empty Plot Title
-    PlotTitle = '';
+ [ne,nn]=size(C);
+%% calculat angle 
+N0=N;
+n=N(:);
+H=N0*C';
+l=sqrt(sum(H.^2)');
+Cell_H=mat2cell(H,3,ones(1,size(H,2)));
+% angle of straight strings
+phi_s_sta=acos(C_sta*R./l);% this is approximation
+phi_s_end=acos(C_end*R./l);
+
+% angle of circluar strings
+phi_r=zeros(nn,1);
+phi_c=zeros(nn,1);
+for i=find(R)
+    h_1=H(:,find(C(:,i)==1));
+    h_2=H(:,find(C(:,i)==-1));
+phi_r(i)=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
 end
-if nargin < 9 % No 3D object data
-    R3Ddata = [];
+phi_c=2*pi-phi_r-(C_sta'*phi_s_sta+C_end'*phi_s_end);
+
+
+% l_s=sqrt(l.^2-R.^2);
+
+
+
+%% calculate nodal coordinate of straight line
+N_plot=[];
+n_sta=N0*C_sta';%kron(C_sta,eye(3))*n;
+n_end=N0*C_end';%kron(C_end,eye(3))*n;
+ne_sta=zeros(nn,1);
+ne_end=zeros(nn,1);
+e_i=zeros(3,nn);
+theta_sta=-phi_s_sta; theta_end=phi_s_end;
+for i=find(R)
+    ne_sta(i)=find(C(:,i)==-1);
+    ne_end(i)=find(C(:,i)==1);
+    h_1=H(:,ne_end(i));
+    h_2=H(:,ne_sta(i));
+e_i(:,i)=skew(h_1)*h_2/norm(skew(h_1)*h_2);
+T_sta=eye(3)-sin(theta_sta(ne_sta(i)))*skew(e_i(:,i))+(1-cos(theta_sta(ne_sta(i))))*skew(e_i(:,i))^2;
+T_end=eye(3)-sin(theta_end(ne_end(i)))*skew(e_i(:,i))+(1-cos(theta_end(ne_end(i))))*skew(e_i(:,i))^2;
+    n_sta(:,ne_sta(i))=kron(C_sta(ne_sta(i),:),eye(3))*n+C_sta(ne_sta(i),:)*R*T_sta'*(h_2/l(ne_sta(i)));
+    n_end(:,ne_end(i))=kron(C_end(ne_end(i),:),eye(3))*n+C_end(ne_end(i),:)*R*T_end'*(-h_1/l(ne_end(i)));
 end
-if nargin < 10 % lb_ele
-    lb_ele = [];
-end
-if nargin < 11 % lb_nod
-    lb_nod = [];
-end
-if nargin < 12 % lb_nod
-   bound = [];
-end
+N_plot=reshape([n_sta;n_end],3,[]);
+
+% for i=1:ne
+%     h_i=H(:,i);
+%     T_sta=[cos(theta_sta(i)),-sin(theta_sta(i)),0;sin(theta_sta(i)),cos(theta_sta(i)),0;0 0 1];
+%     T_end=[cos(theta_end(i)),-sin(theta_end(i)),0;sin(theta_end(i)),cos(theta_end(i)),0;0 0 1];
+%     n_sta(:,i)=kron(C_sta(i,:),eye(3))*n+C_sta(i,:)*R*T_sta*(h_i/l(i));
+%     n_end(:,i)=kron(C_end(i,:),eye(3))*n+C_end(i,:)*R*T_end*(-h_i/l(i));
+%     N_plot=[N_plot,n_sta(:,i),n_end(:,i)];
+% end
+% N_plot=[n_sta,n_end];
+N=N_plot;
+C_in_segment = [1:2:2*ne-1;2:2:2*ne]';  % This is indicating that string connection
+% Convert the above matrices into full connectivity matrices.
+C= tenseg_ind2C(C_in_segment,N_plot);
+
+
+
+
+
+
+
+
+% N_plot=[];
+% fai_S=asin(R_ba./l);
+% for i=1:numel(gr)
+%     for j=1:numel(gr{i})
+%         theta_sta_ij{i,j}=-S_Tij{i,j}*C_sta*mue*(pi/2-S_Tij{i,j}*fai_S);
+%         theta_end_ij{i,j}=S_Tij{i,j}*C_end*mue*(pi/2-S_Tij{i,j}*fai_S);
+%         T_sta_ij{i,j}=[cos(theta_sta_ij{i,j}),-sin(theta_sta_ij{i,j}),0;sin(theta_sta_ij{i,j}),cos(theta_sta_ij{i,j}),0;0 0 1];
+%         T_end_ij{i,j}=[cos(theta_end_ij{i,j}),-sin(theta_end_ij{i,j}),0;sin(theta_end_ij{i,j}),cos(theta_end_ij{i,j}),0;0 0 1];
+%         n_sta_ij{i,j}=kron(S_Tij{i,j}*C_sta,eye(3))*n+S_Tij{i,j}*C_sta*R*T_sta_ij{i,j}*(h_ij{i,j}/l_ij{i,j});
+%         n_end_ij{i,j}=kron(S_Tij{i,j}*C_end,eye(3))*n+S_Tij{i,j}*C_end*R*T_end_ij{i,j}*(-h_ij{i,j}/l_ij{i,j});
+%         N_plot=[N_plot,n_sta_ij{i,j},n_end_ij{i,j}];
+%     end
+% end
+% N=N_plot;
+% C_in_segment = [1:2:2*ne-1;2:2:2*ne]';  % This is indicating that string connection
+% % Convert the above matrices into full connectivity matrices.
+% C= tenseg_ind2C(C_in_segment,N_plot);
+
 % Get min and max X,Y,Z coordinates contained in Nhist
 min_x = min(N(1,:,:)); max_x = max(N(1,:,:));
 min_y = min(N(2,:,:)); max_y = max(N(2,:,:));
 min_z = min(N(3,:,:)); max_z = max(N(3,:,:));
-
 %%
 if ~isempty(R3Ddata) % Extending axis to account for radii of objects
     maxradius = 0;
@@ -145,6 +214,7 @@ color_b=[zeros(1,numel(n_clu_b));zeros(1,numel(n_clu_b));linspace(0,0,numel(n_cl
 sort_b=reshape(reshape(1:2*ceil(numel(n_clu_b)/2),[],2)',[],1);%this is to reorder the color
 sort_b=sort_b(1:numel(n_clu_b));
 color_b=color_b(sort_b,:);
+% color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s))]';
 color_s=[linspace(1,0,numel(n_clu_s));linspace(0,1,numel(n_clu_s));linspace(0,0,numel(n_clu_s))]';
 % color_s=autumn(numel(n_clu_s));
 sort_s=reshape(reshape(1:2*ceil(numel(n_clu_s)/2),[],2)',[],1);%this is to reorder the color
@@ -172,6 +242,7 @@ end
     color_b=color_clu(n_clu_b,:);
     color_s=color_clu(n_clu_s,:);    
 end
+color=[color_b;color_s];
 % index_b=ismember(C_b,C,'row')
 
 % %% plot bars and strings
@@ -225,7 +296,7 @@ end
             for j=1:numel(index_clu{n_clu_b(i)})
                 nod1=find(C(index_clu{n_clu_b(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_b(i)}(j),:)==1);
-                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','--');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',BarWidth,'color',color_b(i,:),'linestyle','-');
                 hold on
             end
              Pplot=[Pplot,PP]; 
@@ -265,7 +336,7 @@ end
             for j=1:numel(index_clu{n_clu_s(i)})
                 nod1=find(C(index_clu{n_clu_s(i)}(j),:)==-1);
                 nod2=find(C(index_clu{n_clu_s(i)}(j),:)==1);
-                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',StringWidth,'color',color_s(i,:),'linestyle','--');
+                PP=line([N(1,nod1),N(1,nod2)],[N(2,nod1),N(2,nod2)],[N(3,nod1),N(3,nod2)],'linewidth',StringWidth,'color',color_s(i,:),'linestyle','-');
                 hold on
             end
                          Pplot=[Pplot,PP]; 
@@ -273,6 +344,22 @@ end
         end
     end
 end
+
+%% plot pulleys and circular strings
+for i=find(R)
+n_cen=N0(:,i);   %center of pulley
+            n_sta_temp= n_sta(:,ne_sta(i));                       % start node in pulley
+            n_end_temp= n_end(:,ne_sta(i));                        % end node in pulley
+R1=n_sta_temp-n_cen;
+N_pulley=[];
+for th=linspace(0,2*pi,20)
+    T_rot=eye(3)-sin(th)*skew(e_i(:,i))+(1-cos(th))*skew(e_i(:,i))^2;
+    N_pulley=[N_pulley,n_cen+T_rot*R1];
+end
+plot3(N_pulley(1,:),N_pulley(2,:),N_pulley(3,:),'linewidth',2*StringWidth,'color','black','linestyle','-');
+end   
+
+
 
 %% legend
 switch Label_colorbar

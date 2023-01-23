@@ -12,6 +12,7 @@ function tenseg_plot_result2(out_tspan,data,legend1,label,name,saveimg,linepro)
 %   lable:[xlabel,ylabel];
 % Outputs:
 %%	plot the results
+NumLgdColumn=2; %number of legend column
 figure
 for i=1:size(data,1)
 %      n='rb';
@@ -19,8 +20,10 @@ for i=1:size(data,1)
        plot(out_tspan,data(i,:),linepro{i},'linewidth',2);hold on
 end
 % plot(out_tspan,data,'linewidth',2);
-set(gca,'fontsize',18,'linewidth',1.15);
-legend(legend1,'location','best','fontsize',15);
+set(gca,'fontsize',18,'linewidth',2);
+lgd =legend(legend1,'location','best','fontsize',15,'Interpreter','latex');
+legend('NumColumns',NumLgdColumn);
+% title(lgd,'Direction');
 ylabel(label(2),'fontsize',18);
 xlabel(label(1),'fontsize',18);
 if saveimg==1
