@@ -204,7 +204,7 @@ end
 
 
 %% damping matrix
-ksi=0.03;    %damping coefficient of steel
+ksi=0.02;    %damping coefficient of steel
 d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping 
 
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
@@ -216,6 +216,13 @@ ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
 ind_dl0=[]'; dl0=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dqb_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_static_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
+[nq,nqa]=size(E_qa_new);
+[~,nqb]=size(E_qb_new);
+% modify external force
+w_t(:,1:substep/2)=w_t(:,2:2:end); w_t(:,substep/2+1:end)=w_t(:,end)*ones(1,substep/2);
+dqb_t(:,1:substep/2)=dqb_t(:,2:2:end); dqb_t(:,substep/2+1:end)=dqb_t(:,end)*ones(1,substep/2);
+l0_t(:,1:substep/2)=l0_t(:,2:2:end); l0_t(:,substep/2+1:end)=l0_t(:,end)*ones(1,substep/2);
+
 % input data
 data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
 data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
@@ -230,6 +237,7 @@ data_out=static_solver_RDT(data);
 t_t=data_out.t_t;          %member force in every step
 q_t=data_out.q_t;          %nodal coordinate in every step
 l_t=data_out.l_t;          %member length in every step
+K_t_t= data_out.Kt_t; %tangent stiffness of whole struct.
 
 n_t=q_t(1:3*nn,:);          % nodal coordinate n
 sld_t=q_t(3*nn+1:end,:);    % sliding distance
@@ -239,15 +247,48 @@ tenseg_plot_result2(1:substep,t_t,{'1', '2', '3','4','5','6'},{'Substep','Force 
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 %% Plot nodal coordinate curve X Y slid
-tenseg_plot_result(1:substep,[n_t([2*3-2,2*3-1],:);E_sa'*sld_t],{'2X','2Y','slide'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
+% tenseg_plot_result(1:substep,[n_t([2*3-2,2*3-1],:);E_sa'*sld_t],{'2X','2Y','slide'},{'Substep','Coordinate /m)'},'plot_coordinate.png',saveimg);
 %% Plot nodal coordinate curve X Y slid
-tenseg_plot_result2(1:substep,[n_t([2*3-2,2*3-1],:);E_sa'*sld_t],{'2X','2Y','$s_a$'}, ...
+tenseg_plot_result2(1:substep,[n_t([2*3-2,2*3-1],:);E_sa'*sld_t],{'$X_2$','$Y_2$','$s_3$'}, ...
     {'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg,{'-or',':+g','-xb'});
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
+%% plot stiffness in small deformation in XYZ direction
+
+F_dir=zeros(nq,3);
+F_dir([3*2-2,3*2-1],1:2)=eye(2);   % force with direction X Y 
+F_dir(3*nn+3,3)=1;                      % force in sliding s_a
+
+compliance_dir=zeros(3,substep);    % compliance with direction X Y s_a
+stiff_dir=zeros(3,substep);         % stiff with direction X Y s_a
+E_qa_temp=[E_qa_new,zeros(nq,1)];
+E_qa_temp(3*nn+3,end)=1;              %add sliding freedom
+for i=1:substep
+    K_taa=E_qa_temp'*K_t_t{i}*E_qa_temp;
+
+  F_dir=F_dir/diag(sqrt(diag(F_dir'*F_dir))); %normalized
+
+    disp_dir=K_taa\(E_qa_temp'*F_dir);
+compliance_dir(:,i)=diag(disp_dir'*K_taa'*disp_dir);     
+stiff_dir(:,i)=1./compliance_dir(:,i);
+end 
+
+%plot stiffness
+figure
+semilogy(1:substep,stiff_dir(1,:),'-r',...
+    1:substep,stiff_dir(2,:),'-.g',...
+    1:substep,stiff_dir(3,:),'--b','linewidth',2); %semilogy
+set(gca,'fontsize',18,'linewidth',2);
+xlabel('Substep','fontsize',18,'Interpreter','tex');
+ylabel('Stiffness (N/m)','fontsize',18);
+lgd =legend('$X_2$','$Y_2$','$s_3$','location','best','fontsize',15,'Interpreter','latex');
+grid on;
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
+
 %% Plot configurations
- j=linspace(0.01,1,3);
+ j=linspace(0.01,1,4);
 %  fig2=figure;% plot in one figure
 for i=1:numel(j)
     num=ceil(j(i)*size(n_t,2));
@@ -273,8 +314,8 @@ tenseg_video_RDT(n_t,C,R,index_b,eye(ne),[],[],[],[],[],[],t_t,[],min(substep,50
 %% dynamics analysis
 % time step
 dt=1e-5;
-out_dt=1e-4;
-tf=0.5;
+tf=0.05;
+out_dt=tf/100;
 tspan=0:dt:tf;
 out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
 
@@ -283,6 +324,13 @@ ind_w=[];w=[];
 ind_dl0=[]; dl0=[];
 ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
 [w_t,dqb_t,dqb_d_t,dqb_dd_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_dyna_RDT(tspan,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
+% modify external force
+step=numel(tspan)-1;
+w_t(:,1:step/2)=w_t(:,2:2:end); w_t(:,step/2+1:end)=w_t(:,end)*ones(1,step/2+1);
+dqb_t(:,1:step/2)=dqb_t(:,2:2:end); dqb_t(:,step/2+1:end)=dqb_t(:,end)*ones(1,step/2+1);
+l0_t(:,1:step/2)=l0_t(:,2:2:end); l0_t(:,step/2+1:end)=l0_t(:,end)*ones(1,step/2+1);
+
+
 % % boundary node motion info
 % [~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
 
@@ -320,8 +368,12 @@ tenseg_plot_result2(out_tspan,t_t2,{'1', '2', '3','4','5','6'},{'Time / s','Forc
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 %% Plot nodal coordinate curve X Y slid
+f1=figure;
 tenseg_plot_result2(out_tspan,[n_t2([2*3-2,2*3-1],:);E_sa'*sld_t2],{'2X','2Y','$s_a$'}, ...
-    {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'--r',':g','-b'});
+    {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'-or','-+g','-b'},f1);
+% plot static result
+tenseg_plot_result2([1:substep]*tf/substep,[n_t([2*3-2,2*3-1],:);E_sa'*sld_t],{'$X_2$','$Y_2$','$s_3$'}, ...
+    {'Substep','Coordinate (m)'},'plot_coordinate.png',saveimg,{'--r','--g','--b'},f1);
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 

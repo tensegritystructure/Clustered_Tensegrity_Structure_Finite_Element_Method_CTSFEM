@@ -78,10 +78,11 @@ phi_s_end=acos(C_end*R./l);
 % angle of circluar strings
 phi_r=zeros(nn,1);
 phi_c=zeros(nn,1);
-for i=find(R)
-    h_1=H(:,find(C(:,i)==1));
-    h_2=H(:,find(C(:,i)==-1));
-phi_r(i)=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
+non_0R=find(R);
+for i=1:numel(non_0R)
+    h_1=H(:,find(C(:,non_0R(i))==1));
+    h_2=H(:,find(C(:,non_0R(i))==-1));
+phi_r(non_0R(i))=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
 end
 phi_c=2*pi-phi_r-(C_sta'*phi_s_sta+C_end'*phi_s_end);
 
@@ -98,16 +99,18 @@ ne_sta=zeros(nn,1);
 ne_end=zeros(nn,1);
 e_i=zeros(3,nn);
 theta_sta=-phi_s_sta; theta_end=phi_s_end;
-for i=find(R)
-    ne_sta(i)=find(C(:,i)==-1);
-    ne_end(i)=find(C(:,i)==1);
-    h_1=H(:,ne_end(i));
-    h_2=H(:,ne_sta(i));
-e_i(:,i)=skew(h_1)*h_2/norm(skew(h_1)*h_2);
-T_sta=eye(3)-sin(theta_sta(ne_sta(i)))*skew(e_i(:,i))+(1-cos(theta_sta(ne_sta(i))))*skew(e_i(:,i))^2;
-T_end=eye(3)-sin(theta_end(ne_end(i)))*skew(e_i(:,i))+(1-cos(theta_end(ne_end(i))))*skew(e_i(:,i))^2;
-    n_sta(:,ne_sta(i))=kron(C_sta(ne_sta(i),:),eye(3))*n+C_sta(ne_sta(i),:)*R*T_sta'*(h_2/l(ne_sta(i)));
-    n_end(:,ne_end(i))=kron(C_end(ne_end(i),:),eye(3))*n+C_end(ne_end(i),:)*R*T_end'*(-h_1/l(ne_end(i)));
+non_0R=find(R);
+for i=1:numel(non_0R)
+    k=non_0R(i);
+    ne_sta(k)=find(C(:,k)==-1);
+    ne_end(k)=find(C(:,k)==1);
+    h_1=H(:,ne_end(k));
+    h_2=H(:,ne_sta(k));
+e_i(:,k)=skew(h_1)*h_2/norm(skew(h_1)*h_2);
+T_sta=eye(3)-sin(theta_sta(ne_sta(k)))*skew(e_i(:,k))+(1-cos(theta_sta(ne_sta(k))))*skew(e_i(:,k))^2;
+T_end=eye(3)-sin(theta_end(ne_end(k)))*skew(e_i(:,k))+(1-cos(theta_end(ne_end(k))))*skew(e_i(:,k))^2;
+    n_sta(:,ne_sta(k))=kron(C_sta(ne_sta(k),:),eye(3))*n+C_sta(ne_sta(k),:)*R*T_sta'*(h_2/l(ne_sta(k)));
+    n_end(:,ne_end(k))=kron(C_end(ne_end(k),:),eye(3))*n+C_end(ne_end(k),:)*R*T_end'*(-h_1/l(ne_end(k)));
 end
 N_plot=reshape([n_sta;n_end],3,[]);
 
@@ -346,14 +349,16 @@ end
 end
 
 %% plot pulleys and circular strings
-for i=find(R)
-n_cen=N0(:,i);   %center of pulley
-            n_sta_temp= n_sta(:,ne_sta(i));                       % start node in pulley
-            n_end_temp= n_end(:,ne_sta(i));                        % end node in pulley
+non_0R=find(R);
+for i=1:numel(non_0R)
+    k=non_0R(i);
+n_cen=N0(:,k);   %center of pulley
+            n_sta_temp= n_sta(:,ne_sta(k));                       % start node in pulley
+            n_end_temp= n_end(:,ne_sta(k));                        % end node in pulley
 R1=n_sta_temp-n_cen;
 N_pulley=[];
 for th=linspace(0,2*pi,20)
-    T_rot=eye(3)-sin(th)*skew(e_i(:,i))+(1-cos(th))*skew(e_i(:,i))^2;
+    T_rot=eye(3)-sin(th)*skew(e_i(:,k))+(1-cos(th))*skew(e_i(:,k))^2;
     N_pulley=[N_pulley,n_cen+T_rot*R1];
 end
 plot3(N_pulley(1,:),N_pulley(2,:),N_pulley(3,:),'linewidth',StringWidth,'color','black','linestyle','-');

@@ -5,9 +5,9 @@ function data_out=static_solver_RDT(data)
 
 global A E l0 E_qa E_qb C qa qb dqa  w  f_int l_int nn
 % minimize total energy? (1: use, 0: not use) it's time consuming
-use_energy=0;
-modify_stiff=0;
-tol = 1e-5;MaxIter = 150; 
+use_energy=1;
+modify_stiff=1;
+tol = 1e-5;MaxIter = 250; 
 %% input data
 C=data.C;
 ne=data.ne;
@@ -102,9 +102,8 @@ qa=E_qa\q;
 
             q=[E_qa,E_qb]*[qa;qb];
             N=reshape(q(1:3*nn),3,[]);
-            H=N*C';
             sld=q(3*nn+1:end);
-            l=sqrt(sum(H.^2))'; %bar length
+            l=sqrt(sum((N*C').^2))'; %bar length
 %             l_c=S*l;
 
             % member force (of truss)
@@ -116,7 +115,7 @@ qa=E_qa\q;
 
            
             % equilibrium matrix (of truss)
-            
+            H=N*C';
             Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
             A_2=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
             Kn=kron(C'*diag(l.\t)*C,eye(3));       %stiffness matrix of truss
@@ -135,11 +134,11 @@ qa=E_qa\q;
             Km=K_Taa;
             %modify the stiffness matrix
         if modify_stiff==1
-        [V_mode,D]=eig(K_Taa);                       %¸Õ¶È¾ØÕóÌØÕ÷¸ù
+        [V_mode,D]=eig(K_Taa);                       %åˆšåº¦çŸ©é˜µç‰¹å¾æ ¹
         d=diag(D);                            %eigen value
-        lmd=min(d);                     %¸Õ¶È¾ØÕó×îÐ¡ÌØÕ÷¸ù
+        lmd=min(d);                     %åˆšåº¦çŸ©é˜µæœ€å°ç‰¹å¾æ ¹
         if lmd>0
-            Km=K_Taa+u*eye(size(K_Taa)); %ÐÞÕýµÄ¸Õ¶È¾ØÕó
+            Km=K_Taa+u*eye(size(K_Taa)); %ä¿®æ­£çš„åˆšåº¦çŸ©é˜µ
         else
             Km=K_Taa+(abs(lmd)+u)*eye(size(K_Taa));
         end

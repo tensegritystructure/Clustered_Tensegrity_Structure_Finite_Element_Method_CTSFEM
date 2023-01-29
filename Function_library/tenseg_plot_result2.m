@@ -1,4 +1,4 @@
-function tenseg_plot_result2(out_tspan,data,legend1,label,name,saveimg,linepro)
+function [fig_out]=tenseg_plot_result2(out_tspan,data,legend1,label,name,saveimg,linepro,fig_handle)
 % /* This Source Code Form is subject to the terms of the Mozilla Public
 % * License, v. 2.0. If a copy of the MPL was not distributed with this
 % * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -11,9 +11,20 @@ function tenseg_plot_result2(out_tspan,data,legend1,label,name,saveimg,linepro)
 %	legend: lengend(1),(2)...
 %   lable:[xlabel,ylabel];
 % Outputs:
+
 %%	plot the results
 NumLgdColumn=2; %number of legend column
-figure
+switch nargin
+    case 7
+        fig_handle = [];
+end
+
+if isempty(fig_handle)
+    fig_out = figure;
+else
+    fig_out = figure(fig_handle);
+end
+
 for i=1:size(data,1)
 %      n='rb';
 %      plot(out_tspan,data(i,:),n(1,i),'linewidth',1);hold on

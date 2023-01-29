@@ -8,7 +8,7 @@ function plot_mode_RDT(Mode,value,N,R,Ia,C,index_b,S,l,title,xlb,ylb,unit,num_pl
 %
 switch nargin
     case 14
-        view_vec=2;
+        view_vec=3;
 end
 
 figure

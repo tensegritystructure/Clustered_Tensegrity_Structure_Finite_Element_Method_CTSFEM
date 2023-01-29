@@ -239,7 +239,7 @@ theta_t=data_out1.theta_out;
 icrm=size(n_t,2);               % increment
 %% Large deformation analysis
 
-%% plot stiffness in large deformation in XYZ direction
+%% plot stiffness in small deformation in XYZ direction
 
 F_dir=zeros(3*nn,4);
 F_dir([3*(level*p+1)-2:3*(level*p+p)],1:3)=kron(ones(p,1),eye(3));   % force with direction X Y Z
