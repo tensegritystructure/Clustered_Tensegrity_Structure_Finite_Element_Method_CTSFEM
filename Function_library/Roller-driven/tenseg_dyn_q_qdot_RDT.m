@@ -111,7 +111,7 @@ Kn=kron(C'*diag(t./l)*C,eye(3));                      %stiffness matrix
 
 %% calculate mass matrix
 
-mass=rho.*A.*(l0-C*sld);        % mass vector
+mass=rho.*A.*l0s;        % mass vector
 M=tenseg_mass_matrix_RDT(mass,C,N,l); % generate mass matrix
 
 

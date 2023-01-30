@@ -51,14 +51,14 @@ dq(ind_dqb)=dqb0;
 dqb=E_qb_new\dq;
 % dq=d3nn(b_new);
 % dn(ind_dn)=dn0;
-dqb_t=dqb*linspace(0,1,substep);
-
+% dqb_t=dqb*linspace(0,1,substep);      % linear
+dqb_t=dqb*[linspace(0,1,round(substep/2)),ones(1,substep/2)];        % slope + flat
 %% velocity and acceleration
 % velocity
 dqb_d_t=[zeros(size(dqb_t,1),1),diff(dqb_t,1,2)]/dt;
 % acceleration
-dqb_dd_t=[zeros(size(dqb_t,1),1),diff(dqb_d_t,1,2)]/dt;
-
+% dqb_dd_t=[zeros(size(dqb_t,1),1),diff(dqb_d_t,1,2)]/dt;
+dqb_dd_t=zeros(size(dqb_t));
 
 %% rest length
 dl0_i=zeros(size(l0));

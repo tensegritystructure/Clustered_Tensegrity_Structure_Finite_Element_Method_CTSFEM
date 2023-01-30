@@ -13,7 +13,8 @@ function [fig_out]=tenseg_plot_result2(out_tspan,data,legend1,label,name,saveimg
 % Outputs:
 
 %%	plot the results
-NumLgdColumn=2; %number of legend column
+NumLgdColumn=1; %number of legend column
+
 switch nargin
     case 7
         fig_handle = [];

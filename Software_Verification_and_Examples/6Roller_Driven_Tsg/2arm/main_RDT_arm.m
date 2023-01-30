@@ -27,16 +27,16 @@ savevideo=1;            % make video(1) or not(0)
 gravity=0;              % consider gravity 1 for yes, 0 for no
 %% N C of the structure
 % Manually specify node positions
-H=1; b=1;h=0.5; level=3;        % shape parameters
+Height=1; b=1;h=0.5; level=3;        % shape parameters
 N=zeros(3,5*(level+1)+4*(level+1));     %initialize N
 % top nodes
-N(:,1:5:5*level+1)=[0,0,1]'*H*[0:level];
+N(:,1:5:5*level+1)=[0,0,1]'*Height*[[0:level]];
 % side noses
 N(:,kron([0:5:5*level],ones(1,4))+kron(ones(1,level+1),[2:5]))=...
-    [kron(ones(1,level+1),0.5*[b,-b,-b,b;h,h,-h,-h]);kron(H*[0:level]-H/2,ones(1,4))];
+    [kron(ones(1,level+1),0.5*[b,-b,-b,b;h,h,-h,-h]);kron(Height*[0:level]-Height/2,ones(1,4))];
 % [kron(ones(1,level+1),0.5*[-b,b,b,-b;h,h,-h,-h]);zeros(1,4),kron(H*[1:level]-H/2,ones(1,4))];
 % dulplicate side nodes
-N(:,5*(level+1)+1:end)=[kron(ones(1,level+1),0.5*[b,-b,-b,b;h,h,-h,-h]);kron(H*[0:level]-H/2,ones(1,4))];
+N(:,5*(level+1)+1:end)=[kron(ones(1,level+1),0.5*[b,-b,-b,b;h,h,-h,-h]);kron(Height*[0:level]-Height/2,ones(1,4))];
  
 % Manually specify connectivity indices.
 C_b_in=zeros(level*15+4,2);
@@ -293,7 +293,7 @@ fig.Position(3:4)=[800,350];   %change fig size
 end
 
 %% damping matrix
-ksi=0.02;    %damping coefficient of steel
+ksi=0.1;    %damping coefficient of steel
 d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping 
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% statics analysis
@@ -301,7 +301,7 @@ substep=30;
 
 ind_w=[];w=[];
 
-ind_dqb=[find(sum(E_qa*E_qa_a,2))]; dqb0=[0.2*K_mode_qaa_sort(:,2)];
+ind_dqb=[find(sum(E_qa*E_qa_a,2))]; dqb0=[0.20*-K_mode_qaa_sort(:,1)];
 ind_dl0=[]'; dl0=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dqb_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_static_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
@@ -398,22 +398,23 @@ tenseg_video_RDT(n_t,C,R,index_b,eye(ne),[],[],[],[45,30],[],[],t_t,[],min(subst
 
 %% dynamics analysis
 % time step
-dt=1e-4;
-tf=0.05;
+dt=1e-5;
+tf=0.1;
 out_dt=1e-4;
 tspan=0:dt:tf;
 out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
 
 % calculate external force and 
 ind_w=[];w=[];
-ind_dl0=[]; dl0=[];
-ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
+ind_dl0=[]'; dl0=[]';
+ind_dqb=[3*nn+find(sum(E_sa,2))]; dqb0=[0.4*K_modess(:,2)];    % 12 active roller
+% ind_dqb=[find(sum(E_qa*E_qa_a,2))]; dqb0=[0.1*K_mode_qaa_sort(:,1)];    %4 active roller
 [w_t,dqb_t,dqb_d_t,dqb_dd_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_dyna_RDT(tspan,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
 % modify external force(optional)
-step=numel(tspan)-1;
-w_t(:,1:step/2)=w_t(:,2:2:end); w_t(:,step/2+1:end)=w_t(:,end)*ones(1,step/2+1);
-dqb_t(:,1:step/2)=dqb_t(:,2:2:end); dqb_t(:,step/2+1:end)=dqb_t(:,end)*ones(1,step/2+1);
-l0_t(:,1:step/2)=l0_t(:,2:2:end); l0_t(:,step/2+1:end)=l0_t(:,end)*ones(1,step/2+1);
+% step=numel(tspan)-1;
+% w_t(:,1:step/2)=w_t(:,2:2:end); w_t(:,step/2+1:end)=w_t(:,end)*ones(1,step/2+1);
+% dqb_t(:,1:step/2)=dqb_t(:,2:2:end); dqb_t(:,step/2+1:end)=dqb_t(:,end)*ones(1,step/2+1);
+% l0_t(:,1:step/2)=l0_t(:,2:2:end); l0_t(:,step/2+1:end)=l0_t(:,end)*ones(1,step/2+1);
 
 
 % % boundary node motion info
@@ -450,11 +451,22 @@ if savedata==1
     save (['Tbr',num2str(tf),'.mat']);
 end
 %% plot member force 
+tenseg_plot_result2(out_tspan,t_t2([size(C_b,1)+8*level+2:4:end-2,size(C_b,1)+8*level+1:4:end-3],:),{'$f_{s_1bottom}$','$f_{s_1middle}$','$f_{s_1top}$','$f_{s_2bottom}$','$f_{s_2middle}$','$f_{s_2top}$'},{'Time (s)','Force (N)'} ...
+    ,'plot_member_force.png',saveimg,{'-r','-g','-b','-c','-m','-k'});
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
+
 tenseg_plot_result2(out_tspan,t_t2,{'1', '2', '3','4','5','6'},{'Time / s','Force / N'} ...
     ,'plot_member_force.png',saveimg,{'--r',':g','-b','-c','-.m','-.y'});
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 %% Plot nodal coordinate curve X Y slid
+
+tenseg_plot_result2(out_tspan,[n_t2([16*3-2:16*3],:)],{'$X_{top}$','$Y_{top}$','$Z_{top}$'}, ...
+    {'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg,{'-r','--g','-.b'});
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
+
 f1=figure;
 tenseg_plot_result2(out_tspan,[n_t2([2*3-2],:)],{'2X'}, ...
     {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'-b','-+g'},f1);
@@ -474,7 +486,7 @@ tenseg_plot_CTS(reshape(n_t2(:,num),3,[]),C,index_b,S);
 %  axis off;
 end
 %% make video of the dynamic
-name2=['Tbar_dynamic_RDT',num2str(tf)];
+name2=['Tbar_dynamic_RDT',num2str(tf),'-2'];
 % tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
 % tenseg_video_CTS(n_t2,C,index_b,eye(ne),[],[],[],[],[],[],t_t2,[],min(numel(out_tspan),50),5,name,savevideo)
-tenseg_video_RDT(n_t2,C,R,index_b,eye(ne),[],[],[],[],[],[],t_t2,[],min(substep,50),5,name2,savevideo);
+tenseg_video_RDT(n_t2,C,R,index_b,eye(ne),[],[],[],[45,30],[],[],t_t2,[],min(substep,50),5,name2,savevideo);
