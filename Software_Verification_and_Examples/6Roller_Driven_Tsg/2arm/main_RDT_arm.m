@@ -293,7 +293,7 @@ fig.Position(3:4)=[800,350];   %change fig size
 end
 
 %% damping matrix
-ksi=0.1;    %damping coefficient of steel
+ksi=0.0;    %damping coefficient of steel
 d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping 
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% statics analysis
@@ -400,14 +400,14 @@ tenseg_video_RDT(n_t,C,R,index_b,eye(ne),[],[],[],[45,30],[],[],t_t,[],min(subst
 % time step
 dt=1e-5;
 tf=0.1;
-out_dt=1e-4;
+out_dt=1e-5;
 tspan=0:dt:tf;
 out_tspan=interp1(tspan,tspan,0:out_dt:tf, 'nearest','extrap');  % output data time span
 
 % calculate external force and 
 ind_w=[];w=[];
 ind_dl0=[]'; dl0=[]';
-ind_dqb=[3*nn+find(sum(E_sa,2))]; dqb0=[0.4*K_modess(:,2)];    % 12 active roller
+ind_dqb=[3*nn+find(sum(E_sa,2))]; dqb0=[2*K_modess(:,2)];    % 12 active roller
 % ind_dqb=[find(sum(E_qa*E_qa_a,2))]; dqb0=[0.1*K_mode_qaa_sort(:,1)];    %4 active roller
 [w_t,dqb_t,dqb_d_t,dqb_dd_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_dyna_RDT(tspan,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
 % modify external force(optional)
@@ -415,7 +415,8 @@ ind_dqb=[3*nn+find(sum(E_sa,2))]; dqb0=[0.4*K_modess(:,2)];    % 12 active rolle
 % w_t(:,1:step/2)=w_t(:,2:2:end); w_t(:,step/2+1:end)=w_t(:,end)*ones(1,step/2+1);
 % dqb_t(:,1:step/2)=dqb_t(:,2:2:end); dqb_t(:,step/2+1:end)=dqb_t(:,end)*ones(1,step/2+1);
 % l0_t(:,1:step/2)=l0_t(:,2:2:end); l0_t(:,step/2+1:end)=l0_t(:,end)*ones(1,step/2+1);
-
+% figure
+% plot(dqb_dd_t(end-9:end,:)')
 
 % % boundary node motion info
 % [~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
@@ -444,9 +445,9 @@ data_out2=dynamic_solver_RDT(data);        %solve ODE of dynamic equation
 t_t2=data_out2.t_t;          %member force in every step
 q_t2=data_out2.q_t;          %nodal coordinate in every step
 l_t2=data_out2.l_t;          %member length in every step
-
 n_t2=q_t2(1:3*nn,:);          % nodal coordinate n
 sld_t2=q_t2(3*nn+1:end,:);    % sliding distance
+
 if savedata==1
     save (['Tbr',num2str(tf),'.mat']);
 end
@@ -456,26 +457,13 @@ tenseg_plot_result2(out_tspan,t_t2([size(C_b,1)+8*level+2:4:end-2,size(C_b,1)+8*
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 
-tenseg_plot_result2(out_tspan,t_t2,{'1', '2', '3','4','5','6'},{'Time / s','Force / N'} ...
-    ,'plot_member_force.png',saveimg,{'--r',':g','-b','-c','-.m','-.y'});
-fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
+
 %% Plot nodal coordinate curve X Y slid
 
 tenseg_plot_result2(out_tspan,[n_t2([16*3-2:16*3],:)],{'$X_{top}$','$Y_{top}$','$Z_{top}$'}, ...
     {'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg,{'-r','--g','-.b'});
 fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
-
-f1=figure;
-tenseg_plot_result2(out_tspan,[n_t2([2*3-2],:)],{'2X'}, ...
-    {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'-b','-+g'},f1);
-% plot static result
-tenseg_plot_result2([1:substep]*tf/substep,[n_t([2*3-2],:)],{'$X_2$'}, ...
-    {'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg,{'--r','--g'},f1);
-legend('$X_2$ dynamics','$X_2$ statics');
-fig=gcf;
-fig.Position(3:4)=[800,250];   %change fig size
 
 %% Plot configurations
  j=linspace(0.01,1,5);
@@ -485,8 +473,21 @@ for i=1:numel(j)
 tenseg_plot_CTS(reshape(n_t2(:,num),3,[]),C,index_b,S);
 %  axis off;
 end
+%% Plot configurations
+ j=linspace(0.01,1,4);
+%  fig2=figure;% plot in one figure
+for i=1:numel(j)
+    num=ceil(j(i)*size(n_t2,2));
+%  tenseg_plot( reshape(n_t(:,num),3,[]),C_b,C_s,[],[],[]);
+% tenseg_plot_CTS(reshape(n_t(:,num),3,[]),C,index_b,S);
+% plot seperate figures
+tenseg_plot_RDT(reshape(n_t2(:,num),3,[]),C,R,index_b,eye(ne),[],[],[45,30], [], [],t_t2(:,num),[],[min(t_t2),max(t_t2)]);
+% plot in one figure
+% tenseg_plot_RDT(reshape(n_t2(:,num),3,[]),C,R,index_b,eye(ne),fig2,[],[45,30], [], [],t_t2(:,num),[],[min(t_t2),max(t_t2)]);
+ axis off;
+end
 %% make video of the dynamic
-name2=['Tbar_dynamic_RDT',num2str(tf),'-2'];
+name2=['Tbar_dynamic_RDT',num2str(tf),'-3'];
 % tenseg_video(n_t,C_b,C_s,[],min(numel(out_tspan),50),name,savevideo,material{2})
 % tenseg_video_CTS(n_t2,C,index_b,eye(ne),[],[],[],[],[],[],t_t2,[],min(numel(out_tspan),50),5,name,savevideo)
 tenseg_video_RDT(n_t2,C,R,index_b,eye(ne),[],[],[],[45,30],[],[],t_t2,[],min(substep,50),5,name2,savevideo);

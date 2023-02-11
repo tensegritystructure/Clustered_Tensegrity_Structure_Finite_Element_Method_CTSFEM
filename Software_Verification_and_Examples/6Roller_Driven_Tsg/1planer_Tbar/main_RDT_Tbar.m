@@ -138,7 +138,7 @@ K_mode_sort1=K_mode1(:,e_nb);
 num_plt=4:9;
 % plot_mode_CTS2(K_mode_sort(1:8,:),k_sort,N,E_na,C,1:2,S,l,'tangent stiffness matrix',...
 %     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
-plot_mode_RDT(K_mode_sort1(1:8,:),k_sort1,N,R,E_na,C,1:2,eye(ne),l,'tangent stiffness matrix',...
+plot_mode_RDT_sa(K_mode_sort1(1:8,:),K_mode_sort1(9,:),k_sort1,N,R,E_na,C,1:2,eye(ne),l,'tangent stiffness matrix',...
     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
 
 %% tangent stiffness of Clustered Tensegrity CTS
@@ -184,6 +184,30 @@ fig=gcf;
 fig.Position(3:4)=[800,350];   %change fig size
 end
 
+S*diag(l)*S'-diag(S*l)
+S*inv(diag(l))*S'-inv(diag(S*l))
+S'*diag(l0_c)*S-diag(S'*l0_c)
+%% mass matrix 
+
+M=tenseg_mass_matrix_RDT(mass,C,N,l); % generate mass matrix
+%% mode analysis
+[V_mode,D1] = eig(E_qa'*K_T*E_qa,E_qa'*M*E_qa);         % calculate vibration mode
+w_2=diag(D1);                                    % eigen value of 
+omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
+[omega_sort,e_nb]=sort(omega);
+omega_sort(1:3)=0;
+V_mode_sort=V_mode(:,e_nb);
+num_plt=1:9;
+plot_mode_RDT_sa(V_mode_sort(1:8,:),V_mode_sort(9,:),omega_sort,N,R,E_na,C,1:2,eye(ne),l,'tangent stiffness matrix',...
+    'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.2,saveimg,2);
+% plot sliding distance
+figure
+bar(4:9,V_mode_sort(9,4:9))
+set(gca,'fontsize',15,'LineWidth',2);
+xlabel('Order of Stiffness','fontsize',18,'Interpreter','tex');
+ylabel('Sliding distance (m)','fontsize',18);
+fig=gcf;
+fig.Position(3:4)=[800,350];   %change fig size
 %% damping matrix
 ksi=0.02;    %damping coefficient of steel
 d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping 

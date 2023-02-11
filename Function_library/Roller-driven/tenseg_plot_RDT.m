@@ -461,7 +461,7 @@ xlabel('x')
 ylabel('y')
 zlabel('z')
 title(PlotTitle)
-set(gca,'fontsize', 15,'linewidth',1.15)
+set(gca,'fontsize', 12,'linewidth',1.15)
 set(gca,'ticklength',1.2*get(gca,'ticklength'))
 
 if ~isempty(R3Ddata) % 3D object changes
