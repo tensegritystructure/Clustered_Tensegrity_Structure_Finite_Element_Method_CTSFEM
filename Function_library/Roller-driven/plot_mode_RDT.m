@@ -22,6 +22,8 @@ semilogy(1:numel(value),value,'k-o','linewidth',1.5); %semilogy
 set(gca,'fontsize',18);
 xlabel(xlb,'fontsize',18,'Interpreter','latex');
 ylabel(ylb,'fontsize',18,'Interpreter','latex');
+fig=gcf;
+fig.Position(3:4)=[700,350];   %change fig size
 grid on;
 
 % grid on;
@@ -38,6 +40,7 @@ for i=1:numel(num_plt)
     tenseg_plot_RDT_dash(N,C,R,index_b,S,f1,[],view_vec,title2,[],[],[],[]);
      axis off;
 %         view(view_vec);
+
     if saveimg==1
         saveas(gcf,[title,' of ',num2str(num_plt(i)),'.png']);
     end
