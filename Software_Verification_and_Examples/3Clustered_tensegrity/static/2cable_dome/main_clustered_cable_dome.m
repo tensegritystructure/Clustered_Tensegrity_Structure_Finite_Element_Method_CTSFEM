@@ -43,7 +43,7 @@ gravity=0;              % consider gravity 1 for yes, 0 for no
 % Manually specify node positions of double layer prism.
 R=50;          %radius
 p=12;          %complexity for cable dome
-m=2;   %number of circle of the vertical bars
+m=1;   %number of circle of the vertical bars
 h=0.15*2*R;   %hight of the dome
 beta=30*pi/180*ones(m,1);    %all angle of diagonal string
 [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
