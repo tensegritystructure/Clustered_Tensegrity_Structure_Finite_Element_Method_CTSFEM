@@ -72,7 +72,7 @@ H=N0*C';
 l=sqrt(sum(H.^2)');
 Cell_H=mat2cell(H,3,ones(1,size(H,2)));
 % angle of straight strings
-phi_s_sta=acos(C_sta*R./l);% this is approximation
+phi_s_sta=acos(C_sta*R./l); % this is approximation
 phi_s_end=acos(C_end*R./l);
 
 % angle of circluar strings
