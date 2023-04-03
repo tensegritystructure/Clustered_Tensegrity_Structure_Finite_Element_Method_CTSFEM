@@ -79,7 +79,7 @@ q=[N(:);sld];
 % transformation matrix of generalized coordinate
 E_qa=blkdiag(E_na,E_sa);
 E_qb=blkdiag(E_nb,E_sb);
-
+E_qsa=E_qa(:,size(E_na,2)+1:end);% extract s_a from q
 %% Group/Clustered information 
 %generate group index
 gr={[3,4]};     % number of elements in one group
@@ -221,34 +221,14 @@ d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% friction factors
 mue=0.01;    %friction coefficient 
-alpha=ones(nn,1);
-% calculat angle 
-
-% angle of straight strings
-phi_s_sta=acos(C_sta*R./l); % this is approximation
-phi_s_end=acos(C_end*R./l);
-% angle of circluar strings
-phi_r=zeros(nn,1);
-phi_c=zeros(nn,1);
-
-for i=1:numel(free_sld)
-    h_1=H(:,find(C(:,free_sld(i))==1));
-    h_2=H(:,find(C(:,free_sld(i))==-1));
-phi_r(free_sld(i))=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
-end
-phi_c=2*pi-phi_r-(C_sta'*phi_s_sta+C_end'*phi_s_end);  % angle of curved strings
-
-alpha(free_sld)=exp(-mue*phi_c(free_sld));
-
-
-
+alpha=friction_factor(mue,nn,free_sld,H,C);
 
 
 %% nonlinear statics analysis
 substep=30;
 
 ind_w=[];w=[];
-ind_dqb=[[1;5]*3-2;[1;5]*3-1;2*3-1]; dqb0=[zeros(4,1);0.4];
+ind_dqb=[[1;5]*3-2;[1;5]*3-1;2*3-2]; dqb0=[zeros(4,1);0.4];
 ind_dl0=[]'; dl0=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dqb_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_static_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
@@ -261,7 +241,7 @@ X1=eye(numel(free_sld)); X2=min(E.*A./l0)*eye(numel(free_sld)); % scaling factor
 % l0_t(:,1:substep/2)=l0_t(:,2:2:end); l0_t(:,substep/2+1:end)=l0_t(:,end)*ones(1,substep/2);
 
 % input data
-data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;%data.S=S;
+data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa_new; data.E_qb=E_qb_new;data.E_sa=E_sa; data.E_sb=E_sb;data.E_qsa=E_qsa;%data.S=S;
 data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
 data.consti_data=consti_data;   data.material=material; %constitue info
 data.w_t=w_t;  % external force
@@ -270,6 +250,7 @@ data.l0_t=l0_t;% forced movement of pinned nodes
 data.alpha=alpha;
 data.substep=substep;    % substep
 data.X1=X1;data.X2=X2;   % scaling factor
+data.mue=mue;               % friction coefficient
 
 data_out=static_solver_RDT_friction(data);
 t_t=data_out.t_t;          %member force in every step

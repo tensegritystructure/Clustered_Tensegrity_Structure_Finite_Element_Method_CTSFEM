@@ -221,24 +221,19 @@ d_c=2/sqrt(3)*sqrt(rho_s)*A.*E.^0.5;                  % cricital damping
 D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 %% friction factors
 mue=0.01;    %friction coefficient 
+alpha=friction_factor(mue,nn,free_sld,H,C);
+
+
 alpha=ones(nn,1);
 % calculat angle 
-
-% angle of straight strings
-phi_s_sta=acos(C_sta*R./l); % this is approximation
-phi_s_end=acos(C_end*R./l);
 % angle of circluar strings
-phi_r=zeros(nn,1);
-phi_c=zeros(nn,1);
-
+phi=zeros(nn,1);
 for i=1:numel(free_sld)
     h_1=H(:,find(C(:,free_sld(i))==1));
     h_2=H(:,find(C(:,free_sld(i))==-1));
-phi_r(free_sld(i))=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
+phi(free_sld(i))=acos(-h_1'*h_2/norm(h_1)/norm(h_2));% approximation not accurate
 end
-phi_c=2*pi-phi_r-(C_sta'*phi_s_sta+C_end'*phi_s_end);  % angle of curved strings
-
-alpha(free_sld)=exp(-mue*phi_c(free_sld));
+alpha(free_sld)=exp(-mue*phi(free_sld));
 
 
 

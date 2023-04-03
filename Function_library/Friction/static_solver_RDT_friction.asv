@@ -162,16 +162,16 @@ while icrm<MaxIcr %&& ~data.StopCriterion(U)&& lmd<=1
 
         K_T_fri=[E_na'*(Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2')*E_na,...
             E_na'*(A_2*diag(E.*A./l0s)*C*E_sa*[eye(n_sa),-eye(n_sa)]);...
-            (diag(X1\sigma_bar./Phi_s)-diag(X1.^-1))*kron(eye(2),E_sa)*[diag(alpha.^-1)*C_end'-C_sta';diag(alpha.^-1)*C_sta'-C_end']*diag(E.*A./l0s)*A_2'*E_na,...
-            C'*diag(E.*A./l0s)*C];          %%%%%%% not finished
+            *kron(eye(2),E_sa)*[diag(alpha.^-1)*C_end'-C_sta';diag(alpha.^-1)*C_sta'-C_end']*diag(E.*A./l0s)*A_2'*E_na,...
+            C'*diag(E.*A./l0s)*C];
 
         %modify the stiffness matrix
         if modify_stiff==1
-            [V_mode,D]=eig(K_Taa);                       %¸Õ¶È¾ØÕóÌØÕ÷¸ù
+            [V_mode,D]=eig(K_Taa);                       %åˆšåº¦çŸ©é˜µç‰¹å¾æ ¹
             d=diag(D);                            %eigen value
-            lmd=min(d);                     %¸Õ¶È¾ØÕó×îÐ¡ÌØÕ÷¸ù
+            lmd=min(d);                     %åˆšåº¦çŸ©é˜µæœ€å°ç‰¹å¾æ ¹
             if lmd>0
-                Km=K_Taa+u*eye(size(K_Taa)); %ÐÞÕýµÄ¸Õ¶È¾ØÕó
+                Km=K_Taa+u*eye(size(K_Taa)); %ä¿®æ­£çš„åˆšåº¦çŸ©é˜µ
             else
                 Km=K_Taa+(abs(lmd)+u)*eye(size(K_Taa));
             end
