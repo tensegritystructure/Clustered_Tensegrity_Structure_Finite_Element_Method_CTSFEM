@@ -195,6 +195,7 @@ ind_dnb=[]; dnb0=[];
 ind_dl0_c=[1,2,3]'; dl0_c=[-50,-50,50]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dnb_t,l0_ct,Ia_new,Ib_new]=tenseg_load_prestress(substep,ind_w,w,ind_dnb,dnb0,ind_dl0_c,dl0_c,l0_c,b,gravity,[0;9.8;0],C,mass);
+
 data.w_t=w_t;  % external force
 data.dnb_t=dnb_t;% forced movement of pinned nodes
 data.l0_t=l0_ct;% forced movement of pinned nodes
