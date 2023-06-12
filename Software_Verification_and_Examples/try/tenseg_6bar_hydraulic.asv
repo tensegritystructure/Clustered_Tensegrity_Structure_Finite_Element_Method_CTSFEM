@@ -12,7 +12,7 @@ hollow_solid=0;          % use hollow bar or solid bar in minimal mass design (1
 c_b=0.5;           % coefficient of safty of bars 0.5
 c_s=0.3;           % coefficient of safty of strings 0.3
 
-substep=1;             % 荷载子步
+substep=5;             % 荷载子步
 lumped=0;               % use lumped matrix 1-yes,0-no
 saveimg=0;              % save image or not (1) yes (0)no
 savedata=0;             % save data or not (1) yes (0)no
@@ -65,10 +65,10 @@ Gp=tenseg_str_gp(gr,C);    %generate group matrix
 w0=zeros(numel(N),1); w0a=Ia'*w0;
 
 %prestress design
-% index_gp=1;                   % number of groups with designed force
-% fd=-10000;                        % force in bar is given as -1000
-% [q_gp,t_gp,q,t,z]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
-% t(1:6)=-100;   % to specify the compression members
+index_gp=1;                   % number of groups with designed force
+fd=-10000;                        % force in bar is given as -1000
+[q_gp,t_gp,q,t,z]=tenseg_prestress_design(Gp,l,l_gp,A_1ag,V2,w0a,index_gp,fd);    %prestress design
+t(1:6)=-100;   % to specify the compression members
 t=zeros(ne,1);
 %% cross sectional design
 index_b=find(t<0);          % index of bar in compression
@@ -77,7 +77,7 @@ index_s=setdiff(1:ne,index_b);	% index of strings
 A=0.01*ones(ne,1);
 E=1e9*ones(ne,1);
 l0=l;
-l0(index_b)=l(index_b)+0.1;
+l0(index_b)=l(index_b)+0.5;
 % l0=E.*A.*l./(t+E.*A);
 rho=ones(ne,1);
 mass=rho.*A.*l0;
@@ -115,7 +115,6 @@ t_t=data_out.t_out;          %member force in every step
 n_t=data_out.n_out;          %nodal coordinate in every step
 N_out=data_out.N_out{1,1};
 tenseg_plot(N_out,C_b,C_s);
-N=N_out;
 %%
 q_index=data_out.q_out(1,1)/data_out.q_out(7,1);
 l_index=data_out.l_out(1,1)/data_out.l_out(7,1);
@@ -195,5 +194,3 @@ Gp=tenseg_str_gp(gr,C);    %generate group matrix
 
 %SVD of equilibrium matrix
 [U1,U2,V1,V2,S]=tenseg_svd(A_1ag);
-diag(S)
-A_1a*t_t
