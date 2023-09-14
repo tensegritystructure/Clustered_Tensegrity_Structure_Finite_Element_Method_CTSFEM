@@ -61,7 +61,25 @@ tenseg_plot(N,C_b,C_s);
 % tenseg_plot(N,[],C);
 axis off
 % view(2);
-% end
+%% plot hyperbolic paraboloid
+if 1
+ld=2*R;
+Rd=(h^2+(ld/2)^2)/(2*h); %radius of the arch
+xp=1.1*linspace(-R,R,40);
+yp=1.1*linspace(-R,R,40);
+[Xp,Yp]=meshgrid(xp,yp); %
+%first surface
+Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h);
+ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
+ss.EdgeColor = 'none';
+view(-30,45);
+%second surface
+Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h)-h;
+ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
+ss.EdgeColor = 'none';
+view(-30,45);
+end
+
 %% Boundary constraints
 pinned_X=([5:5:60])'; pinned_Y=([5:5:60])'; pinned_Z=([5:5:60])';
 [Ia,Ib,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,nn);
@@ -144,21 +162,19 @@ mass=S'*rho.*A.*l0;
 %% plot CTS
 fig_handle=figure;
 tenseg_plot_CTS(N,C,[gr_whg,gr_nhg],S,fig_handle);
+view(0,0);
 axis off;
 %% plot hyperbolic paraboloid
 if 0
-xp=1.1*linspace(-Rx,Rx,40);
-yp=1.1*linspace(-Ry,Ry,40);
+ld=2*R;
+Rd=(h^2+(ld/2)^2)/(2*h); %radius of the arch
+xp=1.1*linspace(-R,R,40);
+yp=1.1*linspace(-R,R,40);
 [Xp,Yp]=meshgrid(xp,yp); %
-Zp=-(Xp/aaa).^2+(Yp/bbb).^2;
+Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h);
 ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
 ss.EdgeColor = 'none';
-
-%  plot cylinder
-
-[Xc,Yc,Zc] = cylinder;
-ss=surf(Rx*Xc,Ry*Yc,Rx*(Zc)+min(N(3,:))-6,'FaceAlpha',0.3);
-ss.EdgeColor = 'none';
+view(-30,45);
 end
 
 %% tangent stiffness matrix
