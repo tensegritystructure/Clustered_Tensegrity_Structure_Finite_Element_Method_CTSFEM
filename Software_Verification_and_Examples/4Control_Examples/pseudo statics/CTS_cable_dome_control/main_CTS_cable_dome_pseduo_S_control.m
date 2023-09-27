@@ -47,12 +47,12 @@ period=0.5;             %period of seismic
 % Manually specify node positions of double layer prism.
 R=50;          %radius
 p=12;          %complexity for cable dome
-m=2;   %number of circle of the vertical bars
+m=6;   %number of circle of the vertical bars
 % for m=[2,3,4]
 h=0.15*2*R;   %hight of the dome
 beta=30*pi/180*ones(m,1);    %all angle of diagonal string
 % [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
-rate=0.3;
+rate=0.1;
 [N,C_b,C_s,C] =N_cable_dome_2(R,rate,p,m,h,beta);
 [ne,nn]=size(C);% ne:No.of element;nn:No.of node
 
@@ -68,13 +68,19 @@ Rd=(h^2+(ld/2)^2)/(2*h); %radius of the arch
 xp=1.1*linspace(-R,R,40);
 yp=1.1*linspace(-R,R,40);
 [Xp,Yp]=meshgrid(xp,yp); %
+% square surface
+sq2cirl=diag(sqrt(1-linspace(-1,1,40).^2));
+Xp=sq2cirl*Xp;
+% Yp=Yp*sq2cirl;
+
+% .*abs(sin(0,pi,40))
 %first surface
 Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h);
 ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
 ss.EdgeColor = 'none';
 view(-30,45);
 %second surface
-% Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h)-h;
+% Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h)-9;
 % ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
 % ss.EdgeColor = 'none';
 % view(-30,45);
