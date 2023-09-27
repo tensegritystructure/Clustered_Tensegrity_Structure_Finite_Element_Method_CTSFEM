@@ -23,17 +23,17 @@ Rd=(h^2+(l/2)^2)/(2*h); %radius of the arch
 %% generate node in one unit
 N0=zeros(3,2*m+1);      %initial N
 for i=1:m
-    N0(:,i)=[i*l/2/(m+1)-R;0;sqrt(Rd^2-((m+1-i)*l/2/(m+1))^2)-(Rd-h)];
+    N0(:,i)=[i*R*(1-rate)/(m+1)-R;0;sqrt(Rd^2-(i*R*(1-rate)/(m+1)-R)^2)-(Rd-h)];
 end
 dy=l/2/(m+1)*tan(beta)+diff([0,N0(3,1:m)])';
 N0(:,m+1:2*m)=N0(:,1:m);
 N0(3,m+1:2*m)=N0(3,m+1:2*m)-dy';
 N0(:,end)=[-R;0;0];
 %% modify radius of bars by rate
-% N0(1,[2:2:])=-R*rate*[1,1];
-% N0(1,[1,3])=-R*(0.5+0.5*rate)*[1,1];
-N0(1,[1:m])=-R*(rate+(m-[1:m])*(1-rate)/m);
-N0(1,[m+1:2*m])=N0(1,[1:m]);
+% % N0(1,[2:2:])=-R*rate*[1,1];
+% % N0(1,[1,3])=-R*(0.5+0.5*rate)*[1,1];
+% N0(1,[1:m])=-R*(rate+(m-[1:m])*(1-rate)/m);
+% N0(1,[m+1:2*m])=N0(1,[1:m]);
 
 %% rotate node in a unit
 beta1=pi/p;
@@ -63,51 +63,78 @@ C_b_in_unit = [[1:m]',[m+1:2*m]'];  % Bar
 C_b2unit = tenseg_ind2C(C_b_in_unit,N);
 
 u=2*m+1;           % # of nodes in a unit
+
+%%%%
 C_s_in_unit1=[1 u   % 2 top 2 diagonal 1 circlur
     1 2*u
     m+1 u
     m+1 2*u
     m+1 m+1+u];%strings of the first loop
-C_s_in_temp=[1 2  % strings of inner loop
+C_s_in_temp_2=[1 2  % strings of inner loop in even number
     1 2+u
     1 m+2
     1 m+2+u
-    m+2 m+2+u
-    3 2
+    m+2 m+2+u];
+C_s_in_temp_1=[3 2  % strings of inner loop in odd number
     3 2+u
-    m+3 2
-    m+3 2+u
-    m+3 m+3+u];%2 top 2 diagonal 1 circlur 2 top 2 diagonal 1 circlur
+    3+m 2
+    3+m 2+u
+    m+3 m+3+u];
 
-if rem(m,2)==1     %odd m
-C_s_in_unit=[C_s_in_unit1;[kron(2*[0:(m-1)/2-1]',ones(10,2))+kron(ones((m-1)/2,1),C_s_in_temp)]];
-C_s_in_unit=[C_s_in_unit;m,m+u];     % top circular strings
-else if m==2
-    C_s_in_unit=[1 u   % 2 top 2 diagonal 1 circlur
-    1 2*u
-    m+1 u
-    m+1 2*u
-    m+1 m+1+u
-    1 2  
-    1 2+u
-    1 m+2
-    1 m+2+u
-    m+2 m+2+u
-    m,m+u];
-else if rem(m,2)==0&&m~=2
-C_s_in_unit=[C_s_in_unit1;[kron(2*[0:(m-2)/2-2]',ones(10,2)),kron(ones((m-2)/2,1),C_s_in_temp)]];
-C_s_in_unit=[C_s_in_unit;           
-    m-1 m  
-    m-1 m+u
-    m-1 2*m
-    m-1 2*m+u
-    2*m 2*m+u
-m,m+u];     % top circular strings
-end
-    end
-end
+C_s_in_dupli_base=kron(ones(50,1),[C_s_in_temp_2;C_s_in_temp_1])+kron(2*[0:49]',ones(size([C_s_in_temp_2;C_s_in_temp_1]))); % duplicated parts to 100
 
-C_s2unit = tenseg_ind2C(C_s_in_unit,N);
+C_s_in_dupli=C_s_in_dupli_base(1:(m-1)*5,:);
+
+C_s_in_unit=[C_s_in_unit1;C_s_in_dupli;m,m+u];     % add together,top circular strings
+
+
+
+% %%%%%
+% C_s_in_unit1=[1 u   % 2 top 2 diagonal 1 circlur
+%     1 2*u
+%     m+1 u
+%     m+1 2*u
+%     m+1 m+1+u];%strings of the first loop
+% C_s_in_temp=[1 2  % strings of inner loop
+%     1 2+u
+%     1 m+2
+%     1 m+2+u
+%     m+2 m+2+u
+%     3 2
+%     3 2+u
+%     m+3 2
+%     m+3 2+u
+%     m+3 m+3+u];%2 top 2 diagonal 1 circlur 2 top 2 diagonal 1 circlur
+% 
+% if rem(m,2)==1     %odd m
+% C_s_in_unit=[C_s_in_unit1;[kron(2*[0:(m-1)/2-1]',ones(10,2))+kron(ones((m-1)/2,1),C_s_in_temp)]];
+% C_s_in_unit=[C_s_in_unit;m,m+u];     % top circular strings
+% else if m==2
+%     C_s_in_unit=[1 u   % 2 top 2 diagonal 1 circlur
+%     1 2*u
+%     m+1 u
+%     m+1 2*u
+%     m+1 m+1+u
+%     1 2  
+%     1 2+u
+%     1 m+2
+%     1 m+2+u
+%     m+2 m+2+u
+%     m,m+u];
+% else if rem(m,2)==0&&m~=2
+% C_s_in_unit=[C_s_in_unit1;[kron(2*[0:(m-2)/2-2]',ones(10,2)),kron(ones((m-2)/2,1),C_s_in_temp)]];
+% C_s_in_unit=[C_s_in_unit;           
+%     m-1 m  
+%     m-1 m+u
+%     m-1 2*m
+%     m-1 2*m+u
+%     2*m 2*m+u
+% m,m+u];     % top circular strings
+% end
+%     end
+% end
+
+% C_s2unit = tenseg_ind2C(C_s_in_unit,N);
 % tenseg_plot(N,C_b2unit,C_s2unit)  ;    %plot a unit
 % title('A unit');
 %% replicate connectivity matrix of a unit 

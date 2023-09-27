@@ -53,14 +53,14 @@ h=0.15*2*R;   %hight of the dome
 beta=30*pi/180*ones(m,1);    %all angle of diagonal string
 % [N,C_b,C_s,C] =generat_cable_dome(R,p,m,h,beta);
 rate=0.3;
-[N,C_b,C_s,C] =N_cable_dome(R,rate,p,m,h,beta);
+[N,C_b,C_s,C] =N_cable_dome_2(R,rate,p,m,h,beta);
 [ne,nn]=size(C);% ne:No.of element;nn:No.of node
 
 tenseg_plot(N,C_b,C_s);
 % title('Cable dome');
 % tenseg_plot(N,[],C);
 axis off
-% view(2);
+view(2);
 %% plot hyperbolic paraboloid
 if 1
 ld=2*R;
@@ -74,10 +74,10 @@ ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
 ss.EdgeColor = 'none';
 view(-30,45);
 %second surface
-Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h)-h;
-ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
-ss.EdgeColor = 'none';
-view(-30,45);
+% Zp=sqrt(Rd^2-(Xp).^2-(Yp).^2)-(Rd-h)-h;
+% ss=surf(Xp,Yp,Zp,'FaceAlpha',0.4);
+% ss.EdgeColor = 'none';
+% view(-30,45);
 end
 
 %% Boundary constraints
