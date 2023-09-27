@@ -23,7 +23,7 @@ Rd=(h^2+(l/2)^2)/(2*h); %radius of the arch
 %% generate node in one unit
 N0=zeros(3,2*m+1);      %initial N
 for i=1:m
-    N0(:,i)=[i*R*(1-rate)/(m)-R;0;sqrt(Rd^2-(i*R*(1-rate)/(m)-R)^2)-(Rd-h)];
+    N0(:,i)=[i*R*(1-rate)/(m+1)-R;0;sqrt(Rd^2-(i*R*(1-rate)/(m+1)-R)^2)-(Rd-h)];
 end
 dy=l/2/(m+1)*tan(beta)+diff([0,N0(3,1:m)])';
 N0(:,m+1:2*m)=N0(:,1:m);
