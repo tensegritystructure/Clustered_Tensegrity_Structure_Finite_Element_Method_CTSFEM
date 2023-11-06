@@ -116,6 +116,10 @@ n_t=data_out.n_out;          %nodal coordinate in every step
 N_out=data_out.N_out{1,1};
 tenseg_plot(N_out,C_b,C_s);
 N=N_out;
+
+
+%%
+[A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
 %%
 q_index=data_out.q_out(1,1)/data_out.q_out(7,1);
 l_index=data_out.l_out(1,1)/data_out.l_out(7,1);
