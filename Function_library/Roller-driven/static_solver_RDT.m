@@ -120,7 +120,7 @@ qa=E_qa\q;
             Cell_H=mat2cell(H,3,ones(1,size(H,2)));          % transfer matrix H into a cell: Cell_H
             A_2=kron(C',eye(3))*blkdiag(Cell_H{:})*diag(l.^-1);     % equilibrium matrix
             Kn=kron(C'*diag(l.\t)*C,eye(3));       %stiffness matrix of truss
-
+            
             % unbalanced force
             IFa=E_qa'*(-[Kn*N(:);C'*t]+w);
 

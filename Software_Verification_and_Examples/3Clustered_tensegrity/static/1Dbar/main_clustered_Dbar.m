@@ -65,11 +65,11 @@ S=Gp';                      % clustering matrix
 %% self-stress design
 %Calculate equilibrium matrix and member length
 [A_1a,A_1ag,A_2a,A_2ag,l,l_gp]=tenseg_equilibrium_matrix1(N,C,Gp,Ia);
-A_1ac=A_1a*diag(l.^-1)*S'*diag(l_gp);          %equilibrium matrix CTS
+A_1ac=A_1a*diag(l.^-1)*S'*diag(l_gp);          %equilibrium matrix CTS  %A_1a是(C'⊙I_3)b.d.（H）
 A_2ac=A_2a*S';          %equilibrium matrix CTS
 l_c=S*l;                % length vector CTS
 %SVD of equilibrium matrix
-[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);
+[U1,U2,V1,V2,S1]=tenseg_svd(A_1ag);    %U1是列空间的基，U2是左零空间的基，V2是零空间的基，V1是行空间的基，S1是奇异值
 
 %external force in equilibrium design
 w0=zeros(numel(N),1); w0a=Ia'*w0;

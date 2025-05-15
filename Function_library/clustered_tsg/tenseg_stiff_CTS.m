@@ -23,15 +23,15 @@ function [Kt_aa,Kg_aa,Ke_aa,K_mode,k]=tenseg_stiff_CTS(Ia,C,S,q,A_1a,E_c,A_c,l_c
 %   rho_b: density of bar
 %   rho_s: density of string
 
-A_1ac=A_1a*S';
-A_2ac=A_1ac/diag(l_c);
+A_1ac=A_1a*S';%87
+A_2ac=A_1ac/diag(l_c);%84
 
 
-Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia;
-Ke_aa=A_1ac*diag(E_c.*A_c./(l_c.^3))*A_1ac';
+Kg_aa=Ia'*kron(C'*diag(q)*C,eye(3))*Ia; %56
+Ke_aa=A_1ac*diag(E_c.*A_c./(l_c.^3))*A_1ac';%103x
 
-Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 
-[K_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix
+Kt_aa=Kg_aa+(Ke_aa+Ke_aa')/2;       % this is to 103
+[K_mode,D1] = eig(Kt_aa);         % eigenvalue of tangent stiffness matrix,D1为右特征向量
 k=diag(D1);   
 
 end

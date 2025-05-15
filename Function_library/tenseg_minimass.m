@@ -44,9 +44,9 @@ r_s=sqrt(A_s/pi);               % radius of string
 I3=eye(ne);
 Ind_b=I3(:,index_b);            % index matrix for bar
 Ind_s=I3(:,index_s);            % index matrix for string
-A=[Ind_b,Ind_s]*[A_b;A_s];      % cross sectional area
+A=[Ind_s,Ind_b]*[A_s;A_b];      % cross sectional area
 A_gp=pinv(Gp)*A;
-radius=[Ind_b,Ind_s]*[r_b;r_s];	%radius
+radius=[Ind_s,Ind_b]*[r_s;r_b];	%radius
 r_gp=pinv(Gp)*radius;
 E=[Ind_b,Ind_s]*[Eb*ones(numel(index_b),1);Es*ones(numel(index_s),1)];        %Young's modulus vector
 

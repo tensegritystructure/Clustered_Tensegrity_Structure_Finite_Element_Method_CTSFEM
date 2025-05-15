@@ -28,7 +28,8 @@ I=eye(size(Gp,2));
 e_d=I(:,index_gp);        % e_d is the matrix to select group of member with designed force
 l_d=e_d'*l_gp;            % length of top center circular strings
 % qd=fd./l_d;
-z=(e_d'*V2)\(e_d'*(fd-pinv(A_2ag)*w0a));   %self-stress coefficient
+% z=(e_d'*V2)\(e_d'*(fd-pinv(A_2ag)*w0a));   %self-stress coefficient
+z=(e_d'*V2)\(fd-e_d'*(pinv(A_2ag)*w0a));   %self-stress coefficient
 %%
 
 t_gp=pinv(A_2ag)*w0a+V2*z;

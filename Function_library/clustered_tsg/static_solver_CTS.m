@@ -5,7 +5,7 @@ function data_out=static_solver_CTS(data)
 
 global E A l0 Ia Ib C S w ne Xb Xa dXa f_int l_int
 % minimize total energy? (1: use, 0: not use) it's time consuming
-use_energy=0;
+use_energy=1;
 
 %% input data
 C=data.C;
@@ -79,6 +79,7 @@ for k=1:substep
     l=sqrt(sum((reshape(X,3,[])*C').^2))'; %bar length
     l_c=S*l;
     strain=(l_c-l0)./l0;        %strain of member
+  
     [E,sigma]=stress_strain(consti_data,index_b,index_s,strain,material);
     t_c=sigma.*A;         %member force
     t=S'*t_c;
@@ -104,7 +105,7 @@ for k=1:substep
         K=kron(C'*q_bar*C,eye(3));                      %stiffness matrix
         Fp=w-K*X;                                       %unbalanced force
         Fp_a=Ia'*Fp;                                 %see the norm of unbalanced force
-        norm(Fp_a)
+        norm(Fp_a);
         if norm(Fp_a)<1e-5
             break
         end

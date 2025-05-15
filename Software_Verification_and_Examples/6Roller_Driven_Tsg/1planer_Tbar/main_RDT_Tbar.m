@@ -55,10 +55,11 @@ R=[0;0;0.05;0;0]; % radius vector
  end
  I_unique=kron(I_unique0,eye(3));
  %% Boundary constraints-transformation matrix of nodal coordinate
- pinned_X=[]; pinned_Y=[]; pinned_Z=(1:numel(ia))';
+ pinned_X=[1;4]; pinned_Y=[1;4]; pinned_Z=(1:numel(ia))';
  [Ia_min,Ib_min,a,b]=tenseg_boundary(pinned_X,pinned_Y,pinned_Z,numel(ia));
  E_na=I_unique*Ia_min;
  E_nb=I_unique*Ib_min;
+ n_a=pinv(E_na)*N(:);
  %% sliding distance vector of pulley and transformation matrix
 sld=zeros(nn,1);
 % transformation matrix of sliding distance vector
@@ -66,8 +67,13 @@ free_sld=3; fixed_sld=setdiff(1:nn,free_sld);
 E_s=eye(nn);
 E_sa=E_s(:,free_sld);
 E_sb=E_s(:,fixed_sld);
+sld_a=E_sa'*sld;
+sld_a_jia=0.5.*[abs(sld_a)+sld_a];
+sld_a_jian=0.5.*[abs(sld_a)-sld_a];
+% sld_
 %% generalized coordinate q
 % generalized coordinate 
+
 q=[N(:);sld];
 % transformation matrix of generalized coordinate
 E_qa=blkdiag(E_na,E_sa);
@@ -79,7 +85,7 @@ gr={[3,4]};     % number of elements in one group
 Gp=tenseg_str_gp(gr,C);    %generate group matrix
 S=Gp';                      % clustering matrix
 
-fig_handle=figure
+fig_handle=figure;
 tenseg_plot_CTS(N,C,[1,2],S,fig_handle);
 %% equilibrium matrix and SVD
 %Calculate equilibrium matrix and member length
@@ -94,7 +100,7 @@ A_RDT=E_qa'*[A_2;C'];
 
 %%  cross section information
 % cross sectional area
-A=1e-5*[100*[1;1];ones(4,1)];
+A=1e-8*[100*[1;1];ones(4,1)];
 % young's modulus
 E=[Eb*ones(2,1);Es*ones(4,1)];
 % external force
@@ -102,8 +108,8 @@ f_ena=zeros(size(E_na,2),1);
 f_esa=zeros(size(E_sa,2),1);
 
 % member force design
-index_gp=[1];
-fd=-1e3;
+index_gp=[1,2,3,4,5];
+fd=1e3;
 e_nb=eye(ne);
 e_d=e_nb(:,index_gp); % e_d is the matrix to select group of member with designed force
 z=(e_d'*V2)\(e_d'*(fd-pinv(A_RDT)*[f_ena;f_esa]));   %self-stress coefficient
@@ -116,7 +122,7 @@ index_s=setdiff(1:ne,index_b);	% index of strings
 l0=E.*A.*l./(t+E.*A);
 mass=rho_s.*A.*l0;
 %% plot with pulley size
-fig2=figure
+fig2=figure;
 tenseg_plot_RDT(N,C,R,index_b,S,fig2,[],[], [], [],[],[],[]);
 % axis off;
 %% tangent stiffness matrix
@@ -125,7 +131,7 @@ Kn=kron(C'*diag(l.\t)*C,eye(3));
 K_T=[Kn+A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
     C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
 K_Tg=blkdiag(Kn-A_2*diag(l.\t)*A_2',zeros(numel(sld)));%geometry stiffness
-K_Te=[A_2*diag(E.*A./l0)*A_2'-A_2*diag(l.\t)*A_2',A_2*diag(E.*A./l0)*C;...
+K_Te=[A_2*diag(E.*A./l0)*A_2',A_2*diag(E.*A./l0)*C;...
     C'*diag(E.*A./l0)*A_2',C'*diag(E.*A./l0)*C];
 
 K_T=0.5*(K_T+K_T');
@@ -135,11 +141,11 @@ k=diag(D1);
 [k_sort1,e_nb]=sort(k);
 K_mode_sort1=K_mode1(:,e_nb);
 % plot mode
-num_plt=4:9;
+num_plt=4:6;
 % plot_mode_CTS2(K_mode_sort(1:8,:),k_sort,N,E_na,C,1:2,S,l,'tangent stiffness matrix',...
 %     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
-plot_mode_RDT_sa(K_mode_sort1(1:8,:),K_mode_sort1(9,:),k_sort1,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
+% plot_mode_RDT_sa(K_mode_sort1(1:8,:),K_mode_sort1(9,:),k_sort1,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
+%     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
 
 %% tangent stiffness of Clustered Tensegrity CTS
 if 1
@@ -158,35 +164,34 @@ k1=diag(D1);
 K_mode2=K_mode1(:,e_nb);
   end
 
-K_mode2(:,1)'*Kt_aa*K_mode2(:,1)      %eigenvalue
-K_mode2(:,1)'*Kg_aa*K_mode2(:,1)      % eigenvalue of geometry stiffness
-K_mode2(:,1)'*Ke_aa*K_mode2(:,1)      % eigenvalue of material stiffness
+K_mode2(:,1)'*Kt_aa*K_mode2(:,1);      %eigenvalue
+K_mode2(:,1)'*Kg_aa*K_mode2(:,1);      % eigenvalue of geometry stiffness
+K_mode2(:,1)'*Ke_aa*K_mode2(:,1);      % eigenvalue of material stiffness
 
 num_plt=1:8;
 % plot_mode_CTS2(K_mode,k,N,Ia,C,1:2,S,l,'tangent stiffness matrix',...
 %     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)',num_plt,0.2,saveimg,3);
 % plot_mode(K_mode2,k2,N,E_na,C_b,C_s,l,'natrual vibration',...
 %     'Order of Vibration Mode','Frequency (Hz)',num_plt,0.2,saveimg);
-plot_mode_RDT(-K_mode2,k2,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
-    'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
+% plot_mode_RDT(-K_mode2,k2,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
+%     'Order of Eigenvalue','Eigenvalue of Stiffness (N/m)','N/m',num_plt,0.2,saveimg,2);
 
 
 % compare stiffness eigen value
 figure
-semilogy(4:9,k_sort1(4:end),'-or',...
-    4:8,k2(4:end),'-.ob','linewidth',2); %semilogy
+% semilogy(4:9,k_sort1(4:end),'-or',...
+%     4:8,k2(4:end),'-.ob','linewidth',2); %semilogy
 set(gca,'fontsize',15,'LineWidth',2);
 xlabel('Order of Stiffness','fontsize',18,'Interpreter','tex');
 ylabel('Eigenvalue (N/m)','fontsize',18);
-legend('PD-CTS','CTS');
+legend('PD-CTS','CTS','Location','southeast');
 grid on;
 fig=gcf;
-fig.Position(3:4)=[800,350];   %change fig size
+% fig.Position(3:4)=[800,350];   %change fig size
+fig.Position(1:4)=[100,100,650,550];   %change fig size
 end
 
-S*diag(l)*S'-diag(S*l)
-S*inv(diag(l))*S'-inv(diag(S*l))
-S'*diag(l0_c)*S-diag(S'*l0_c)
+
 %% mass matrix 
 
 M=tenseg_mass_matrix_RDT(mass,C,N,l); % generate mass matrix
@@ -197,12 +202,14 @@ omega=real(sqrt(w_2))/2/pi;                   % frequency in Hz
 [omega_sort,e_nb]=sort(omega);
 omega_sort(1:3)=0;
 V_mode_sort=V_mode(:,e_nb);
-num_plt=1:9;
-plot_mode_RDT_sa(V_mode_sort(1:8,:),V_mode_sort(9,:),omega_sort,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
+num_plt=1:4;
+plot_mode_RDT_sa(V_mode_sort(1:4,:),V_mode_sort(5,:),omega_sort,N,R,E_na,C,1:2,S,l,'tangent stiffness matrix',...
     'Order of Vibration Mode','Frequency (Hz)','Hz',num_plt,0.2,saveimg,2);
+fig=gcf;
+fig.Position(1:4)=[100,100,[650,350]];   %change fig size
 % plot sliding distance
 figure
-bar(4:9,V_mode_sort(9,4:9))
+bar(4:5,V_mode_sort(5,4:5))
 set(gca,'fontsize',15,'LineWidth',2);
 xlabel('Order of Stiffness','fontsize',18,'Interpreter','tex');
 ylabel('Sliding distance (m)','fontsize',18);
@@ -216,7 +223,7 @@ D=[A_2;C']*diag(ksi.*d_c)*[A_2;C']';
 substep=30;
 
 ind_w=[];w=[];
-ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);0.4];
+ind_dqb=[[1;5]*3-2;[1;5]*3-1;18]; dqb0=[zeros(4,1);5e-2];
 ind_dl0=[]'; dl0=[]';
 % ind_dl0_c=[1,2,3]'; dl0_c=[-40,-30,10]';
 [w_t,dqb_t,l0_t,E_qa_new,E_qb_new]=tenseg_load_static_RDT(substep,ind_w,w,ind_dqb,dqb0,ind_dl0,dl0,l0,E_qa,E_qb,gravity,[0;9.8;0],C,mass);
@@ -245,6 +252,35 @@ K_t_t= data_out.Kt_t; %tangent stiffness of whole struct.
 
 n_t=q_t(1:3*nn,:);          % nodal coordinate n
 sld_t=q_t(3*nn+1:end,:);    % sliding distance
+%% statics friction analysis
+free_sld1=3; fixed_sld1=setdiff(1:nn,free_sld1);
+E_s1=eye(nn);
+E_sa1=E_s1(:,free_sld1);
+E_sb1=E_s1(:,fixed_sld1);
+dq1=zeros(size(E_qb,1),1);
+ind_dqb1=[[1;5]*3-2;[1;5]*3-1;16];
+dq1(ind_dqb1)=dqb0;
+dqb1=E_qb\dq1;
+dqb_t1=dqb1*linspace(0,1,substep);
+data.q=q; data.C=C; data.ne=ne; data.nn=nn; data.E_qa=E_qa; data.E_qb=E_qb;%data.S=S;
+data.E_na=E_na; data.E_sa=E_sa1; data.E_nb=E_nb; data.E_sb=E_sb1;
+data.E=E; data.A=A; data.index_b=index_b; data.index_s=index_s;
+data.consti_data=consti_data;   data.material=material; %constitue info
+data.w_t=w_t;  % external force
+data.dqb_t=dqb_t1;% forced movement of pinned nodes
+data.l0_t=l0_t;% forced movement of pinned nodes
+data.substep=substep;    % substep
+
+
+data_out3=static_solver_friction_RDT(data);
+t_t3=data_out3.t_t;          %member force in every step
+q_t3=data_out3.q_t;          %nodal coordinate in every step
+l_t3=data_out3.l_t;          %member length in every step
+K_t_t3= data_out3.Kt_t; %tangent stiffness of whole struct.
+
+n_t3=q_t3(1:3*nn,:);          % nodal coordinate n
+sld_t3=q_t3(3*nn+1:end,:);    % sliding distance
+
 %% plot member force 
 tenseg_plot_result2(1:substep,t_t,{'1', '2', '3','4','5','6'},{'Substep','Force (N)'} ...
     ,'plot_member_force.png',saveimg,{'-or','-+g','-xb','-*c','-^m','-vk'});
@@ -329,7 +365,6 @@ w_t(:,1:step/2)=w_t(:,2:2:end); w_t(:,step/2+1:end)=w_t(:,end)*ones(1,step/2+1);
 dqb_t(:,1:step/2)=dqb_t(:,2:2:end); dqb_t(:,step/2+1:end)=dqb_t(:,end)*ones(1,step/2+1);
 l0_t(:,1:step/2)=l0_t(:,2:2:end); l0_t(:,step/2+1:end)=l0_t(:,end)*ones(1,step/2+1);
 
-
 % % boundary node motion info
 % [~,dqb_t,dqb_d_t,dqb_dd_t,dz_a_t]=tenseg_ex_force_RDT(tspan,E_qa_new,E_qb_new,'vib_force',gravity,[0;0;0],C,mass,[1,2],amplitude,period);
 
@@ -349,7 +384,6 @@ data.q0a_d=q0a_d;        %initial speed of free coordinates
 data.rho=rho_s; data.ksi=ksi;
 data.tf=tf;data.dt=dt;data.tspan=tspan;data.out_tspan=out_tspan;
 
-
 %% solve ODE
 % solve dynamic equation
 data_out2=dynamic_solver_RDT(data);        %solve ODE of dynamic equation
@@ -363,6 +397,7 @@ sld_t2=q_t2(3*nn+1:end,:);    % sliding distance
 if savedata==1
     save (['Tbr',num2str(tf),'.mat']);
 end
+
 %% plot member force 
 tenseg_plot_result2(out_tspan,t_t2,{'1', '2', '3','4','5','6'},{'Time / s','Force / N'} ...
     ,'plot_member_force.png',saveimg,{'--r',':g','-b','-c','-.m','-.y'});
@@ -371,7 +406,7 @@ fig.Position(3:4)=[800,350];   %change fig size
 %% Plot nodal coordinate curve X Y slid
 f1=figure;
 tenseg_plot_result2(out_tspan,[n_t2([2*3-2],:)],{'2X'}, ...
-    {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'-b','-+g'},f1);
+    {'Time / s','Coordinate / m'},'plot_coordinate.png',saveimg,{'-b','-+g'},f1D);
 % plot static result
 tenseg_plot_result2([1:substep]*tf/substep,[n_t([2*3-2],:)],{'$X_2$'}, ...
     {'Time (s)','Coordinate (m)'},'plot_coordinate.png',saveimg,{'--r','--g'},f1);

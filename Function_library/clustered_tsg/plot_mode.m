@@ -11,7 +11,7 @@ switch nargin
         view_vec=2;
 end
 
-figure
+% figure
 % plot(1:numel(value),value,'k-o','linewidth',1.5);
 % set(gca,'fontsize',18);
 % xlabel(xlb,'fontsize',18,'Interpreter','latex');
